@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
@@ -117,7 +117,9 @@ export default function ResetPasswordPage() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
-                <ResetPasswordContent />
+                <Suspense fallback={<div className="text-center text-slate-500">Đang tải dữ liệu...</div>}>
+                    <ResetPasswordContent />
+                </Suspense>
             </div>
         </div>
     );
