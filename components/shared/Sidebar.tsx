@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Briefcase, Users, CalendarCheck, Mail, BarChart2, Settings, HelpCircle, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useAuth } from "@/context/AuthContext";
 
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
@@ -15,6 +16,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname();
+    const { logout } = useAuth();
 
     const menuItems = [
         { name: "Tổng quan", icon: LayoutDashboard, href: "/" },
@@ -85,7 +87,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         </Link>
                     );
                 })}
-                <button title={isCollapsed ? "Đăng xuất" : undefined} className={cn("w-full flex items-center gap-3 rounded-xl transition-all font-medium text-sm group text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 overflow-hidden", isCollapsed ? "justify-center p-3" : "px-4 py-3 mt-2")}>
+                <button onClick={logout} title={isCollapsed ? "Đăng xuất" : undefined} className={cn("w-full flex items-center gap-3 rounded-xl transition-all font-medium text-sm group text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 overflow-hidden", isCollapsed ? "justify-center p-3" : "px-4 py-3 mt-2")}>
                     <LogOut className="shrink-0 w-5 h-5 text-rose-500 group-hover:text-rose-400" />
                     {!isCollapsed && <span className="whitespace-nowrap">Đăng xuất</span>}
                 </button>
