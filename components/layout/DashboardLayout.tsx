@@ -9,7 +9,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
 
-    const isAuthPage = pathname === '/login' || pathname === '/register';
+    const authRoutes = ['/login', '/register', '/verify', '/forgot-password', '/reset-password'];
+    const isAuthPage = authRoutes.includes(pathname);
 
     if (isAuthPage) {
         return <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a]">{children}</div>;

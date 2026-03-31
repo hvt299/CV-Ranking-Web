@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    const authRoutes = ['/login', '/register'];
+    const authRoutes = ['/login', '/register', '/verify', '/forgot-password', '/reset-password'];
     if (authRoutes.includes(pathname) && token) {
         return NextResponse.redirect(new URL('/', request.url));
     }
