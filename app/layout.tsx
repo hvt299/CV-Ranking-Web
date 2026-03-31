@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
@@ -15,11 +18,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <DashboardLayout>
-            {children}
-          </DashboardLayout>
-        </ThemeProvider>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <AuthProvider>
+              <DashboardLayout>
+                {children}
+              </DashboardLayout>
+            </AuthProvider>
+          </ThemeProvider>
+        </GoogleOAuthProvider>
+
+        <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>
   );
