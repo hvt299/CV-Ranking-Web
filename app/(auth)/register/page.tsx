@@ -60,7 +60,7 @@ export default function RegisterPage() {
                 const res = await api.post('/auth/google', {
                     access_token: tokenResponse.access_token
                 });
-                login(res.data.access_token, email || 'google-user');
+                login(res.data.access_token);
                 toast.success('Đăng nhập bằng Google thành công!');
             } catch (err: any) {
                 toast.error(err.response?.data?.detail || 'Lỗi xác thực Google từ máy chủ');
