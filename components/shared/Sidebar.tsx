@@ -16,7 +16,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
 
     const menuItems = [
         { name: "Tổng quan", icon: LayoutDashboard, href: "/" },
@@ -46,19 +46,21 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
             </button>
 
             {/* Profile HR */}
-            <div className={cn("flex flex-col items-center border-b border-slate-800/50 transition-all duration-300", isCollapsed ? "p-4 mt-6" : "p-8 pb-6 mt-2")}>
-                <div className="w-12 h-12 rounded-xl bg-linear-to-tr from-blue-500 to-teal-400 p-0.5 mb-2 shadow-lg">
-                    <div className="w-full h-full bg-[#1e293b] rounded-xl flex items-center justify-center">
-                        <span className="font-bold text-white text-sm">TN</span>
-                    </div>
+            {user && (
+                <div className={cn("mt-4 mb-2 flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50", isCollapsed ? "justify-center" : "")}>
+                    <img
+                        src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random`}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-slate-700"
+                    />
+                    {!isCollapsed && (
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="text-sm font-bold text-white truncate">{user.full_name}</span>
+                            <span className="text-xs text-slate-400 truncate">{user.email}</span>
+                        </div>
+                    )}
                 </div>
-                {!isCollapsed && (
-                    <div className="text-center overflow-hidden">
-                        <h2 className="text-white font-semibold text-base tracking-wide whitespace-nowrap">Trần Nam</h2>
-                        <p className="text-slate-400 text-xs mt-0.5 whitespace-nowrap">Trưởng phòng NS</p>
-                    </div>
-                )}
-            </div>
+            )}
 
             {/* Main Menu */}
             <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto no-scrollbar">

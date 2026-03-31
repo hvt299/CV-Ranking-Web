@@ -1,48 +1,63 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import api from '@/lib/api';
+
+interface User {
+    full_name: string;
+    email: string;
+    avatar: string;
+}
 
 interface AuthContextType {
-    user: string | null;
-    login: (token: string, email: string) => void;
+    isAuthenticated: boolean;
+    user: User | null;
+    login: (token: string) => void;
     logout: () => void;
-    loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
+
+    const fetchUserProfile = async () => {
+        try {
+            const res = await api.get('/auth/me');
+            setUser(res.data);
+        } catch (error) {
+            console.error('Failed to fetch user profile', error);
+        }
+    };
 
     useEffect(() => {
         const token = Cookies.get('token');
-        const email = Cookies.get('user_email');
-        if (token && email) {
-            setUser(email);
+        if (token) {
+            setIsAuthenticated(true);
+            fetchUserProfile();
         }
-        setLoading(false);
     }, []);
 
-    const login = (token: string, email: string) => {
+    const login = (token: string) => {
         Cookies.set('token', token, { expires: 1 });
-        Cookies.set('user_email', email, { expires: 1 });
-        setUser(email);
-        router.push('/');
+        setIsAuthenticated(true);
+        fetchUserProfile();
+        router.push('/dashboard');
     };
 
     const logout = () => {
         Cookies.remove('token');
-        Cookies.remove('user_email');
+        setIsAuthenticated(false);
         setUser(null);
         router.push('/login');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
@@ -50,6 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within AuthProvider');
+    if (!context) throw new Error('useAuth must be used within an AuthProvider');
     return context;
-}
+};
