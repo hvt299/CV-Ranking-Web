@@ -1,11 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/shared/Sidebar';
 import Header from '@/components/shared/Header';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const pathname = usePathname();
+
+    const authRoutes = ['/login', '/register', '/verify', '/forgot-password', '/reset-password'];
+    const isAuthPage = authRoutes.includes(pathname);
+
+    if (isAuthPage) {
+        return <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a]">{children}</div>;
+    }
 
     return (
         <div className="flex min-h-screen bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
