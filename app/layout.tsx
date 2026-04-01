@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -10,24 +9,22 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = {
-  title: "ATS Dashboard",
-  description: "Hệ thống quản lý và xếp hạng CV",
+  title: "ATS Dashboard | Tuyển dụng thông minh",
+  description: "Hệ thống quản lý và xếp hạng CV bằng trí tuệ nhân tạo",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <AuthProvider>
-              <DashboardLayout>
-                {children}
-              </DashboardLayout>
+              {/* ĐÃ GỠ BỎ <DashboardLayout> Ở ĐÂY */}
+              {children}
             </AuthProvider>
           </ThemeProvider>
         </GoogleOAuthProvider>
-
         <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>

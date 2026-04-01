@@ -19,7 +19,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const { logout, user } = useAuth();
 
     const menuItems = [
-        { name: "Tổng quan", icon: LayoutDashboard, href: "/" },
+        { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
         { name: "Chiến dịch tuyển dụng", icon: Briefcase, href: "/jobs" },
         { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
         { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
