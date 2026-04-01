@@ -23,6 +23,7 @@ export default function CreateEnterpriseJobPage() {
     const [requiredSkills, setRequiredSkills] = useState([{ name: '', weight: 0.5, min_years: 0 }]);
     const [preferredSkills, setPreferredSkills] = useState([{ name: '', weight: 0.2, min_years: 0 }]);
     const [majorInput, setMajorInput] = useState('');
+    const [isNegotiable, setIsNegotiable] = useState(false);
 
     const handleSkillChange = (type: 'required' | 'preferred', index: number, field: string, value: any) => {
         if (type === 'required') {
@@ -84,7 +85,16 @@ export default function CreateEnterpriseJobPage() {
         try {
             const payload = {
                 ...formData,
-                deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+                deadline: formData.deadline ? new Date(`${formData.deadline}T23:59:59`).toISOString() : null,
+                salary: isNegotiable ? {
+                    min_salary: null,
+                    max_salary: null,
+                    currency: formData.salary.currency
+                } : {
+                    min_salary: formData.salary.min_salary ? Number(formData.salary.min_salary) : null,
+                    max_salary: formData.salary.max_salary ? Number(formData.salary.max_salary) : null,
+                    currency: formData.salary.currency
+                },
                 required_skills: validReqSkills,
                 preferred_skills: validPrefSkills
             };
@@ -210,56 +220,81 @@ export default function CreateEnterpriseJobPage() {
                             <DollarSign className="w-5 h-5 text-amber-500" /> Đãi ngộ & Vận hành
                         </h2>
                         <div className="space-y-6">
-                            {/* SLIDER LƯƠNG */}
+                            {/* SLIDER LƯƠNG & THỎA THUẬN */}
                             <div>
-                                <div className="flex justify-between mb-2">
+                                <div className="flex justify-between items-center mb-2">
                                     <label className="block text-xs font-bold text-slate-500 uppercase">Mức lương dự kiến</label>
-                                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                                        {formData.salary.currency}
-                                    </span>
-                                </div>
 
-                                <div className="space-y-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                                    {/* Lương Tối thiểu */}
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-1">
-                                            <span className="text-slate-500">Tối thiểu:</span>
-                                            <span className="font-bold text-slate-700 dark:text-slate-200">{formatCurrency(formData.salary.min_salary)}</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="1000000"
-                                            max="200000000"
-                                            step="1000000"
-                                            className="w-full accent-blue-600 cursor-pointer"
-                                            value={formData.salary.min_salary}
-                                            onChange={e => {
-                                                const val = Number(e.target.value);
-                                                setFormData({ ...formData, salary: { ...formData.salary, min_salary: Math.min(val, formData.salary.max_salary) } });
-                                            }}
-                                        />
-                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {/* NÚT TICK LƯƠNG THỎA THUẬN */}
+                                        <label className="flex items-center gap-1.5 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                                                checked={isNegotiable}
+                                                onChange={(e) => setIsNegotiable(e.target.checked)}
+                                            />
+                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Thỏa thuận</span>
+                                        </label>
 
-                                    {/* Lương Tối đa */}
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-1">
-                                            <span className="text-slate-500">Tối đa:</span>
-                                            <span className="font-bold text-slate-700 dark:text-slate-200">{formatCurrency(formData.salary.max_salary)}</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="1000000"
-                                            max="500000000"
-                                            step="1000000"
-                                            className="w-full accent-emerald-500 cursor-pointer"
-                                            value={formData.salary.max_salary}
-                                            onChange={e => {
-                                                const val = Number(e.target.value);
-                                                setFormData({ ...formData, salary: { ...formData.salary, max_salary: Math.max(val, formData.salary.min_salary) } });
-                                            }}
-                                        />
+                                        {/* Badge tiền tệ */}
+                                        {!isNegotiable && (
+                                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                                {formData.salary.currency}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
+
+                                {/* Khối Slider */}
+                                {!isNegotiable ? (
+                                    <div className="space-y-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        {/* Lương Tối thiểu */}
+                                        <div>
+                                            <div className="flex justify-between text-sm mb-1">
+                                                <span className="text-slate-500">Tối thiểu:</span>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200">{formatCurrency(formData.salary.min_salary)}</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="1000000"
+                                                max="200000000"
+                                                step="1000000"
+                                                className="w-full accent-blue-600 cursor-pointer"
+                                                value={formData.salary.min_salary}
+                                                onChange={e => {
+                                                    const val = Number(e.target.value);
+                                                    setFormData({ ...formData, salary: { ...formData.salary, min_salary: Math.min(val, formData.salary.max_salary) } });
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Lương Tối đa */}
+                                        <div>
+                                            <div className="flex justify-between text-sm mb-1">
+                                                <span className="text-slate-500">Tối đa:</span>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200">{formatCurrency(formData.salary.max_salary)}</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="1000000"
+                                                max="500000000"
+                                                step="1000000"
+                                                className="w-full accent-emerald-500 cursor-pointer"
+                                                value={formData.salary.max_salary}
+                                                onChange={e => {
+                                                    const val = Number(e.target.value);
+                                                    setFormData({ ...formData, salary: { ...formData.salary, max_salary: Math.max(val, formData.salary.min_salary) } });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Giao diện thay thế khi chọn Lương thỏa thuận */
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center">
+                                        <span className="text-sm font-bold text-slate-500">Mức lương sẽ được thỏa thuận khi phỏng vấn</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* THỜI GIAN LÀM VIỆC + QUICKS TAGS */}
