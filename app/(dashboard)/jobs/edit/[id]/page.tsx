@@ -452,10 +452,10 @@ export default function EditEnterpriseJobPage() {
 
                             <div className="space-y-2">
                                 {requiredSkills.map((skill, index) => (
-                                    <div key={index} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 flex gap-2 items-center">
-                                        <input type="text" placeholder="VD: ReactJS" className="w-1/3 p-1.5 bg-slate-50 rounded outline-none text-sm" value={skill.name} onChange={e => handleSkillChange('required', index, 'name', e.target.value)} />
-                                        <input type="number" step="0.1" className="w-1/4 p-1.5 bg-slate-50 rounded outline-none text-sm text-center" value={skill.weight} onChange={e => handleSkillChange('required', index, 'weight', Number(e.target.value))} />
-                                        <input type="number" step="0.5" className="w-1/4 p-1.5 bg-slate-50 rounded outline-none text-sm text-center" value={skill.min_years} onChange={e => handleSkillChange('required', index, 'min_years', Number(e.target.value))} />
+                                    <div key={index} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 flex gap-2 items-center">
+                                        <input type="text" placeholder="VD: ReactJS" className="w-1/3 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm" value={skill.name} onChange={e => handleSkillChange('required', index, 'name', e.target.value)} />
+                                        <input type="number" step="0.1" className="w-1/4 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm text-center" value={skill.weight} onChange={e => handleSkillChange('required', index, 'weight', Number(e.target.value))} />
+                                        <input type="number" step="0.5" className="w-1/4 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm text-center" value={skill.min_years} onChange={e => handleSkillChange('required', index, 'min_years', Number(e.target.value))} />
                                         <button type="button" onClick={() => removeSkillRow('required', index)} className="w-8 flex justify-center text-red-400 hover:text-red-600"><X className="w-4 h-4" /></button>
                                     </div>
                                 ))}
@@ -477,10 +477,10 @@ export default function EditEnterpriseJobPage() {
 
                             <div className="space-y-2">
                                 {preferredSkills.map((skill, index) => (
-                                    <div key={index} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 flex gap-2 items-center">
-                                        <input type="text" placeholder="VD: AWS" className="w-1/3 p-1.5 bg-slate-50 rounded outline-none text-sm" value={skill.name} onChange={e => handleSkillChange('preferred', index, 'name', e.target.value)} />
-                                        <input type="number" step="0.1" className="w-1/4 p-1.5 bg-slate-50 rounded outline-none text-sm text-center" value={skill.weight} onChange={e => handleSkillChange('preferred', index, 'weight', Number(e.target.value))} />
-                                        <input type="number" step="0.5" className="w-1/4 p-1.5 bg-slate-50 rounded outline-none text-sm text-center" value={skill.min_years} onChange={e => handleSkillChange('preferred', index, 'min_years', Number(e.target.value))} />
+                                    <div key={index} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 flex gap-2 items-center">
+                                        <input type="text" placeholder="VD: AWS" className="w-1/3 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm" value={skill.name} onChange={e => handleSkillChange('preferred', index, 'name', e.target.value)} />
+                                        <input type="number" step="0.1" className="w-1/4 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm text-center" value={skill.weight} onChange={e => handleSkillChange('preferred', index, 'weight', Number(e.target.value))} />
+                                        <input type="number" step="0.5" className="w-1/4 p-1.5 bg-slate-50 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded outline-none text-sm text-center" value={skill.min_years} onChange={e => handleSkillChange('preferred', index, 'min_years', Number(e.target.value))} />
                                         <button type="button" onClick={() => removeSkillRow('preferred', index)} className="w-8 flex justify-center text-red-400 hover:text-red-600"><X className="w-4 h-4" /></button>
                                     </div>
                                 ))}

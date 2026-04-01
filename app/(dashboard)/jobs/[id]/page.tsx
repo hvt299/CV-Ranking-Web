@@ -36,6 +36,9 @@ export default function JobLeaderboardPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
+    const [editingNote, setEditingNote] = useState<{ id: string, currentNote: string } | null>(null);
+    const [noteInput, setNoteInput] = useState('');
+
     const fetchRanking = useCallback(async () => {
         try {
             const res = await api.get(`/jobs/${jobId}/ranking`);
@@ -108,6 +111,32 @@ export default function JobLeaderboardPage() {
             setCandidates(prev => prev.filter(cv => cv.id !== cvId));
         } catch (error) {
             toast.error("Lỗi khi xóa CV");
+        }
+    };
+
+    const handleSaveNote = async () => {
+        if (!editingNote) return;
+
+        try {
+            await api.patch(`/cv/${editingNote.id}`, { note: noteInput });
+
+            if (noteInput.trim() === '') {
+                toast.success("Đã xóa trắng ghi chú");
+            } else {
+                toast.success("Đã lưu ghi chú!");
+            }
+
+            setCandidates(prev => prev.map(cv => {
+                if (cv.id === editingNote.id) {
+                    return { ...cv, note: noteInput };
+                }
+                return cv;
+            }));
+
+            setEditingNote(null);
+            setNoteInput('');
+        } catch (error) {
+            toast.error("Lỗi khi lưu ghi chú");
         }
     };
 
@@ -293,11 +322,18 @@ export default function JobLeaderboardPage() {
                                                 <div className="flex items-start gap-3">
                                                     <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 mt-1"><FileText className="w-4 h-4" /></div>
                                                     <div>
-                                                        <p className="font-bold text-sm text-slate-800 dark:text-white line-clamp-1 mb-1" title={cv.filename}>{cv.filename}</p>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <p className="font-bold text-sm text-slate-800 dark:text-white line-clamp-1" title={cv.filename}>{cv.filename}</p>
+                                                            {cv.note && (
+                                                                <span title={cv.note} className="text-amber-500 cursor-help">
+                                                                    <FileText className="w-3.5 h-3.5" />
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <div className="space-y-1">
                                                             {cv.candidate_info?.email && <a href={`mailto:${cv.candidate_info.email}`} className="text-xs text-slate-500 hover:text-blue-600 hover:underline flex items-center gap-1.5"><Mail className="w-3 h-3" /> {cv.candidate_info.email}</a>}
                                                             {cv.candidate_info?.phone && <a href={`tel:${cv.candidate_info.phone.replace(/[^0-9+]/g, '')}`} className="text-xs text-slate-500 hover:text-blue-600 hover:underline flex items-center gap-1.5"><Phone className="w-3 h-3" /> {cv.candidate_info.phone}</a>}
-                                                            {cv.candidate_info?.github && <a href={cv.candidate_info.github.startsWith('http') ? cv.candidate_info.github : `https://${cv.candidate_info.github}`} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1.5"><GitCommitHorizontal className="w-3 h-3" /> Github Profile</a>}
+                                                            {cv.candidate_info?.github && <a href={cv.candidate_info.github.startsWith('http') ? cv.candidate_info.github : `https://${cv.candidate_info.github}`} target="_blank" rel="noreferrer" className="text-xs text-slate-500 hover:text-blue-600 hover:underline flex items-center gap-1.5 transition-colors"><GitCommitHorizontal className="w-3 h-3" /> {cv.candidate_info.github}</a>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -350,6 +386,17 @@ export default function JobLeaderboardPage() {
                                                     >
                                                         <Trash2 className="w-3 h-3" /> Xóa CV
                                                     </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            const currentNote = cv.note || '';
+                                                            setEditingNote({ id: cv.id, currentNote: currentNote });
+                                                            setNoteInput(currentNote);
+                                                        }}
+                                                        className="text-[10px] flex items-center gap-1 font-bold text-slate-400 hover:text-blue-600 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                                                    >
+                                                        <FileText className="w-3 h-3" /> Ghi chú
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -360,6 +407,29 @@ export default function JobLeaderboardPage() {
                     </div>
                 )}
             </div>
+
+            {/* MODAL GHI CHÚ */}
+            {editingNote && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-blue-500" />
+                            {editingNote.currentNote ? 'Thay đổi ghi chú' : 'Thêm Ghi chú'}
+                        </h3>
+                        <textarea
+                            rows={4}
+                            className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm mb-4 resize-none focus:border-blue-500 transition-colors"
+                            placeholder="Nhập đánh giá, ghi chú phỏng vấn, điểm mạnh/yếu..."
+                            value={noteInput}
+                            onChange={e => setNoteInput(e.target.value)}
+                        ></textarea>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setEditingNote(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">Hủy</button>
+                            <button onClick={handleSaveNote} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-lg shadow-blue-500/30">Lưu lại</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

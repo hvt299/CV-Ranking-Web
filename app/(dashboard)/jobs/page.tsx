@@ -17,6 +17,7 @@ interface Job {
     job_level: string;
     status: string;
     created_at: string;
+    deadline?: string | null;
 }
 
 export default function JobsListPage() {
@@ -130,44 +131,65 @@ export default function JobsListPage() {
                 <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
             ) : filteredJobs.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredJobs.map((job) => (
-                        <div key={job.id} className="group bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all flex flex-col justify-between h-full relative overflow-hidden">
-                            {/* Dải màu trạng thái */}
-                            <div className={`absolute top-0 left-0 w-full h-1 ${job.status === 'closed' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
+                    {filteredJobs.map((job) => {
+                        const isClosedManually = job.status === 'closed';
+                        const isExpired = job.deadline && new Date(job.deadline).getTime() < new Date().getTime();
 
-                            <div>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg ${job.status === 'closed' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                        {job.status === 'closed' ? 'ĐÃ ĐÓNG' : 'ĐANG MỞ'}
+                        let badgeColor = 'bg-emerald-50 text-emerald-600';
+                        let stripeColor = 'bg-emerald-500';
+                        let statusText = 'ĐANG MỞ';
+
+                        if (isClosedManually) {
+                            badgeColor = 'bg-rose-50 text-rose-600';
+                            stripeColor = 'bg-rose-500';
+                            statusText = 'ĐÃ ĐÓNG';
+                        } else if (isExpired) {
+                            badgeColor = 'bg-amber-50 text-amber-600';
+                            stripeColor = 'bg-amber-500';
+                            statusText = 'HẾT HẠN';
+                        }
+
+                        return (
+                            <div key={job.id} className="group bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all flex flex-col justify-between h-full relative overflow-hidden">
+                                {/* Dải màu trạng thái */}
+                                <div className={`absolute top-0 left-0 w-full h-1 ${stripeColor}`}></div>
+
+                                <div>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg ${badgeColor}`}>
+                                            {statusText}
+                                        </div>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-amber-600 transition-colors" title="Chỉnh sửa"><Edit2 className="w-4 h-4" /></Link>
+                                            <button onClick={() => handleDelete(job.id)} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-rose-600 transition-colors" title="Xóa chiến dịch"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-amber-600 transition-colors" title="Chỉnh sửa"><Edit2 className="w-4 h-4" /></Link>
-                                        <button onClick={() => handleDelete(job.id)} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-rose-600 transition-colors" title="Xóa chiến dịch"><Trash2 className="w-4 h-4" /></button>
+
+                                    <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-3 line-clamp-2 leading-tight" title={job.title}>{job.title}</h3>
+
+                                    <div className="space-y-2.5 mb-6">
+                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                            <Building2 className="w-4 h-4 text-slate-400" /> {job.company_name}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                            <MapPin className="w-4 h-4 text-slate-400" /> {job.work_mode} • {job.job_level}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-3 line-clamp-2 leading-tight" title={job.title}>{job.title}</h3>
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between mt-auto">
+                                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isExpired ? 'text-amber-500' : 'text-slate-500'}`}>
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {job.deadline ? `Hạn nộp: ${new Date(job.deadline).toLocaleDateString('vi-VN')}` : 'Không thời hạn'}
+                                    </div>
 
-                                <div className="space-y-2.5 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                        <Building2 className="w-4 h-4 text-slate-400" /> {job.company_name}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                        <MapPin className="w-4 h-4 text-slate-400" /> {job.work_mode} • {job.job_level}
-                                    </div>
+                                    <Link href={`/jobs/${job.id}`} className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors">
+                                        Mở Leaderboard <ExternalLink className="w-4 h-4" />
+                                    </Link>
                                 </div>
                             </div>
-
-                            <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between mt-auto">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                                    <Calendar className="w-3.5 h-3.5" /> {new Date(job.created_at).toLocaleDateString('vi-VN')}
-                                </div>
-                                <Link href={`/jobs/${job.id}`} className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors">
-                                    Mở Leaderboard <ExternalLink className="w-4 h-4" />
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
