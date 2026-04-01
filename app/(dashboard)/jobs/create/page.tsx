@@ -89,9 +89,9 @@ export default function CreateEnterpriseJobPage() {
                 preferred_skills: validPrefSkills
             };
 
-            await api.post('/jobs', payload);
+            const res = await api.post('/jobs', payload);
             toast.success('Khởi tạo chiến dịch thành công!');
-            router.push('/jobs');
+            router.push(`/jobs/${res.data.job_id}`);
         } catch (error: any) {
             toast.error(error.response?.data?.detail || 'Lỗi hệ thống khi tạo Job');
         } finally {
@@ -378,7 +378,7 @@ export default function CreateEnterpriseJobPage() {
                             </div>
                         </div>
 
-                        {/* TIÊU ĐỀ KỸ NĂNG ƯU TIÊN */}
+                        {/* KỸ NĂNG ƯU TIÊN */}
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Kỹ năng Ưu tiên (Điểm cộng)</label>
