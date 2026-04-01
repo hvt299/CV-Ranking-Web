@@ -1,7 +1,8 @@
 'use client';
 
-import { Search, Bell, Plus, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Plus, Sun, Moon, ArrowRight } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function Header() {
@@ -42,10 +43,10 @@ export default function Header() {
                 </button>
 
                 {/* Nút Tạo mới */}
-                <button className="flex items-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-blue-500/30 ml-2">
-                    <Plus className="w-4 h-4 stroke-3" />
-                    Tạo chiến dịch
-                </button>
+                <Link href="/" className="flex items-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-blue-500/30 ml-2">
+                    <ArrowRight className="w-4 h-4 stroke-3" />
+                    Về trang chủ
+                </Link>
             </div>
         </header>
     );

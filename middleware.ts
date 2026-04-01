@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
     const { pathname } = request.nextUrl;
 
-    const protectedRoutes = ['/', '/jobs', '/candidates', '/analytics'];
+    const protectedRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics'];
     const isProtectedRoute = protectedRoutes.some(route =>
         pathname === route || pathname.startsWith(`${route}/`)
     );
@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
 
     const authRoutes = ['/login', '/register', '/verify', '/forgot-password', '/reset-password'];
     if (authRoutes.includes(pathname) && token) {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     return NextResponse.next();
