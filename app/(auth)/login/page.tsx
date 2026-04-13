@@ -54,24 +54,24 @@ export default function LoginPage() {
     });
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
+        <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center p-4 transition-colors duration-300">
+            <div className="max-w-md w-full bg-white dark:bg-[#1e293b] rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none p-10 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200">
+                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200 dark:shadow-none">
                         <Briefcase className="text-white w-6 h-6" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800">Chào mừng trở lại!</h1>
-                    <p className="text-slate-500 text-sm mt-1">Hệ thống quản lý tuyển dụng AI</p>
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Chào mừng trở lại!</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Hệ thống quản lý tuyển dụng AI</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email công việc</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email công việc</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                             <input
                                 type="email" required
-                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                                className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 placeholder="name@company.com"
                                 onChange={(e) => setEmail(e.target.value)}
                             />
@@ -80,8 +80,8 @@ export default function LoginPage() {
 
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-sm font-semibold text-slate-700">Mật khẩu</label>
-                            <Link href="/forgot-password" className="text-sm font-semibold text-blue-600 hover:underline">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Mật khẩu</label>
+                            <Link href="/forgot-password" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                                 Quên mật khẩu?
                             </Link>
                         </div>
@@ -89,35 +89,33 @@ export default function LoginPage() {
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                             <input
                                 type="password" required
-                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                                className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                                 placeholder="••••••••"
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                     </div>
 
-                    {error && <p className="text-red-500 text-xs font-medium bg-red-50 p-3 rounded-lg">{error}</p>}
+                    {error && <p className="text-rose-500 text-xs font-medium bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-3 rounded-lg">{error}</p>}
 
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group">
+                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2 group">
                         Đăng nhập ngay
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </form>
 
                 <div className="mt-6 flex items-center gap-4">
-                    <div className="h-px bg-slate-200 flex-1"></div>
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hoặc</span>
-                    <div className="h-px bg-slate-200 flex-1"></div>
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+                    <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Hoặc</span>
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
                 </div>
 
                 <div className="mt-6">
-                    {/* NÚT GOOGLE */}
                     <button
                         type="button"
                         onClick={() => loginWithGoogle()}
-                        className="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-3"
+                        className="w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-3"
                     >
-                        {/* Biểu tượng SVG Google siêu nét */}
                         <svg viewBox="0 0 24 24" className="w-5 h-5">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -128,9 +126,9 @@ export default function LoginPage() {
                     </button>
                 </div>
 
-                <p className="text-center mt-8 text-slate-500 text-sm">
+                <p className="text-center mt-8 text-slate-500 dark:text-slate-400 text-sm">
                     Chưa có tài khoản?{' '}
-                    <Link href="/register" className="text-blue-600 font-bold hover:underline">Đăng ký ngay</Link>
+                    <Link href="/register" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">Đăng ký ngay</Link>
                 </p>
             </div>
         </div>
