@@ -56,9 +56,9 @@ function ResetPasswordContent() {
     if (!token) {
         return (
             <div className="text-center">
-                <h1 className="text-2xl font-bold text-rose-600 mb-2">Lỗi xác thực</h1>
-                <p className="text-slate-500 mb-6">Liên kết đặt lại mật khẩu của bạn không hợp lệ hoặc bị thiếu.</p>
-                <Link href="/forgot-password" className="text-blue-600 font-bold hover:underline">Yêu cầu liên kết mới</Link>
+                <h1 className="text-2xl font-bold text-rose-600 dark:text-rose-400 mb-2">Lỗi xác thực</h1>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">Liên kết đặt lại mật khẩu của bạn không hợp lệ hoặc bị thiếu.</p>
+                <Link href="/forgot-password" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">Yêu cầu liên kết mới</Link>
             </div>
         );
     }
@@ -66,38 +66,38 @@ function ResetPasswordContent() {
     return (
         <>
             <div className="flex flex-col items-center mb-8 text-center">
-                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200">
+                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200 dark:shadow-none">
                     <ShieldCheck className="text-white w-6 h-6" />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-800">Tạo mật khẩu mới</h1>
-                <p className="text-slate-500 text-sm mt-2">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Tạo mật khẩu mới</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Mật khẩu mới</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu mới</label>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
                             type="password" required minLength={8}
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1.5 font-medium">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
                         *Tối thiểu 8 ký tự, gồm 1 chữ hoa, 1 chữ thường, 1 số & 1 ký tự đặc biệt.
                     </p>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Xác nhận Mật khẩu mới</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Xác nhận Mật khẩu mới</label>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
                             type="password" required
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -105,7 +105,7 @@ function ResetPasswordContent() {
                     </div>
                 </div>
 
-                <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-4">
+                <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg dark:shadow-none flex items-center justify-center gap-2 mt-4">
                     {isLoading ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
                 </button>
             </form>
@@ -115,9 +115,9 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
-                <Suspense fallback={<div className="text-center text-slate-500">Đang tải dữ liệu...</div>}>
+        <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center p-4 transition-colors duration-300">
+            <div className="max-w-md w-full bg-white dark:bg-[#1e293b] rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none p-10 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+                <Suspense fallback={<div className="text-center text-slate-500 dark:text-slate-400">Đang tải dữ liệu...</div>}>
                     <ResetPasswordContent />
                 </Suspense>
             </div>
