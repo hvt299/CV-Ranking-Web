@@ -7,21 +7,21 @@ import api from '@/lib/api';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
-  const [recentCvs, setRecentCvs] = useState<any[]>([]);
+  const [recentApps, setRecentApps] = useState<any[]>([]);
   const [openJobs, setOpenJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsRes, cvsRes, jobsRes] = await Promise.all([
+        const [statsRes, appsRes, jobsRes] = await Promise.all([
           api.get('/jobs/dashboard/analytics'),
-          api.get('/cv/all'),
+          api.get('/cv/applications/recent'),
           api.get('/jobs')
         ]);
 
         setStats(statsRes.data);
-        setRecentCvs(cvsRes.data);
+        setRecentApps(appsRes.data);
         setOpenJobs(jobsRes.data.filter((j: any) => j.status !== 'closed'));
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu Dashboard:", error);
@@ -32,7 +32,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  const highScoringCvs = recentCvs.filter(cv => (cv.ai_score?.total_score || 0) >= 80).length;
+  const highScoringApps = recentApps.filter(app => (app.ai_score?.total_score || 0) >= 80).length;
 
   const todayString = new Date().toLocaleDateString('vi-VN', {
     day: 'numeric', month: 'long', year: 'numeric'
@@ -49,29 +49,22 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Responsive: 1 cột mobile, 2 cột tablet, 4 cột PC */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Chiến dịch (Jobs)" value={stats?.total_jobs || 0} icon={Briefcase} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-500/10" />
-        <StatCard title="CV Đã Phân Tích" value={stats?.total_cvs || 0} icon={FileText} color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-500/10" />
-        <StatCard title="AI Đề Xuất (>80đ)" value={highScoringCvs} icon={Sparkles} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-500/10" />
+        <StatCard title="CV Đã Phân Tích" value={stats?.total_cvs_in_pool || 0} icon={FileText} color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-500/10" />
+        <StatCard title="AI Đề Xuất (>80đ)" value={highScoringApps} icon={Sparkles} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-500/10" />
         <StatCard title="Đang Phỏng Vấn" value={stats?.status_breakdown?.['Phỏng vấn'] || 0} icon={Users} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-500/10" />
       </div>
 
-      {/* Responsive: 1 cột bự trên tablet, tách 3 cột trên PC */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* Bảng CV */}
+        {/* Bảng Lượt Ứng Tuyển Mới */}
         <div className="col-span-1 lg:col-span-2 bg-white dark:bg-[#1e293b] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">CV Mới Phân Tích</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Lượt Ứng Tuyển Mới</h2>
             </div>
-            <Link href="/candidates" className="text-blue-600 dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-slate-800 px-4 py-2 rounded-xl transition-colors">
-              Xem tất cả
-            </Link>
           </div>
 
-          {/* Vùng Bảng cuộn ngang được */}
           <div className="overflow-x-auto no-scrollbar">
             <div className="min-w-150">
               <div className="grid grid-cols-12 gap-4 px-4 pb-3 border-b border-slate-100 dark:border-slate-800/50 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -82,22 +75,22 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-2 mt-4 flex-1">
-                {recentCvs.slice(0, 5).map((cv) => {
-                  const displayName = cv.candidate_info?.email?.split('@')[0] || cv.filename.split('.')[0];
+                {recentApps.slice(0, 5).map((app) => {
+                  const displayName = app.candidate_email?.split('@')[0] || app.filename?.split('.')[0] || "Ứng viên ẩn";
                   return (
                     <ApplicantRow
-                      key={cv.id}
+                      key={app.id}
                       name={displayName}
-                      role={cv.job_title || 'Chiến dịch đã ẩn'}
-                      score={cv.ai_score?.total_score || 0}
-                      date={new Date(cv.created_at).toLocaleDateString('vi-VN')}
-                      status={cv.status || 'Mới'}
-                      jobId={cv.job_id}
+                      role={app.job_title}
+                      score={app.ai_score?.total_score || 0}
+                      date={new Date(app.applied_at || new Date()).toLocaleDateString('vi-VN')}
+                      status={app.status || 'Mới'}
+                      jobId={app.job_id}
                     />
                   )
                 })}
-                {recentCvs.length === 0 && (
-                  <div className="text-center py-8 text-slate-500 text-sm">Chưa có CV nào trong hệ thống.</div>
+                {recentApps.length === 0 && (
+                  <div className="text-center py-8 text-slate-500 text-sm">Chưa có CV nào được đưa vào chiến dịch.</div>
                 )}
               </div>
             </div>
@@ -115,7 +108,7 @@ export default function Dashboard() {
 
           <div className="space-y-4 flex-1">
             {openJobs.slice(0, 4).map((job) => {
-              const cvCount = recentCvs.filter(cv => cv.job_id === job.id).length;
+              const cvCount = recentApps.filter(app => app.job_id === job.id).length;
               const reqSkills = job.required_skills?.slice(0, 3).map((s: any) => s.name) || [];
 
               return (
