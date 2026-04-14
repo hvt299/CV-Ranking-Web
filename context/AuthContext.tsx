@@ -9,6 +9,7 @@ interface User {
     full_name: string;
     email: string;
     avatar: string;
+    role: 'hr' | 'applicant' | 'admin';
 }
 
 interface AuthContextType {
@@ -45,8 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = (token: string) => {
         Cookies.set('token', token, { expires: 1 });
         setIsAuthenticated(true);
-        fetchUserProfile();
-        router.push('/dashboard');
+        // fetchUserProfile sẽ redirect sau khi biết role
+        api.get('/auth/me').then(res => {
+            setUser(res.data);
+            const role = res.data.role;
+            if (role === 'applicant') {
+                router.push('/apply');
+            } else {
+                router.push('/dashboard');
+            }
+        }).catch(() => router.push('/dashboard'));
     };
 
     const logout = () => {
