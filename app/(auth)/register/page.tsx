@@ -14,6 +14,7 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole] = useState<'hr' | 'applicant'>('applicant');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -33,7 +34,8 @@ export default function RegisterPage() {
             await api.post('/auth/register', {
                 full_name: fullName,
                 email: email,
-                password: password
+                password: password,
+                role: role
             });
 
             toast.success('Đăng ký thành công! Vui lòng kiểm tra hộp thư email của bạn để xác thực tài khoản.', { duration: 5000 });
@@ -92,6 +94,29 @@ export default function RegisterPage() {
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                             />
+                        </div>
+                    </div>
+
+                    {/* CHỌN ROLE */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Bạn là</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setRole('applicant')}
+                                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-sm font-bold ${role === 'applicant' ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'}`}
+                            >
+                                <span className="text-xl">👤</span>
+                                Ứng viên
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRole('hr')}
+                                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-sm font-bold ${role === 'hr' ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'}`}
+                            >
+                                <span className="text-xl">💼</span>
+                                Nhà tuyển dụng (HR)
+                            </button>
                         </div>
                     </div>
 
