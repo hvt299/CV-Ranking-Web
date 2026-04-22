@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Briefcase, Users, CalendarCheck, Mail, BarChart2, Settings, HelpCircle, ChevronLeft, ChevronRight, Hexagon, X } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useAuth } from "@/context/AuthContext";
 
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
@@ -17,6 +18,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: SidebarProps) {
     const pathname = usePathname();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
 
     const menuItems = [
         { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
@@ -28,7 +31,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     ];
 
     const bottomItems = [
-        { name: "Cài đặt hệ thống", icon: Settings, href: "/settings" },
+        ...(isAdmin ? [{ name: "Cài đặt hệ thống", icon: Settings, href: "/settings" }] : []),
         { name: "Hỗ trợ", icon: HelpCircle, href: "/help" },
     ];
 
