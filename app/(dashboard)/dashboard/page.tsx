@@ -76,7 +76,9 @@ export default function Dashboard() {
 
               <div className="space-y-2 mt-4 flex-1">
                 {recentApps.slice(0, 5).map((app) => {
-                  const displayName = app.candidate_email?.split('@')[0] || app.filename?.split('.')[0] || "Ứng viên ẩn";
+                  const displayName = app.filename
+                    ? app.filename.replace(/-TopCV\.vn.*/i, '').replace(/-/g, ' ')
+                    : app.candidate_email?.split('@')[0] || "Ứng viên ẩn";
                   return (
                     <ApplicantRow
                       key={app.id}
