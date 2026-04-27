@@ -1,9 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, FileText, Mail, Phone, GraduationCap, Briefcase, GitCommitHorizontal, UploadCloud, FolderOutput, Trash2, Users, Globe } from 'lucide-react';
+import {
+    Search, FileText, Mail, Phone, GraduationCap, Briefcase,
+    GitCommitHorizontal, UploadCloud, FolderOutput, Trash2,
+    Users, Globe, Eye
+} from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import CandidateSkillsModal from '@/components/shared/CandidateSkillsModal';
 
 export default function TalentPoolPage() {
     const [candidates, setCandidates] = useState<any[]>([]);
@@ -16,6 +21,7 @@ export default function TalentPoolPage() {
 
     const [mappingCvId, setMappingCvId] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string>('');
+    const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any>(null);
 
     const fetchData = async () => {
         try {
@@ -177,31 +183,30 @@ export default function TalentPoolPage() {
                                             </div>
                                         </td>
 
-                                        {/* CỘT 2: HỌC VẤN & KINH NGHIỆM (CÓ TOOLTIP) */}
+                                        {/* CỘT 2: HỌC VẤN & KINH NGHIỆM */}
                                         <td className="p-4">
                                             <div className="space-y-2 mb-2">
-                                                <div className="flex items-center gap-2 text-xs"><GraduationCap className="w-3 h-3 text-slate-400" /> <span className="font-semibold text-slate-700 dark:text-slate-200">{cv.candidate_info?.education_level || 'Không đề cập'}</span></div>
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <GraduationCap className="w-3 h-3 text-slate-400" />
+                                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                                        {cv.candidate_info?.education_level || 'Không đề cập'}
+                                                    </span>
+                                                </div>
 
-                                                <div className="flex items-center gap-2 text-xs group/exp relative cursor-help">
+                                                <div className="flex items-center gap-2 text-xs">
                                                     <Briefcase className="w-3 h-3 text-slate-400" />
-                                                    <span className="font-semibold text-slate-700 dark:text-slate-200 border-b border-dashed border-slate-400">
+                                                    <span className="font-semibold text-slate-700 dark:text-slate-200 border-b border-dashed border-slate-400 cursor-help" title="Số năm kinh nghiệm hệ thống dự đoán">
                                                         {cv.candidate_info?.years_of_experience || 0} năm KN
                                                     </span>
-                                                    {Object.keys(skillExp).length > 0 && (
-                                                        <div className="fixed mb-2 hidden group-hover/exp:block z-10 w-48 p-3 bg-slate-800 text-white text-[11px] rounded-lg shadow-lg border border-slate-700">
-                                                            <p className="font-bold border-b border-slate-600 pb-1 mb-2 text-slate-300">Chi tiết kinh nghiệm (AI quét):</p>
-                                                            <div className="grid grid-cols-1 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                                                                {Object.entries(skillExp).map(([sk, years]) => (
-                                                                    <div key={sk} className="flex justify-between items-center">
-                                                                        <span className="capitalize font-medium">{sk}</span>
-                                                                        <span className="text-blue-400 font-bold bg-blue-900/50 px-1.5 py-0.5 rounded">{years as number} năm</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-slate-800 border-b border-r border-slate-700 transform rotate-45"></div>
-                                                        </div>
-                                                    )}
                                                 </div>
+
+                                                {/* NÚT MỞ MODAL XEM CHI TIẾT */}
+                                                <button
+                                                    onClick={() => setSelectedCandidateForSkills(cv)}
+                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 px-2 py-1.5 rounded-md transition-colors w-max mt-1"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" /> Xem chi tiết kỹ năng & kinh nghiệm
+                                                </button>
                                             </div>
                                         </td>
 
@@ -215,25 +220,15 @@ export default function TalentPoolPage() {
                                                     </span>
                                                 ))}
 
-                                                {/* Phần Tooltip cho kỹ năng bổ sung */}
+                                                {/* Nút chỉ báo còn kỹ năng bị ẩn */}
                                                 {cv.extracted_skills?.length > 5 && (
-                                                    <div className="flex items-center group/skill relative cursor-help">
-                                                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-200">
-                                                            +{cv.extracted_skills.length - 5}
-                                                        </span>
-
-                                                        <div className="fixed mb-2 hidden group-hover/skill:block z-10 w-48 p-3 bg-slate-800 text-white text-[11px] rounded-lg shadow-lg border border-slate-700">
-                                                            <p className="font-bold border-b border-slate-600 pb-1 mb-2 text-slate-300">Kỹ năng bổ sung (AI quét):</p>
-                                                            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                                                                {cv.extracted_skills.slice(5).map((skill: string, idx: number) => (
-                                                                    <span key={idx} className="bg-slate-700 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold text-blue-300">
-                                                                        {skill}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-slate-800 border-b border-r border-slate-700 transform rotate-45"></div>
-                                                        </div>
-                                                    </div>
+                                                    <span
+                                                        className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-200 cursor-pointer hover:bg-blue-100"
+                                                        onClick={() => setSelectedCandidateForSkills(cv)}
+                                                        title="Bấm vào để xem toàn bộ kỹ năng"
+                                                    >
+                                                        +{cv.extracted_skills.length - 5} kỹ năng khác
+                                                    </span>
                                                 )}
                                             </div>
                                         </td>
@@ -284,6 +279,13 @@ export default function TalentPoolPage() {
                     </div>
                 </div>
             )}
+
+            {/* MODAL KỸ NĂNG */}
+            <CandidateSkillsModal
+                isOpen={!!selectedCandidateForSkills}
+                onClose={() => setSelectedCandidateForSkills(null)}
+                candidate={selectedCandidateForSkills}
+            />
         </div>
     );
 }
