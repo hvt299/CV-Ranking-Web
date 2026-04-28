@@ -6,10 +6,12 @@ import {
     Users, ArrowLeft, FileText, CheckCircle2,
     XCircle, Award, Briefcase, Mail, Phone,
     GraduationCap, Building2, GitCommitHorizontal, ChevronDown, ChevronUp,
-    DollarSign, Clock, MapPin, Search, Filter, Trash2, Globe
+    DollarSign, Clock, MapPin, Search, Filter, Trash2, Globe, AlertTriangle, Eye
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import CandidateSkillsModal from '@/components/shared/CandidateSkillsModal';
+import JobDetailsContent from '@/components/shared/JobDetailsContent';
 
 const CV_STATUSES = [
     { value: 'Mới', label: 'Mới', color: 'bg-blue-100 text-blue-700' },
@@ -35,6 +37,7 @@ export default function JobLeaderboardPage() {
 
     const [editingNote, setEditingNote] = useState<{ id: string, currentNote: string } | null>(null);
     const [noteInput, setNoteInput] = useState('');
+    const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any>(null);
 
     const fetchRanking = useCallback(async () => {
         try {
@@ -135,19 +138,7 @@ export default function JobLeaderboardPage() {
 
                 {/* KHU VỰC CHI TIẾT JOB */}
                 {showJobDetails && (
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 border-t border-slate-200 dark:border-slate-700 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-4">
-                            <div><h3 className="text-sm font-bold text-slate-800 dark:text-white mb-1 uppercase tracking-wider">Mô tả công việc</h3><p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo?.description}</p></div>
-                            <div><h3 className="text-sm font-bold text-slate-800 dark:text-white mb-1 uppercase tracking-wider">Yêu cầu ứng viên</h3><p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo?.requirements}</p></div>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-                                <div className="flex items-center gap-3 text-sm"><div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><DollarSign className="w-4 h-4" /></div><div><p className="text-xs text-slate-400 font-bold uppercase">Mức lương</p><p className="font-bold text-slate-700 dark:text-slate-200">{jobInfo?.salary?.min_salary ? `${formatCurrency(jobInfo.salary.min_salary)} - ${formatCurrency(jobInfo.salary.max_salary)} ${jobInfo.salary.currency}` : 'Thỏa thuận'}</p></div></div>
-                                <div className="flex items-center gap-3 text-sm"><div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Clock className="w-4 h-4" /></div><div><p className="text-xs text-slate-400 font-bold uppercase">Thời gian làm việc</p><p className="font-semibold text-slate-700 dark:text-slate-200">{jobInfo?.working_hours}</p></div></div>
-                                <div className="flex items-center gap-3 text-sm"><div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><GraduationCap className="w-4 h-4" /></div><div><p className="text-xs text-slate-400 font-bold uppercase">Yêu cầu Kinh nghiệm</p><p className="font-semibold text-slate-700 dark:text-slate-200">{jobInfo?.min_yoe} năm • {jobInfo?.education?.min_level}</p></div></div>
-                            </div>
-                        </div>
-                    </div>
+                    <JobDetailsContent jobInfo={jobInfo} />
                 )}
             </div>
 
@@ -249,21 +240,18 @@ export default function JobLeaderboardPage() {
                                             <td className="p-4">
                                                 <div className="space-y-2 mb-2">
                                                     <div className="flex items-center gap-2 text-xs"><GraduationCap className="w-3 h-3 text-slate-400" /> <span className="font-semibold text-slate-700 dark:text-slate-200">{cv.candidate_info?.education_level || 'Không đề cập'}</span></div>
-                                                    <div className="flex items-center gap-2 text-xs group/exp relative cursor-help">
+                                                    <div className="flex items-center gap-2 text-xs">
                                                         <Briefcase className="w-3 h-3 text-slate-400" />
-                                                        <span className="font-semibold text-slate-700 dark:text-slate-200 border-b border-dashed border-slate-400">{cv.candidate_info?.years_of_experience || 0} năm KN</span>
-                                                        {Object.keys(skillExp).length > 0 && (
-                                                            <div className="fixed mb-2 hidden group-hover/exp:block z-10 w-48 p-3 bg-slate-800 text-white text-[11px] rounded-lg shadow-lg border border-slate-700">
-                                                                <p className="font-bold border-b border-slate-600 pb-1 mb-2 text-slate-300">Chi tiết kinh nghiệm (AI quét):</p>
-                                                                <div className="grid grid-cols-1 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                                                                    {Object.entries(skillExp).map(([sk, years]) => (
-                                                                        <div key={sk} className="flex justify-between items-center"><span className="capitalize font-medium">{sk}</span><span className="text-blue-400 font-bold bg-blue-900/50 px-1.5 py-0.5 rounded">{years as number} năm</span></div>
-                                                                    ))}
-                                                                </div>
-                                                                <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-slate-800 border-b border-r border-slate-700 transform rotate-45"></div>
-                                                            </div>
-                                                        )}
+                                                        <span className="font-semibold text-slate-700 dark:text-slate-200">{cv.candidate_info?.years_of_experience || 0} năm KN</span>
                                                     </div>
+
+                                                    {/* NÚT MỞ MODAL XEM CHI TIẾT */}
+                                                    <button
+                                                        onClick={() => setSelectedCandidateForSkills(cv)}
+                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 px-2 py-1.5 rounded-md transition-colors w-max mt-1"
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" /> Xem chi tiết Kỹ năng
+                                                    </button>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1 max-h-12 overflow-y-auto custom-scrollbar">
                                                     {cv.ai_score?.matched_skills?.map((skill: string, idx: number) => <span key={idx} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold uppercase"><CheckCircle2 className="w-2 h-2 inline mr-1" />{skill}</span>)}
@@ -273,6 +261,13 @@ export default function JobLeaderboardPage() {
 
                                             {/* CỘT 4: Điểm AI */}
                                             <td className="p-4 pr-6">
+                                                {/* HIỂN THỊ CẢNH BÁO PHẠT NẾU CÓ */}
+                                                {breakdown.penalty_score > 0 && (
+                                                    <div className="flex items-center justify-end gap-1 text-[10px] font-bold text-rose-500 mb-1" title="CV quá sơ sài, hệ thống tự động trừ điểm">
+                                                        <AlertTriangle className="w-3 h-3" />
+                                                        Bị phạt trừ {breakdown.penalty_score}đ
+                                                    </div>
+                                                )}
                                                 <div className="text-right mb-1"><span className={`text-xl font-black ${score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>{score.toFixed(1)}</span><span className="text-[10px] text-slate-400 font-bold ml-1">/100</span></div>
                                                 <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
                                                     <div className="flex flex-col gap-0.5 text-[8px] font-bold text-slate-500"><div className="flex justify-between"><span>K.NĂNG</span><span>{breakdown.skills_score?.toFixed(0) || 0}</span></div><div className="w-full h-1 bg-slate-100 rounded-full"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, breakdown.skills_score || 0)}%` }}></div></div></div>
@@ -323,6 +318,13 @@ export default function JobLeaderboardPage() {
                     </div>
                 </div>
             )}
+
+            {/* MODAL KỸ NĂNG */}
+            <CandidateSkillsModal
+                isOpen={!!selectedCandidateForSkills}
+                onClose={() => setSelectedCandidateForSkills(null)}
+                candidate={selectedCandidateForSkills}
+            />
         </div>
     );
 }

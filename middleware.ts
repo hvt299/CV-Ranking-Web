@@ -5,12 +5,22 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
     const { pathname } = request.nextUrl;
 
-    const protectedRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics'];
-    const isProtectedRoute = protectedRoutes.some(route =>
-        pathname === route || pathname.startsWith(`${route}/`)
-    );
+    // Routes chỉ dành cho HR/Admin
+    const hrRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics'];
+    const isHrRoute = hrRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
 
-    if (isProtectedRoute && !token) {
+    // Routes chỉ dành cho Applicant
+    const applicantRoutes = ['/apply', '/my-applications'];
+    const isApplicantRoute = applicantRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
+
+    // Routes chỉ dành cho Admin
+    const adminRoutes = ['/settings'];
+    const isAdminRoute = adminRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
+
+    const protectedRoutes = [...hrRoutes, ...applicantRoutes, ...adminRoutes];
+    const isProtected = protectedRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
+
+    if (isProtected && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
