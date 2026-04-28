@@ -2,12 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Briefcase, FileText, LogOut } from 'lucide-react';
+import { Briefcase, FileText, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import NotificationBell from '@/components/shared/NotificationBell';
+import NotificationToast from '@/components/shared/NotificationToast';
 
 export default function ApplicantLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user, logout } = useAuth();
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => setMounted(true), []);
 
     const navItems = [
         { href: '/apply', label: 'Tìm việc', icon: Briefcase },
@@ -51,8 +59,46 @@ export default function ApplicantLayout({ children }: { children: React.ReactNod
             </aside>
 
             <main className="flex-1 overflow-auto">
+                {/* Header with notifications */}
+                <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 sticky top-0 z-10">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+                            {pathname === '/apply' ? 'Tìm việc làm' : 
+                             pathname === '/my-applications' ? 'Hồ sơ của tôi' : 'Ứng tuyển'}
+                        </h2>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        {/* Theme Toggle */}
+                        {mounted && (
+                            <button
+                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-amber-400 transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-full"
+                                title="Chuyển đổi giao diện"
+                            >
+                                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
+                        )}
+                        
+                        {/* Notification Bell */}
+                        <NotificationBell />
+                        
+                        {/* User Avatar */}
+                        <div className="flex items-center gap-2">
+                            <img
+                                src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=random`}
+                                alt="Avatar"
+                                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                            />
+                        </div>
+                    </div>
+                </header>
+                
                 {children}
             </main>
+            
+            {/* Toast Notifications */}
+            <NotificationToast />
         </div>
     );
 }
