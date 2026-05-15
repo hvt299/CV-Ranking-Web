@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface Notification {
     id: string;
@@ -32,9 +33,10 @@ const NOTIFICATION_COLORS = {
 };
 
 export default function NotificationBell() {
+    const { isAuthenticated } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const unreadCount = notifications.filter(n => n.status === 'unread').length;
@@ -45,7 +47,7 @@ export default function NotificationBell() {
         // Poll for new notifications every 30 seconds
         const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isAuthenticated]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -58,9 +60,25 @@ export default function NotificationBell() {
     }, []);
 
     const fetchNotifications = async () => {
+        // Only fetch if user is authenticated
+        if (!isAuthenticated) return;
+        
         try {
             const response = await api.get('/apply/notifications');
-            setNotifications(response.data);
+            const newNotifications = response.data;
+            
+            // Check for new unread notifications
+            const currentUnreadCount = notifications.filter((n: Notification) => n.status === 'unread').length;
+            const newUnreadCount = newNotifications.filter((n: Notification) => n.status === 'unread').length;
+            
+            // If there are new unread notifications, show a subtle indication
+            if (newUnreadCount > currentUnreadCount && notifications.length > 0) {
+                // Optional: Play notification sound or show toast
+                // You can uncomment the line below to show a toast for new notifications
+                // toast.success('Bạn có thông báo mới!');
+            }
+            
+            setNotifications(newNotifications);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
@@ -119,11 +137,13 @@ export default function NotificationBell() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-full"
+                className="relative p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+                aria-label={`Thông báo${unreadCount > 0 ? ` (${unreadCount} chưa đọc)` : ''}`}
+                title={`Thông báo${unreadCount > 0 ? ` - ${unreadCount} thông báo chưa đọc` : ''}`}
             >
-                <Bell className="w-5 h-5" />
+                <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'animate-pulse' : ''}`} />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -155,9 +175,12 @@ export default function NotificationBell() {
                     {/* Notifications List */}
                     <div className="max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-6 text-center">
-                                <Bell className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                <p className="text-slate-500 text-sm">Chưa có thông báo nào</p>
+                            <div className="p-8 text-center">
+                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Bell className="w-8 h-8 text-slate-300" />
+                                </div>
+                                <p className="text-slate-500 text-sm font-medium">Chưa có thông báo nào</p>
+                                <p className="text-slate-400 text-xs mt-1">Thông báo về trạng thái ứng tuyển sẽ hiển thị ở đây</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -168,8 +191,10 @@ export default function NotificationBell() {
                                     return (
                                         <div
                                             key={notification.id}
-                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                                                notification.status === 'unread' ? 'bg-blue-50/50 dark:bg-blue-500/5' : ''
+                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 cursor-pointer border-l-4 ${
+                                                notification.status === 'unread' 
+                                                    ? 'bg-blue-50/50 dark:bg-blue-500/5 border-l-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10' 
+                                                    : 'border-l-transparent hover:border-l-slate-200 dark:hover:border-l-slate-600'
                                             }`}
                                         >
                                             <div className="flex items-start gap-3">
@@ -184,20 +209,32 @@ export default function NotificationBell() {
                                                                 {notification.title}
                                                             </h4>
                                                             {notification.job_title && (
-                                                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">
-                                                                    {notification.job_title}
+                                                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md inline-block">
+                                                                    📋 {notification.job_title}
                                                                 </p>
                                                             )}
-                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
                                                                 {notification.message}
                                                             </p>
                                                             {notification.application_status && (
-                                                                <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded">
-                                                                    Trạng thái: {getStatusText(notification.application_status)}
+                                                                <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${
+                                                                    notification.application_status === 'Trúng tuyển' || notification.application_status === 'Đề nghị (Offer)' || notification.application_status === 'Phỏng vấn'
+                                                                        ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                                                                        : notification.application_status === 'Từ chối'
+                                                                        ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
+                                                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                                                }`}>
+                                                                    🔄 Trạng thái: {getStatusText(notification.application_status)}
                                                                 </span>
                                                             )}
-                                                            <p className="text-xs text-slate-400 mt-2">
-                                                                {new Date(notification.created_at).toLocaleString('vi-VN')}
+                                                            <p className="text-xs text-slate-400 mt-3 flex items-center gap-1">
+                                                                🕒 {new Date(notification.created_at).toLocaleString('vi-VN', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                })}
                                                             </p>
                                                         </div>
                                                         

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
 import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface ToastNotification {
     id: string;
@@ -27,6 +28,7 @@ const TOAST_COLORS = {
 };
 
 export default function NotificationToast() {
+    const { isAuthenticated } = useAuth();
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
     const [lastChecked, setLastChecked] = useState<Date>(new Date());
 
@@ -37,6 +39,9 @@ export default function NotificationToast() {
     }, [lastChecked]);
 
     const checkForNewNotifications = async () => {
+        // Only check if user is authenticated
+        if (!isAuthenticated) return;
+        
         try {
             const response = await api.get('/apply/notifications');
             const notifications = response.data;

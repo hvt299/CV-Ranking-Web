@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Briefcase, CheckCircle2, XCircle, Bell, Eye, Trash2 } from 'lucide-react';
+import { FileText, Briefcase, Bell, Eye, Trash2 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -135,7 +135,6 @@ export default function MyApplicationsPage() {
             ) : (
                 <div className="space-y-4">
                     {apps.map(app => {
-                        const score = app.ai_score?.total_score || 0;
                         return (
                             <div key={app.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -155,38 +154,11 @@ export default function MyApplicationsPage() {
                                     </div>
 
                                     <div className="flex items-center gap-4">
-                                        {/* AI Score */}
-                                        <div className="text-center">
-                                            <p className="text-xs text-slate-400 font-bold uppercase mb-1">AI Score</p>
-                                            <span className={`text-2xl font-black ${score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
-                                                {score.toFixed(1)}
-                                            </span>
-                                            <span className="text-xs text-slate-400">/100</span>
-                                        </div>
-
                                         {/* Status */}
                                         <StatusBadge status={app.status} showIcon={true} />
                                     </div>
                                 </div>
 
-                                {/* Skills breakdown */}
-                                {app.ai_score?.matched_skills?.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Kỹ năng phù hợp</p>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {app.ai_score.matched_skills.map((s: string, i: number) => (
-                                                <span key={i} className="text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded flex items-center gap-1">
-                                                    <CheckCircle2 className="w-3 h-3" />{s}
-                                                </span>
-                                            ))}
-                                            {app.ai_score.missing_required_skills?.map((s: string, i: number) => (
-                                                <span key={i} className="text-[11px] font-bold bg-rose-50 text-rose-600 px-2 py-0.5 rounded flex items-center gap-1 opacity-75">
-                                                    <XCircle className="w-3 h-3" />{s}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         );
                     })}

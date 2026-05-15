@@ -16,6 +16,14 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .w-65 {
+    width: 16rem; /* 256px */
+  }
+
+  .ml-65 {
+    margin-left: 16rem; /* 256px */
+  }
 }
 
 body {
