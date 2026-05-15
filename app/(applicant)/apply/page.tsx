@@ -1,47 +1,205 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Briefcase } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import JobSearchBar from '@/components/shared/JobSearchBar';
+import JobCard from '@/components/shared/JobCard';
 
 export default function ApplyPage() {
     const [jobs, setJobs] = useState<any[]>([]);
+    const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [expandedJob, setExpandedJob] = useState<string | null>(null);
-    const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
-    const [uploadingId, setUploadingId] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Search and filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('newest'); // newest, oldest, salary_high, salary_low, relevance
+    const [filters, setFilters] = useState({
+        location: '',
+        workMode: '',
+        jobLevel: '',
+        salaryMin: '',
+        salaryMax: '',
+        skills: [] as string[],
+        company: ''
+    });
+
+    // Available filter options
+    const [filterOptions, setFilterOptions] = useState({
+        locations: [] as string[],
+        workModes: [] as string[],
+        jobLevels: [] as string[],
+        skills: [] as string[],
+        companies: [] as string[]
+    });
 
     useEffect(() => {
         api.get('/apply/jobs').then(res => {
             setJobs(res.data);
+            setFilteredJobs(res.data);
+            
+            // Extract filter options from jobs data
+            const locations = [...new Set(res.data.map((job: any) => job.location?.city).filter(Boolean))] as string[];
+            const workModes = [...new Set(res.data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
+            const jobLevels = [...new Set(res.data.map((job: any) => job.job_level).filter(Boolean))] as string[];
+            const skills = [...new Set(res.data.flatMap((job: any) => job.required_skills || []))] as string[];
+            const companies = [...new Set(res.data.map((job: any) => job.company_name).filter(Boolean))] as string[];
+            
+            setFilterOptions({
+                locations,
+                workModes,
+                jobLevels,
+                skills,
+                companies
+            });
         }).catch(() => {
             toast.error('Không thể tải danh sách việc làm');
         }).finally(() => setIsLoading(false));
     }, []);
 
-    const handleApply = async (file: File, jobId: string) => {
-        setUploadingId(jobId);
-        const form = new FormData();
-        form.append('file', file);
-        try {
-            const res = await api.post(`/apply/jobs/${jobId}`, form, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success(res.data.message);
-            setApplyingJobId(null);
-        } catch (err: any) {
-            toast.error(err.response?.data?.detail || 'Nộp hồ sơ thất bại');
-        } finally {
-            setUploadingId(null);
-            if (fileInputRef.current) fileInputRef.current.value = '';
+    // Filter and search logic
+    useEffect(() => {
+        let filtered = jobs;
+
+        // Text search
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(job => 
+                job.title?.toLowerCase().includes(query) ||
+                job.company_name?.toLowerCase().includes(query) ||
+                job.description?.toLowerCase().includes(query) ||
+                job.required_skills?.some((skill: string) => skill.toLowerCase().includes(query))
+            );
         }
+
+        // Apply filters
+        if (filters.location) {
+            filtered = filtered.filter(job => job.location?.city === filters.location);
+        }
+        if (filters.workMode) {
+            filtered = filtered.filter(job => job.work_mode === filters.workMode);
+        }
+        if (filters.jobLevel) {
+            filtered = filtered.filter(job => job.job_level === filters.jobLevel);
+        }
+        if (filters.company) {
+            filtered = filtered.filter(job => job.company_name === filters.company);
+        }
+        if (filters.salaryMin) {
+            filtered = filtered.filter(job => 
+                job.salary?.min_salary && job.salary.min_salary >= parseInt(filters.salaryMin)
+            );
+        }
+        if (filters.salaryMax) {
+            filtered = filtered.filter(job => 
+                job.salary?.max_salary && job.salary.max_salary <= parseInt(filters.salaryMax)
+            );
+        }
+        if (filters.skills.length > 0) {
+            filtered = filtered.filter(job => 
+                filters.skills.some(skill => 
+                    job.required_skills?.includes(skill)
+                )
+            );
+        }
+
+        setFilteredJobs(filtered);
+    }, [jobs, searchQuery, filters]);
+
+    // Sort jobs
+    useEffect(() => {
+        let sorted = [...filteredJobs];
+        
+        switch (sortBy) {
+            case 'newest':
+                sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+                break;
+            case 'oldest':
+                sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+                break;
+            case 'salary_high':
+                sorted.sort((a, b) => (b.salary?.max_salary || 0) - (a.salary?.max_salary || 0));
+                break;
+            case 'salary_low':
+                sorted.sort((a, b) => (a.salary?.min_salary || 0) - (b.salary?.min_salary || 0));
+                break;
+            case 'relevance':
+                // Sort by number of matching skills if search query exists
+                if (searchQuery.trim()) {
+                    const query = searchQuery.toLowerCase();
+                    sorted.sort((a, b) => {
+                        const aMatches = (a.required_skills || []).filter((skill: string) => 
+                            skill.toLowerCase().includes(query)
+                        ).length;
+                        const bMatches = (b.required_skills || []).filter((skill: string) => 
+                            skill.toLowerCase().includes(query)
+                        ).length;
+                        return bMatches - aMatches;
+                    });
+                }
+                break;
+        }
+        
+        setFilteredJobs(sorted);
+    }, [sortBy]); // Only depend on sortBy to avoid infinite loop
+
+    const clearFilters = () => {
+        setFilters({
+            location: '',
+            workMode: '',
+            jobLevel: '',
+            salaryMin: '',
+            salaryMax: '',
+            skills: [],
+            company: ''
+        });
+        setSearchQuery('');
+        setSortBy('newest');
     };
 
-    const formatSalary = (salary: any) => {
-        if (!salary?.min_salary) return 'Thỏa thuận';
-        return `${new Intl.NumberFormat('vi-VN').format(salary.min_salary)} - ${new Intl.NumberFormat('vi-VN').format(salary.max_salary)} ${salary.currency}`;
+    // Save and load filter presets
+    const saveFilterPreset = (name: string) => {
+        const preset = {
+            searchQuery,
+            filters,
+            sortBy,
+            name,
+            savedAt: new Date().toISOString()
+        };
+        
+        const savedPresets = JSON.parse(localStorage.getItem('jobSearchPresets') || '[]');
+        const updatedPresets = [...savedPresets.filter((p: any) => p.name !== name), preset];
+        localStorage.setItem('jobSearchPresets', JSON.stringify(updatedPresets));
+        toast.success(`Đã lưu bộ lọc "${name}"`);
+    };
+
+    const loadFilterPreset = (preset: any) => {
+        setSearchQuery(preset.searchQuery || '');
+        setFilters(preset.filters || {
+            location: '',
+            workMode: '',
+            jobLevel: '',
+            salaryMin: '',
+            salaryMax: '',
+            skills: [],
+            company: ''
+        });
+        setSortBy(preset.sortBy || 'newest');
+        toast.success(`Đã tải bộ lọc "${preset.name}"`);
+    };
+
+    const getSavedPresets = () => {
+        return JSON.parse(localStorage.getItem('jobSearchPresets') || '[]');
+    };
+
+    const activeFiltersCount = Object.values(filters).filter(value => 
+        Array.isArray(value) ? value.length > 0 : value !== ''
+    ).length + (searchQuery ? 1 : 0);
+
+    const handleApplySuccess = () => {
+        // Refresh jobs list or update UI as needed
+        // Could also show a success message or update application status
     };
 
     if (isLoading) return (
@@ -51,108 +209,76 @@ export default function ApplyPage() {
     );
 
     return (
-        <div className="max-w-4xl mx-auto py-10 px-4 pb-20 space-y-6">
+        <div className="max-w-6xl mx-auto py-10 px-4 pb-20 space-y-6">
             <div>
                 <h1 className="text-3xl font-black text-slate-800 dark:text-white">Việc làm đang tuyển</h1>
                 <p className="text-slate-500 mt-1">Tìm vị trí phù hợp và nộp CV trực tiếp</p>
             </div>
 
-            {jobs.length === 0 ? (
+            {/* Search and Filter Section */}
+            <JobSearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                filters={filters}
+                onFiltersChange={setFilters}
+                filterOptions={filterOptions}
+                onClearFilters={clearFilters}
+                activeFiltersCount={activeFiltersCount}
+                onSavePreset={saveFilterPreset}
+                onLoadPreset={loadFilterPreset}
+                savedPresets={getSavedPresets()}
+            />
+
+            {/* Results Summary and Sort */}
+            <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+                <span>Tìm thấy {filteredJobs.length} việc làm</span>
+                <div className="flex items-center gap-4">
+                    {activeFiltersCount > 0 && (
+                        <span>Đã áp dụng {activeFiltersCount} bộ lọc</span>
+                    )}
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Sắp xếp:</label>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="newest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                            <option value="salary_high">Lương cao nhất</option>
+                            <option value="salary_low">Lương thấp nhất</option>
+                            {searchQuery && <option value="relevance">Liên quan nhất</option>}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {filteredJobs.length === 0 ? (
                 <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
                     <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">Hiện chưa có vị trí nào đang tuyển</p>
+                    <p className="text-slate-500">
+                        {jobs.length === 0 
+                            ? 'Hiện chưa có vị trí nào đang tuyển' 
+                            : 'Không tìm thấy việc làm phù hợp với tiêu chí tìm kiếm'
+                        }
+                    </p>
+                    {activeFiltersCount > 0 && (
+                        <button
+                            onClick={clearFilters}
+                            className="mt-3 px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                            Xóa bộ lọc và thử lại
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {jobs.map(job => (
-                        <div key={job.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-                            <div className="p-6">
-                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                    <div className="flex-1">
-                                        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{job.title}</h2>
-                                        <div className="flex flex-wrap gap-3 text-sm text-slate-500">
-                                            <span className="flex items-center gap-1"><Building2 className="w-4 h-4" />{job.company_name}</span>
-                                            {job.location?.city && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{job.location.city}</span>}
-                                            <span className="flex items-center gap-1"><Briefcase className="w-4 h-4" />{job.work_mode} • {job.job_level}</span>
-                                            <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />{formatSalary(job.salary)}</span>
-                                        </div>
-                                        {job.deadline && (
-                                            <p className="text-xs text-amber-600 font-semibold mt-2 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" /> Hạn nộp: {new Date(job.deadline).toLocaleDateString('vi-VN')}
-                                            </p>
-                                        )}
-                                        <div className="flex flex-wrap gap-1.5 mt-3">
-                                            {job.required_skills?.slice(0, 6).map((s: string, i: number) => (
-                                                <span key={i} className="text-[11px] font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-500/20">{s}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-2 shrink-0">
-                                        <button
-                                            onClick={() => setApplyingJobId(applyingJobId === job.id ? null : job.id)}
-                                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
-                                        >
-                                            <UploadCloud className="w-4 h-4" /> Nộp hồ sơ
-                                        </button>
-                                        <button
-                                            onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
-                                            className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-1 justify-center"
-                                        >
-                                            {expandedJob === job.id ? <><ChevronUp className="w-4 h-4" /> Ẩn bớt</> : <><ChevronDown className="w-4 h-4" /> Xem JD</>}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Upload CV */}
-                                {applyingJobId === job.id && (
-                                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20">
-                                        <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Chọn file CV để nộp (PDF hoặc DOCX, tối đa 5MB)</p>
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept=".pdf,.docx"
-                                            disabled={uploadingId === job.id}
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) handleApply(file, job.id);
-                                            }}
-                                            className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer disabled:opacity-50"
-                                        />
-                                        {uploadingId === job.id && (
-                                            <div className="flex items-center gap-2 mt-2 text-sm text-blue-700 dark:text-blue-400">
-                                                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                                                Đang phân tích và nộp hồ sơ...
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* JD chi tiết */}
-                            {expandedJob === job.id && (
-                                <div className="px-6 pb-6 border-t border-slate-100 dark:border-slate-700 pt-4 space-y-4">
-                                    {job.description && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Mô tả công việc</h3>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.description}</p>
-                                        </div>
-                                    )}
-                                    {job.requirements && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Yêu cầu ứng viên</h3>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.requirements}</p>
-                                        </div>
-                                    )}
-                                    {job.benefits && (
-                                        <div>
-                                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Quyền lợi</h3>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.benefits}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                    {filteredJobs.map(job => (
+                        <JobCard 
+                            key={job.id} 
+                            job={job} 
+                            onApplySuccess={handleApplySuccess}
+                        />
                     ))}
                 </div>
             )}

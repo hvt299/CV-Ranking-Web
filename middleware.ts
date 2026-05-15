@@ -5,28 +5,17 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
     const { pathname } = request.nextUrl;
 
-    // Routes chỉ dành cho HR/Admin
-    const hrRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics'];
-    const isHrRoute = hrRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
-
-    // Routes chỉ dành cho Applicant
-    const applicantRoutes = ['/apply', '/my-applications'];
-    const isApplicantRoute = applicantRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
-
-    // Routes chỉ dành cho Admin
-    const adminRoutes = ['/settings'];
-    const isAdminRoute = adminRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
-
-    const protectedRoutes = [...hrRoutes, ...applicantRoutes, ...adminRoutes];
+    // Các route cần đăng nhập
+    const protectedRoutes = [
+        '/dashboard', '/jobs', '/candidates', '/analytics', '/interviews', '/messages', '/settings',
+        '/apply', '/my-applications', '/profile'
+    ];
+    
     const isProtected = protectedRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
 
+    // Nếu chưa đăng nhập và truy cập route được bảo vệ -> redirect về login
     if (isProtected && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    const authRoutes = ['/login', '/register', '/verify', '/forgot-password', '/reset-password'];
-    if (authRoutes.includes(pathname) && token) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     return NextResponse.next();
