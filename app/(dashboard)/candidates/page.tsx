@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import CandidateSkillsModal from '@/components/shared/CandidateSkillsModal';
+import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 
 export default function TalentPoolPage() {
     const [candidates, setCandidates] = useState<any[]>([]);

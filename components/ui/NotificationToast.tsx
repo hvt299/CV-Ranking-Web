@@ -33,26 +33,22 @@ export default function NotificationToast() {
     const [lastChecked, setLastChecked] = useState<Date>(new Date());
 
     useEffect(() => {
-        // Check for new notifications every 30 seconds
         const interval = setInterval(checkForNewNotifications, 30000);
         return () => clearInterval(interval);
     }, [lastChecked]);
 
     const checkForNewNotifications = async () => {
-        // Only check if user is authenticated
         if (!isAuthenticated) return;
         
         try {
             const response = await api.get('/apply/notifications');
             const notifications = response.data;
             
-            // Find notifications created after last check
             const newNotifications = notifications.filter((n: any) => 
                 n.status === 'unread' && new Date(n.created_at) > lastChecked
             );
 
             if (newNotifications.length > 0) {
-                // Show toast for new notifications
                 newNotifications.forEach((notification: any) => {
                     showToast({
                         id: notification.id,
@@ -73,7 +69,6 @@ export default function NotificationToast() {
     const showToast = (notification: ToastNotification) => {
         setToasts(prev => [...prev, notification]);
         
-        // Auto remove after 8 seconds
         setTimeout(() => {
             removeToast(notification.id);
         }, 8000);

@@ -46,9 +46,7 @@ export default function JobSearchBar({
     const [showPresets, setShowPresets] = useState(false);
     const [presetName, setPresetName] = useState('');
 
-    // Track search activity when query or filters change
     useEffect(() => {
-        // Remove tracking functionality
     }, [searchQuery, filters, activeFiltersCount]);
 
     const toggleSkillFilter = (skill: string) => {

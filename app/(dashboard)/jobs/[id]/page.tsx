@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import CandidateSkillsModal from '@/components/shared/CandidateSkillsModal';
-import JobDetailsContent from '@/components/shared/JobDetailsContent';
+import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
+import JobDetailsContent from '@/components/jobs/JobDetailsContent';
 
 const CV_STATUSES = [
     { value: 'Mới', label: 'Mới', color: 'bg-blue-100 text-blue-700' },

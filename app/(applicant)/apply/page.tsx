@@ -4,17 +4,16 @@ import { useState, useEffect } from 'react';
 import { Briefcase } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import JobSearchBar from '@/components/shared/JobSearchBar';
-import JobCard from '@/components/shared/JobCard';
+import JobSearchBar from '@/components/jobs/JobSearchBar';
+import JobCard from '@/components/jobs/JobCard';
 
 export default function ApplyPage() {
     const [jobs, setJobs] = useState<any[]>([]);
     const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Search and filter states
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState('newest'); // newest, oldest, salary_high, salary_low, relevance
+    const [sortBy, setSortBy] = useState('newest');
     const [filters, setFilters] = useState({
         location: '',
         workMode: '',
@@ -25,7 +24,6 @@ export default function ApplyPage() {
         company: ''
     });
 
-    // Available filter options
     const [filterOptions, setFilterOptions] = useState({
         locations: [] as string[],
         workModes: [] as string[],
@@ -39,7 +37,6 @@ export default function ApplyPage() {
             setJobs(res.data);
             setFilteredJobs(res.data);
             
-            // Extract filter options from jobs data
             const locations = [...new Set(res.data.map((job: any) => job.location?.city).filter(Boolean))] as string[];
             const workModes = [...new Set(res.data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
             const jobLevels = [...new Set(res.data.map((job: any) => job.job_level).filter(Boolean))] as string[];
@@ -58,11 +55,9 @@ export default function ApplyPage() {
         }).finally(() => setIsLoading(false));
     }, []);
 
-    // Filter and search logic
     useEffect(() => {
         let filtered = jobs;
 
-        // Text search
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(job => 
@@ -73,7 +68,6 @@ export default function ApplyPage() {
             );
         }
 
-        // Apply filters
         if (filters.location) {
             filtered = filtered.filter(job => job.location?.city === filters.location);
         }
@@ -107,7 +101,6 @@ export default function ApplyPage() {
         setFilteredJobs(filtered);
     }, [jobs, searchQuery, filters]);
 
-    // Sort jobs
     useEffect(() => {
         let sorted = [...filteredJobs];
         
@@ -125,7 +118,6 @@ export default function ApplyPage() {
                 sorted.sort((a, b) => (a.salary?.min_salary || 0) - (b.salary?.min_salary || 0));
                 break;
             case 'relevance':
-                // Sort by number of matching skills if search query exists
                 if (searchQuery.trim()) {
                     const query = searchQuery.toLowerCase();
                     sorted.sort((a, b) => {
@@ -142,7 +134,7 @@ export default function ApplyPage() {
         }
         
         setFilteredJobs(sorted);
-    }, [sortBy]); // Only depend on sortBy to avoid infinite loop
+    }, [sortBy]);
 
     const clearFilters = () => {
         setFilters({
@@ -158,7 +150,6 @@ export default function ApplyPage() {
         setSortBy('newest');
     };
 
-    // Save and load filter presets
     const saveFilterPreset = (name: string) => {
         const preset = {
             searchQuery,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Briefcase, Bell, Eye, Trash2 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import StatusBadge from '@/components/shared/StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const STATUS_COLORS: Record<string, string> = {
     'Mới': 'bg-blue-100 text-blue-700',

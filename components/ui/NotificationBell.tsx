@@ -33,6 +33,8 @@ const NOTIFICATION_COLORS = {
 };
 
 export default function NotificationBell() {
+    const { user } = useAuth();
+
     const { isAuthenticated } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -43,8 +45,7 @@ export default function NotificationBell() {
 
     useEffect(() => {
         fetchNotifications();
-        
-        // Poll for new notifications every 30 seconds
+
         const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, [isAuthenticated]);
@@ -60,24 +61,21 @@ export default function NotificationBell() {
     }, []);
 
     const fetchNotifications = async () => {
-        // Only fetch if user is authenticated
         if (!isAuthenticated) return;
-        
+
         try {
             const response = await api.get('/apply/notifications');
             const newNotifications = response.data;
-            
-            // Check for new unread notifications
+
             const currentUnreadCount = notifications.filter((n: Notification) => n.status === 'unread').length;
             const newUnreadCount = newNotifications.filter((n: Notification) => n.status === 'unread').length;
-            
-            // If there are new unread notifications, show a subtle indication
+
             if (newUnreadCount > currentUnreadCount && notifications.length > 0) {
                 // Optional: Play notification sound or show toast
                 // You can uncomment the line below to show a toast for new notifications
                 // toast.success('Bạn có thông báo mới!');
             }
-            
+
             setNotifications(newNotifications);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -87,7 +85,7 @@ export default function NotificationBell() {
     const markAsRead = async (notificationId: string) => {
         try {
             await api.patch(`/apply/notifications/${notificationId}/read`);
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n)
             );
         } catch (error) {
@@ -187,21 +185,20 @@ export default function NotificationBell() {
                                 {notifications.map((notification) => {
                                     const IconComponent = getNotificationIcon(notification.type);
                                     const colorClass = NOTIFICATION_COLORS[notification.type];
-                                    
+
                                     return (
                                         <div
                                             key={notification.id}
-                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 cursor-pointer border-l-4 ${
-                                                notification.status === 'unread' 
-                                                    ? 'bg-blue-50/50 dark:bg-blue-500/5 border-l-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10' 
-                                                    : 'border-l-transparent hover:border-l-slate-200 dark:hover:border-l-slate-600'
-                                            }`}
+                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 cursor-pointer border-l-4 ${notification.status === 'unread'
+                                                ? 'bg-blue-50/50 dark:bg-blue-500/5 border-l-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10'
+                                                : 'border-l-transparent hover:border-l-slate-200 dark:hover:border-l-slate-600'
+                                                }`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <div className={`p-2 rounded-lg ${colorClass} shrink-0`}>
                                                     <IconComponent className="w-4 h-4" />
                                                 </div>
-                                                
+
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex-1">
@@ -217,13 +214,12 @@ export default function NotificationBell() {
                                                                 {notification.message}
                                                             </p>
                                                             {notification.application_status && (
-                                                                <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${
-                                                                    notification.application_status === 'Trúng tuyển' || notification.application_status === 'Đề nghị (Offer)' || notification.application_status === 'Phỏng vấn'
-                                                                        ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                                                                        : notification.application_status === 'Từ chối'
+                                                                <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${notification.application_status === 'Trúng tuyển' || notification.application_status === 'Đề nghị (Offer)' || notification.application_status === 'Phỏng vấn'
+                                                                    ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                                                                    : notification.application_status === 'Từ chối'
                                                                         ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
                                                                         : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                                                                }`}>
+                                                                    }`}>
                                                                     🔄 Trạng thái: {getStatusText(notification.application_status)}
                                                                 </span>
                                                             )}
@@ -237,7 +233,7 @@ export default function NotificationBell() {
                                                                 })}
                                                             </p>
                                                         </div>
-                                                        
+
                                                         <div className="flex items-center gap-1">
                                                             {notification.status === 'unread' && (
                                                                 <button
@@ -272,12 +268,15 @@ export default function NotificationBell() {
                             <button
                                 onClick={() => {
                                     setIsOpen(false);
-                                    // Navigate to notifications page if exists
-                                    window.location.href = '/my-applications';
+                                    if (user?.role === 'applicant') {
+                                        window.location.href = '/my-applications';
+                                    } else {
+                                        window.location.href = '/dashboard';
+                                    }
                                 }}
                                 className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
-                                Xem tất cả hồ sơ
+                                Xem tất cả thông báo
                             </button>
                         </div>
                     )}
