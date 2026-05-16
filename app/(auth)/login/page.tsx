@@ -13,6 +13,11 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { login } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [tempGoogleToken, setTempGoogleToken] = useState('');
+    const [selectedGoogleRole, setSelectedGoogleRole] = useState<'hr' | 'applicant'>('applicant');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,20 +43,42 @@ export default function LoginPage() {
         }
     };
 
-    const loginWithGoogle = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                const res = await api.post('/auth/google', {
-                    access_token: tokenResponse.access_token
-                });
-                login(res.data.access_token);
-                toast.success('Đăng nhập bằng Google thành công!');
-            } catch (err: any) {
-                toast.error(err.response?.data?.detail || 'Lỗi xác thực Google từ máy chủ');
+    const handleGoogleAuth = async (accessToken: string, targetRole?: string) => {
+        try {
+            setIsLoading(true);
+            const res = await api.post('/auth/google', {
+                access_token: accessToken,
+                role: targetRole
+            });
+
+            if (res.status === 202 && res.data.action === 'require_role') {
+                setTempGoogleToken(accessToken);
+                setShowRoleModal(true);
+                setIsLoading(false);
+                return;
             }
+
+            login(res.data.access_token);
+            toast.success('Đăng nhập thành công!');
+            setShowRoleModal(false);
+
+        } catch (err: any) {
+            console.error(err);
+            toast.error(err.response?.data?.detail || 'Lỗi đăng nhập Google');
+            setIsLoading(false);
+        }
+    };
+
+    const loginWithGoogle = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            handleGoogleAuth(tokenResponse.access_token);
         },
         onError: () => toast.error('Đăng nhập Google thất bại')
     });
+
+    const submitGoogleRole = () => {
+        handleGoogleAuth(tempGoogleToken, selectedGoogleRole);
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center p-4 transition-colors duration-300">
@@ -131,6 +158,52 @@ export default function LoginPage() {
                     <Link href="/register" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">Đăng ký ngay</Link>
                 </p>
             </div>
+
+            {/* ================= MODAL CHỌN ROLE DÀNH CHO GOOGLE LOGIN ================= */}
+            {showRoleModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all">
+                    <div className="bg-white dark:bg-[#1e293b] p-8 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 text-center">Chào mừng người mới! 🎉</h3>
+                        <p className="text-slate-500 dark:text-slate-400 mb-8 text-center text-sm">
+                            Hệ thống nhận thấy đây là lần đầu bạn đăng nhập. Vui lòng chọn vai trò để hoàn tất hồ sơ.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedGoogleRole('applicant')}
+                                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${selectedGoogleRole === 'applicant'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 shadow-md shadow-blue-500/10'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600'
+                                    }`}
+                            >
+                                <span className="text-4xl mb-1">👤</span>
+                                <span className="font-bold text-sm">Ứng viên</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedGoogleRole('hr')}
+                                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${selectedGoogleRole === 'hr'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 shadow-md shadow-blue-500/10'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600'
+                                    }`}
+                            >
+                                <span className="text-4xl mb-1">💼</span>
+                                <span className="font-bold text-sm">Nhà tuyển dụng</span>
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={submitGoogleRole}
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 dark:shadow-none flex justify-center items-center gap-2"
+                        >
+                            {isLoading ? 'Đang xử lý...' : 'Hoàn tất'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

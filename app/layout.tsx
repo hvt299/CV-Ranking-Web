@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin", "vietnamese"] });
 export const metadata: Metadata = {
   title: "ATS Dashboard | Tuyển dụng thông minh",
   description: "Hệ thống quản lý và xếp hạng CV bằng trí tuệ nhân tạo",
+  icons: {
+    icon: "/icon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
