@@ -33,8 +33,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const isApplicant = role === 'applicant';
 
     return (
-        <div className="flex min-h-screen bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
-
+        <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
+            
             {/* ================= 1. RENDER ĐỘNG SIDEBAR ================= */}
             <Sidebar
                 isCollapsed={isCollapsed}
@@ -44,15 +44,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             />
 
             {/* ================= 2. KHUNG MAIN CONTENT ================= */}
-            <div className={`flex-1 flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-65'}`}>
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
 
                 {/* ================= 3. RENDER ĐỘNG HEADER ================= */}
                 <Header setIsMobileOpen={setIsMobileOpen} />
 
                 {/* ================= 4. NỘI DUNG TRANG CHÍNH ================= */}
-                <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+                <main className="flex-1 p-4 md:p-8 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
+                
             </div>
 
             {/* ================= 5. TOAST NOTIFICATION DÙNG CHUNG ================= */}

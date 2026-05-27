@@ -108,6 +108,7 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                             src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=random`}
                             alt="Avatar"
                             className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                            referrerPolicy="no-referrer"
                         />
                         <div className="hidden md:flex flex-col items-start text-left">
                             <span className="text-sm font-bold text-slate-700 dark:text-white leading-tight line-clamp-1 max-w-30">

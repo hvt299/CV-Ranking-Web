@@ -70,8 +70,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
             {/* ================= SIDEBAR CHÍNH ================= */}
             <aside
                 className={cn(
-                    "fixed top-0 left-0 h-screen bg-[#0f172a] border-r border-slate-800 z-50 flex flex-col transition-all duration-300 shadow-2xl",
-                    isCollapsed ? "w-20" : "w-65",
+                    "fixed md:relative top-0 left-0 h-full bg-[#0f172a] border-r border-slate-800 z-50 flex flex-col transition-all duration-300 shadow-2xl shrink-0",
+                    isCollapsed ? "w-20" : "w-64",
                     isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                 )}
             >
