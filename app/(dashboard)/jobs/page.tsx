@@ -102,7 +102,7 @@ export default function JobsListPage() {
                             onChange={(e) => setFilterLevel(e.target.value)}
                         >
                             <option value="All">Tất cả Cấp bậc</option>
-                            <option value="Intern">Intern (Thực tập)</option>
+                            <option value="Intern">Intern</option>
                             <option value="Fresher">Fresher</option>
                             <option value="Junior">Junior</option>
                             <option value="Middle">Middle</option>
