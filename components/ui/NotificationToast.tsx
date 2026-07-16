@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/types';
 
 interface ToastNotification {
     id: string;
@@ -28,39 +29,50 @@ const TOAST_COLORS = {
 };
 
 export default function NotificationToast() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const isApplicant = user?.role === UserRole.APPLICANT;
+
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
-    const [lastChecked, setLastChecked] = useState<Date>(new Date());
+    const lastCheckedRef = useRef(new Date());
+    const shownIds = useRef(new Set<string>());
 
     useEffect(() => {
+        if (!isAuthenticated || !isApplicant) return;
+
+        checkForNewNotifications();
+
         const interval = setInterval(checkForNewNotifications, 30000);
+
         return () => clearInterval(interval);
-    }, [lastChecked]);
+    }, [isAuthenticated]);
 
     const checkForNewNotifications = async () => {
-        if (!isAuthenticated) return;
-        
+        if (!isAuthenticated || !isApplicant) return;
+
         try {
             const response = await api.get('/apply/notifications');
             const notifications = response.data;
-            
-            const newNotifications = notifications.filter((n: any) => 
-                n.status === 'unread' && new Date(n.created_at) > lastChecked
+
+            const newNotifications = notifications.filter(
+                (n: any) =>
+                    n.status === 'unread' &&
+                    new Date(n.created_at) > lastCheckedRef.current &&
+                    !shownIds.current.has(n.id)
             );
 
-            if (newNotifications.length > 0) {
-                newNotifications.forEach((notification: any) => {
-                    showToast({
-                        id: notification.id,
-                        title: notification.title,
-                        message: notification.message,
-                        type: notification.type,
-                        job_title: notification.job_title
-                    });
+            newNotifications.forEach((notification: any) => {
+                shownIds.current.add(notification.id);
+
+                showToast({
+                    id: notification.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    job_title: notification.job_title
                 });
-                
-                setLastChecked(new Date());
-            }
+            });
+
+            lastCheckedRef.current = new Date();
         } catch (error) {
             console.error('Failed to check for new notifications:', error);
         }
@@ -68,7 +80,7 @@ export default function NotificationToast() {
 
     const showToast = (notification: ToastNotification) => {
         setToasts(prev => [...prev, notification]);
-        
+
         setTimeout(() => {
             removeToast(notification.id);
         }, 8000);
@@ -85,7 +97,7 @@ export default function NotificationToast() {
             {toasts.map((toast) => {
                 const IconComponent = TOAST_ICONS[toast.type];
                 const colorClass = TOAST_COLORS[toast.type];
-                
+
                 return (
                     <div
                         key={toast.id}
@@ -93,15 +105,23 @@ export default function NotificationToast() {
                     >
                         <div className="flex items-start gap-3">
                             <IconComponent className="w-5 h-5 shrink-0 mt-0.5" />
+
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm">{toast.title}</h4>
+                                <h4 className="font-semibold text-sm">
+                                    {toast.title}
+                                </h4>
+
                                 {toast.job_title && (
                                     <p className="text-xs font-medium opacity-80 mt-0.5">
                                         {toast.job_title}
                                     </p>
                                 )}
-                                <p className="text-sm opacity-90 mt-1">{toast.message}</p>
+
+                                <p className="text-sm opacity-90 mt-1">
+                                    {toast.message}
+                                </p>
                             </div>
+
                             <button
                                 onClick={() => removeToast(toast.id)}
                                 className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors"

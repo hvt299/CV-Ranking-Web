@@ -1,12 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Search, Building2, Users, Save, CheckCircle, Mail, Briefcase } from 'lucide-react';
+import { Shield, Search, Building2, Users, Save, CheckCircle, Mail, Briefcase, ExternalLink, Globe, MapPin } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { UserRole, CompanyStatus } from '@/types';
+import Select from 'react-select';
+
+const INDUSTRIES = [
+    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
+    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
+    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
+    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
+    { label: 'Công nghệ Thông tin', value: 'it' },
+    { label: 'Lao động phổ thông', value: 'labor' },
+    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
+    { label: 'Bất động sản', value: 'realestate' },
+    { label: 'Xây dựng', value: 'construction' },
+    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
+    { label: 'Sản xuất', value: 'manufacturing' },
+    { label: 'Giáo dục/Đào tạo', value: 'education' },
+    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
+    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
+    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
+    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
+    { label: 'Tư vấn chuyên môn', value: 'consulting' },
+    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
+    { label: 'Thiết kế', value: 'design' },
+    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
+    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
+    { label: 'Tài xế', value: 'driver' },
+    { label: 'Biên phiên dịch', value: 'translation' },
+    { label: 'Luật', value: 'law' },
+    { label: 'Nhóm nghề khác', value: 'other' }
+];
 
 const ROLES = [
     { value: UserRole.APPLICANT, label: 'Ứng viên', color: 'bg-slate-100 text-slate-700' },
@@ -33,9 +62,6 @@ export default function SettingsPage() {
     return null;
 }
 
-// ============================================================================
-// COMPONENT DÀNH CHO HR (CÀI ĐẶT CÔNG TY & MỜI THÀNH VIÊN)
-// ============================================================================
 function CompanySettingsSection({ user }: { user: any }) {
     const [activeTab, setActiveTab] = useState('info');
     const [company, setCompany] = useState<any>(null);
@@ -44,6 +70,39 @@ function CompanySettingsSection({ user }: { user: any }) {
     const [taxCode, setTaxCode] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const checkDark = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
+        checkDark();
+        const observer = new MutationObserver(checkDark);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+
+    const customSelectStyles = {
+        control: (base: any, state: any) => ({
+            ...base,
+            backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+            borderColor: state.isFocused ? '#3b82f6' : (isDarkMode ? '#334155' : '#e2e8f0'),
+            borderRadius: '0.75rem',
+            minHeight: '42px',
+            padding: '0 4px',
+            boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+            fontSize: '0.875rem',
+        }),
+        menu: (base: any) => ({
+            ...base, zIndex: 9999, backgroundColor: isDarkMode ? '#1e293b' : '#ffffff', fontSize: '0.875rem'
+        }),
+        option: (base: any, state: any) => ({
+            ...base, cursor: 'pointer',
+            backgroundColor: state.isFocused ? (isDarkMode ? '#334155' : '#eff6ff') : 'transparent',
+            color: isDarkMode ? '#e2e8f0' : '#334155'
+        }),
+        singleValue: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
+        input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
+    };
 
     useEffect(() => {
         api.get('/companies/settings').then(res => {
@@ -78,6 +137,8 @@ function CompanySettingsSection({ user }: { user: any }) {
                 tax_code: taxCode,
                 name: company.name,
                 industry: company.industry,
+                size: company.size,
+                website: company.website,
                 address: company.address,
                 license_file_url: company.license_file_url
             });
@@ -154,7 +215,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 <label className="block text-sm font-semibold mb-2">Mã số thuế (MST) <span className="text-red-500">*</span></label>
                                 <div className="flex gap-2">
                                     <input type="text" value={taxCode} onChange={e => setTaxCode(e.target.value)} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="VD: 0312345678" />
-                                    <button onClick={handleLookupTax} className="px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded-xl text-sm hover:bg-blue-200 whitespace-nowrap">Tra cứu VietQR</button>
+                                    <button onClick={handleLookupTax} className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold rounded-xl text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 whitespace-nowrap">Tra cứu VietQR</button>
                                 </div>
                             </div>
 
@@ -163,20 +224,85 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 <input type="text" value={company.name || ''} onChange={e => setCompany({ ...company, name: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="Ví dụ: Công ty TNHH Công nghệ ABC" />
                             </div>
 
+                            {/* SMART DROPDOWN NGÀNH NGHỀ */}
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Ngành nghề</label>
+                                <Select
+                                    options={INDUSTRIES}
+                                    styles={customSelectStyles}
+                                    placeholder="Tìm ngành nghề..."
+                                    noOptionsMessage={() => "Không tìm thấy"}
+                                    value={INDUSTRIES.find(i => i.value === company.industry) || null}
+                                    onChange={(selected: any) => setCompany({ ...company, industry: selected?.value || '' })}
+                                />
+                            </div>
+
+                            {/* DROPDOWN QUY MÔ ĐỒNG BỘ */}
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Quy mô nhân sự</label>
+                                <select value={company.size || ''} onChange={e => setCompany({ ...company, size: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 cursor-pointer">
+                                    <option value="">Chọn quy mô</option>
+                                    <option value="1-50">1-50 nhân sự</option>
+                                    <option value="51-200">51-200 nhân sự</option>
+                                    <option value="201-1000">201-1000 nhân sự</option>
+                                    <option value="1000+">Hơn 1000 nhân sự</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Website (Tùy chọn)</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                    <input type="url" value={company.website || ''} onChange={e => setCompany({ ...company, website: e.target.value })} className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="https://www.company-website.com" />
+                                </div>
+                            </div>
+
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-semibold mb-2">Địa chỉ Đăng ký kinh doanh</label>
-                                <input type="text" value={company.address || ''} onChange={e => setCompany({ ...company, address: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" />
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                    <input type="text" value={company.address || ''} onChange={e => setCompany({ ...company, address: e.target.value })} className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" />
+                                </div>
                             </div>
 
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-semibold mb-2">
-                                    Giấy phép kinh doanh (Ảnh/PDF)
+                                    Giấy phép kinh doanh
                                 </label>
 
-                                <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-900 hover:border-blue-500 hover:bg-blue-50/40 dark:hover:bg-slate-800 cursor-pointer transition-all">
+                                {/* Link */}
+                                <input
+                                    type="text"
+                                    value={company.license_file_url || ""}
+                                    onChange={(e) =>
+                                        setCompany({
+                                            ...company,
+                                            license_file_url: e.target.value,
+                                        })
+                                    }
+                                    placeholder="https://res.cloudinary.com/..."
+                                    className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:border-blue-500 dark:text-white"
+                                />
+
+                                {/* Upload */}
+                                <label
+                                    className="group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800"
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+
+                                        const file = e.dataTransfer.files?.[0];
+                                        if (!file) return;
+
+                                        setCompany({
+                                            ...company,
+                                            license_file_url: file.name,
+                                        });
+                                    }}
+                                >
                                     <input
                                         type="file"
-                                        accept=".pdf,image/*"
+                                        accept=".pdf,.png,.jpg,.jpeg"
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -189,21 +315,28 @@ function CompanySettingsSection({ user }: { user: any }) {
                                         }}
                                     />
 
-                                    <Briefcase className="w-10 h-10 text-blue-500 mb-3" />
+                                    <Briefcase className="w-11 h-11 text-blue-500 mb-4" />
 
                                     <p className="font-semibold text-slate-700 dark:text-slate-200">
-                                        Chọn hoặc kéo thả tệp vào đây
+                                        Kéo & thả file vào đây
                                     </p>
 
-                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                        Hỗ trợ PDF, JPG, PNG (tối đa 10MB)
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                        hoặc <span className="text-blue-600 font-semibold">bấm để chọn file</span>
                                     </p>
 
-                                    {company.license_file_url && (
-                                        <div className="mt-4 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-                                            ✓ {company.license_file_url}
-                                        </div>
-                                    )}
+                                    <p className="mt-2 text-xs text-slate-400">
+                                        PDF, JPG, PNG • Tối đa 10MB
+                                    </p>
+
+                                    <a
+                                        href={company.license_file_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-sm text-blue-600 hover:underline"
+                                    >
+                                        Xem file
+                                    </a>
                                 </label>
                             </div>
                         </div>
@@ -262,9 +395,6 @@ function CompanySettingsSection({ user }: { user: any }) {
     );
 }
 
-// ============================================================================
-// COMPONENT DÀNH CHO ADMIN (QUẢN LÝ USER - CODE CŨ CỦA BẠN ĐÃ BỌC LẠI)
-// ============================================================================
 function AdminSettingsSection({ user }: { user: any }) {
     const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);

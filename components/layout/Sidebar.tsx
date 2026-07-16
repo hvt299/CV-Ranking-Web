@@ -67,13 +67,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
     const adminMenu: MenuItem[] = [
         { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
-        { name: "Quản lý công ty", icon: Building2, href: "/companies" },
+        { name: "Quản lý công ty", icon: Building2, href: "/admin/companies" },
         { name: "Quản lý tuyển dụng", icon: Briefcase, href: "/jobs" },
         { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
         { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
         { name: "Hộp thư", icon: Mail, href: "/messages" },
         { name: "Phân tích hệ thống", icon: BarChart2, href: "/analytics" },
-        { name: "Nhật ký hệ thống", icon: ShieldCheck, href: "/audit-logs" },
+        { name: "Nhật ký hệ thống", icon: ShieldCheck, href: "/admin/audit-logs" },
     ];
 
     const mainMenuItems = isApplicant
@@ -128,7 +128,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden md:flex absolute -right-3 top-24 w-6 h-6 bg-blue-600 text-white rounded-full items-center justify-center hover:bg-blue-500 hover:scale-110 shadow-lg shadow-blue-500/30 transition-all z-50"
+                    className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-blue-600 text-white rounded-full items-center justify-center hover:bg-blue-500 hover:scale-110 shadow-lg shadow-blue-500/30 transition-all z-50"
                 >
                     {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </button>

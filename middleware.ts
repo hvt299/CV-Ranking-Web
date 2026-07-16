@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { UserRole } from '@/types';
 
 function decodeJWT(token: string) {
     try {
@@ -30,28 +31,39 @@ export function middleware(request: NextRequest) {
 
     if (token) {
         const payload = decodeJWT(token);
-        const role = payload?.role || 'applicant';
+        const role = payload?.role || UserRole.APPLICANT;
+
+        const authRoutes = ['/login', '/register', '/reset-password', '/forgot-password', '/verify'];
+        const isTryingToAccessAuthRoute = authRoutes.some(r => pathname === r || pathname.startsWith(`${r}?`));
+
+        if (isTryingToAccessAuthRoute) {
+            if (role === UserRole.ADMIN || role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) {
+                return NextResponse.redirect(new URL('/dashboard', request.url));
+            } else {
+                return NextResponse.redirect(new URL('/apply', request.url));
+            }
+        }
 
         if (pathname.startsWith('/admin')) {
-            if (role !== 'admin') {
-                const fallbackUrl = (role === 'hr_owner' || role === 'hr_member') ? '/dashboard' : '/apply';
+            if (role !== UserRole.ADMIN) {
+                const fallbackUrl = (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) ? '/dashboard' : '/apply';
                 return NextResponse.redirect(new URL(fallbackUrl, request.url));
             }
             return NextResponse.next();
         }
 
-        if (role === 'admin') {
+        if (role === UserRole.ADMIN) {
             return NextResponse.next();
         }
 
         const hrOnlyRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics', '/interviews', '/messages', '/settings'];
         const isTryingToAccessHrRoute = hrOnlyRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
 
-        if (role === 'applicant' && isTryingToAccessHrRoute) {
+        if (role === UserRole.APPLICANT && isTryingToAccessHrRoute) {
             return NextResponse.redirect(new URL('/apply', request.url));
         }
 
-        const isHrRole = role === 'hr_owner' || role === 'hr_member';
+        const isHrRole = role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER;
         if (isHrRole && (pathname.startsWith('/apply') || pathname.startsWith('/my-applications'))) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }

@@ -10,6 +10,7 @@ import { clearAllAuthData } from '@/lib/auth-utils';
 interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
+    loading: boolean;
     login: (token: string) => void;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     const fetchUserProfile = async () => {
@@ -34,35 +36,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
-        const token = Cookies.get('token');
-        if (token) {
-            setIsAuthenticated(true);
-            fetchUserProfile();
-        }
+        const initAuth = async () => {
+            const token = Cookies.get('token');
+
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const user = await fetchUserProfile();
+
+                if (user) {
+                    setIsAuthenticated(true);
+                } else {
+                    clearAllAuthData();
+                }
+            } catch {
+                clearAllAuthData();
+                setUser(null);
+                setIsAuthenticated(false);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     const login = (token: string) => {
+        setLoading(true);
+
         Cookies.set('token', token, { expires: 1, path: '/' });
-        setIsAuthenticated(true);
 
-        api.get('/auth/me').then(res => {
-            const fetchedUser: User = res.data;
-            setUser(fetchedUser);
+        api.get('/auth/me')
+            .then((res) => {
+                const fetchedUser: User = res.data;
 
-            if (fetchedUser.role === UserRole.APPLICANT) {
-                router.push('/apply');
-            } else if (
-                fetchedUser.role === UserRole.HR_OWNER ||
-                fetchedUser.role === UserRole.HR_MEMBER ||
-                fetchedUser.role === UserRole.ADMIN
-            ) {
-                router.push('/dashboard');
-            } else {
-                router.push('/apply');
-            }
-        }).catch(() => {
-            router.push('/apply');
-        });
+                setUser(fetchedUser);
+                setIsAuthenticated(true);
+
+                if (fetchedUser.role === UserRole.APPLICANT) {
+                    router.push('/apply');
+                } else if (
+                    fetchedUser.role === UserRole.HR_OWNER ||
+                    fetchedUser.role === UserRole.HR_MEMBER ||
+                    fetchedUser.role === UserRole.ADMIN
+                ) {
+                    router.push('/dashboard');
+                } else {
+                    router.push('/apply');
+                }
+            })
+            .catch(() => {
+                clearAllAuthData();
+                setUser(null);
+                setIsAuthenticated(false);
+                router.push('/login');
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     const logout = () => {
@@ -80,7 +114,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser }}>
+        <AuthContext.Provider
+            value={{
+                isAuthenticated,
+                user,
+                loading,
+                login,
+                logout,
+                updateUser,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

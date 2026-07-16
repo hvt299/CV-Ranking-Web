@@ -14,6 +14,7 @@ import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 import JobDetailsContent from '@/components/jobs/JobDetailsContent';
 import CandidateKanban from '@/components/candidates/CandidateKanban';
 import DocumentViewer from '@/components/ui/DocumentViewer';
+import InterviewEmailModal from '@/components/candidates/InterviewEmailModal';
 import { ApplicationStatus } from '@/types';
 
 const CV_STATUSES = [
@@ -78,9 +79,18 @@ export default function JobLeaderboardPage() {
         await executeStatusUpdate(appId, newStatus);
     };
 
-    const executeStatusUpdate = async (appId: string, newStatus: string) => {
+    const executeStatusUpdate = async (appId: string, newStatus: string, emailData?: any) => {
         try {
-            await api.patch(`/cv/applications/${appId}`, { status: newStatus });
+            const payload: any = { status: newStatus };
+            
+            if (emailData) {
+                payload.send_email = emailData.send_email || false;
+                if (emailData.interview_schedule) {
+                    payload.interview_schedule = emailData.interview_schedule;
+                }
+            }
+
+            await api.patch(`/cv/applications/${appId}`, payload);
             toast.success("Cập nhật trạng thái thành công");
             setCandidates(prev => prev.map(cv => cv.id === appId ? { ...cv, status: newStatus } : cv));
             setEmailModalData(null);
@@ -397,32 +407,12 @@ export default function JobLeaderboardPage() {
 
             {/* MODALS */}
             {emailModalData && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-                        <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 mx-auto">
-                            <Send className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-xl font-bold text-center mb-2">Gửi Email Mời Phỏng Vấn</h3>
-                        <p className="text-sm text-center text-slate-500 mb-6">Bạn đang chuyển CV này sang vòng phỏng vấn. Bạn có muốn cấu hình gửi email tự động không?</p>
-
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => {
-                                    toast.error("Form nhập lịch sẽ được ráp ở file Modal riêng!");
-                                }}
-                                className="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700"
-                            >
-                                Cấu hình Lịch & Gửi Email
-                            </button>
-                            <button
-                                onClick={() => executeStatusUpdate(emailModalData.appId, emailModalData.newStatus)}
-                                className="w-full py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600"
-                            >
-                                Bỏ qua, chỉ đổi trạng thái
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <InterviewEmailModal
+                    isOpen={!!emailModalData}
+                    onClose={() => setEmailModalData(null)}
+                    candidateName={emailModalData.filename || 'Ứng viên'}
+                    onConfirm={(data) => executeStatusUpdate(emailModalData.appId, emailModalData.newStatus, data)}
+                />
             )}
 
             {editingNote && (

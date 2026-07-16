@@ -6,8 +6,12 @@ import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import NotificationToast from '@/components/ui/NotificationToast';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+    const { loading } = useAuth();
+
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -22,6 +26,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const isAuthPage = authRoutes.includes(pathname);
 
     if (!mounted) return null;
+
+    if (loading) {
+        return (
+            <div className="flex h-screen flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-[#0f172a]">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Đang tải...
+                </p>
+            </div>
+        );
+    }
 
     if (isAuthPage) {
         return <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a]">{children}</div>;

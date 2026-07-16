@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye } from 'lucide-react';
+import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
-import { Notification, NotificationReadStatus, NotificationType, ApplicationStatus } from '@/types';
+import { Notification, NotificationReadStatus, NotificationType, ApplicationStatus, UserRole } from '@/types';
 
 const NOTIFICATION_ICONS = {
     [NotificationType.SUCCESS]: CheckCircle2,
@@ -21,19 +21,61 @@ const NOTIFICATION_COLORS = {
     [NotificationType.WARNING]: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10'
 };
 
+const APPLICATION_STATUS_CONFIG: Record<
+    ApplicationStatus,
+    { label: string; colorClass: string }
+> = {
+    [ApplicationStatus.NEW]: {
+        label: 'Mới nộp',
+        colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+    },
+    [ApplicationStatus.REVIEWING]: {
+        label: 'Đang xem xét',
+        colorClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+    },
+    [ApplicationStatus.INTERVIEW]: {
+        label: 'Phỏng vấn',
+        colorClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400'
+    },
+    [ApplicationStatus.OFFERED]: {
+        label: 'Đề nghị (Offer)',
+        colorClass: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400'
+    },
+    [ApplicationStatus.HIRED]: {
+        label: 'Trúng tuyển',
+        colorClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+    },
+    [ApplicationStatus.REJECTED]: {
+        label: 'Từ chối',
+        colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
+    },
+    [ApplicationStatus.WITHDRAWN]: {
+        label: 'Đã rút hồ sơ',
+        colorClass: 'bg-slate-100 text-slate-500 dark:bg-slate-700/50 dark:text-slate-400'
+    },
+    [ApplicationStatus.EXPIRED]: {
+        label: 'Hết hạn',
+        colorClass: 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+    }
+};
+
 export default function NotificationBell() {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, loading } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const unreadCount = notifications.filter(n => n.status === NotificationReadStatus.UNREAD).length;
+    const isApplicant = user?.role === UserRole.APPLICANT;
 
-    useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
-    }, [isAuthenticated]);
+    const fetchNotifications = async () => {
+        if (!isAuthenticated || !isApplicant) return;
+        try {
+            const response = await api.get('/apply/notifications');
+            setNotifications(response.data);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        }
+    };
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -45,15 +87,9 @@ export default function NotificationBell() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const fetchNotifications = async () => {
-        if (!isAuthenticated) return;
-        try {
-            const response = await api.get('/apply/notifications');
-            setNotifications(response.data);
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
-        }
-    };
+    const unreadCount = notifications.filter(n => n.status === NotificationReadStatus.UNREAD).length;
+
+    if (loading || !isApplicant) return null;
 
     const markAsRead = async (notificationId: string) => {
         try {
@@ -91,22 +127,20 @@ export default function NotificationBell() {
     };
 
     const getStatusText = (status: string) => {
-        const statusMap: Record<string, string> = {
-            [ApplicationStatus.NEW]: 'Mới nộp',
-            [ApplicationStatus.REVIEWING]: 'Đang đánh giá',
-            [ApplicationStatus.INTERVIEW]: 'Mời phỏng vấn',
-            [ApplicationStatus.OFFERED]: 'Đề nghị làm việc',
-            [ApplicationStatus.HIRED]: 'Trúng tuyển',
-            [ApplicationStatus.REJECTED]: 'Từ chối',
-            [ApplicationStatus.WITHDRAWN]: 'Đã rút hồ sơ'
-        };
-        return statusMap[status] || status;
+        return APPLICATION_STATUS_CONFIG[status as ApplicationStatus]?.label || status;
     };
 
     return (
         <div className="relative" ref={dropdownRef}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={async () => {
+                    const next = !isOpen;
+                    setIsOpen(next);
+
+                    if (next) {
+                        await fetchNotifications();
+                    }
+                }}
                 className="relative p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
             >
                 <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'animate-pulse' : ''}`} />
@@ -162,25 +196,32 @@ export default function NotificationBell() {
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex-1">
                                                             <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{notification.title}</h4>
+
                                                             {notification.job_title_snapshot && (
-                                                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md inline-block">
-                                                                    📋 {notification.job_title_snapshot}
+                                                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                                                                    <Briefcase className="w-3 h-3" />
+                                                                    {notification.job_title_snapshot}
                                                                 </p>
                                                             )}
+
                                                             <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">{notification.message}</p>
 
-                                                            {notification.application_status_snapshot && (
-                                                                <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${['hired', 'offered', 'interview'].includes(notification.application_status_snapshot)
-                                                                    ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                                                                    : notification.application_status_snapshot === 'rejected'
-                                                                        ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
-                                                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                                                                    }`}>
-                                                                    🔄 Trạng thái: {getStatusText(notification.application_status_snapshot)}
-                                                                </span>
-                                                            )}
+                                                            {notification.application_status_snapshot && (() => {
+                                                                const statusKey = notification.application_status_snapshot as ApplicationStatus;
+                                                                const statusInfo = APPLICATION_STATUS_CONFIG[statusKey];
+                                                                const badgeColor = statusInfo?.colorClass || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+
+                                                                return (
+                                                                    <span className={`inline-flex items-center gap-1 mt-2 px-3 py-1 text-xs font-medium rounded-full ${badgeColor}`}>
+                                                                        <RefreshCw className="w-3 h-3 animate-spin-slow" />
+                                                                        Trạng thái: {getStatusText(notification.application_status_snapshot)}
+                                                                    </span>
+                                                                );
+                                                            })()}
+
                                                             <p className="text-xs text-slate-400 mt-3 flex items-center gap-1">
-                                                                🕒 {new Date(notification.created_at).toLocaleString('vi-VN')}
+                                                                <Clock className="w-3 h-3" />
+                                                                {new Date(notification.created_at).toLocaleString('vi-VN')}
                                                             </p>
                                                         </div>
 
