@@ -4,13 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
-
-interface User {
-    full_name: string;
-    email: string;
-    avatar: string;
-    role: 'hr' | 'applicant' | 'admin';
-}
+import { User, UserRole } from '@/types';
+import { clearAllAuthData } from '@/lib/auth-utils';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -47,38 +42,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = (token: string) => {
-        Cookies.set('token', token, { expires: 1 });
+        Cookies.set('token', token, { expires: 1, path: '/' });
         setIsAuthenticated(true);
-        
-        // Fetch user profile và redirect dựa trên role
+
         api.get('/auth/me').then(res => {
-            setUser(res.data);
-            const role = res.data.role;
-            
-            // Redirect dựa trên role
-            if (role === 'applicant') {
+            const fetchedUser: User = res.data;
+            setUser(fetchedUser);
+
+            if (fetchedUser.role === UserRole.APPLICANT) {
                 router.push('/apply');
-            } else if (role === 'hr' || role === 'admin') {
+            } else if (
+                fetchedUser.role === UserRole.HR_OWNER ||
+                fetchedUser.role === UserRole.HR_MEMBER ||
+                fetchedUser.role === UserRole.ADMIN
+            ) {
                 router.push('/dashboard');
             } else {
-                // Fallback nếu role không xác định
                 router.push('/apply');
             }
         }).catch(() => {
-            // Nếu lỗi, mặc định về apply
             router.push('/apply');
         });
     };
 
     const logout = () => {
-        Cookies.remove('token');
-        Cookies.remove('token', { path: '/' });
-        
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-        }
-        
+        clearAllAuthData();
+
         setIsAuthenticated(false);
         setUser(null);
         router.push('/login');
@@ -99,6 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within an AuthProvider');
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
     return context;
 };

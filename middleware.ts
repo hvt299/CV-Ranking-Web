@@ -18,7 +18,11 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
     const { pathname } = request.nextUrl;
 
-    const isProtected = ['/dashboard', '/jobs', '/candidates', '/analytics', '/interviews', '/messages', '/settings', '/apply', '/my-applications', '/profile', '/help'].some(r => pathname === r || pathname.startsWith(`${r}/`));
+    const isProtected = [
+        '/dashboard', '/jobs', '/candidates', '/analytics', '/interviews',
+        '/messages', '/settings', '/apply', '/my-applications', '/profile',
+        '/help', '/admin'
+    ].some(r => pathname === r || pathname.startsWith(`${r}/`));
 
     if (isProtected && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
@@ -27,6 +31,14 @@ export function middleware(request: NextRequest) {
     if (token) {
         const payload = decodeJWT(token);
         const role = payload?.role || 'applicant';
+
+        if (pathname.startsWith('/admin')) {
+            if (role !== 'admin') {
+                const fallbackUrl = (role === 'hr_owner' || role === 'hr_member') ? '/dashboard' : '/apply';
+                return NextResponse.redirect(new URL(fallbackUrl, request.url));
+            }
+            return NextResponse.next();
+        }
 
         if (role === 'admin') {
             return NextResponse.next();
@@ -39,9 +51,12 @@ export function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/apply', request.url));
         }
 
-        if (role === 'hr' && (pathname.startsWith('/apply') || pathname.startsWith('/my-applications'))) {
+        const isHrRole = role === 'hr_owner' || role === 'hr_member';
+        if (isHrRole && (pathname.startsWith('/apply') || pathname.startsWith('/my-applications'))) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
+
+        return NextResponse.next();
     }
 
     return NextResponse.next();

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -14,7 +13,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const [mounted, setMounted] = useState(false);
 
     const pathname = usePathname();
-    const { user, isAuthenticated } = useAuth();
 
     useEffect(() => {
         setMounted(true);
@@ -29,12 +27,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         return <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a]">{children}</div>;
     }
 
-    const role = user?.role || 'applicant';
-    const isApplicant = role === 'applicant';
-
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
-            
+
             {/* ================= 1. RENDER ĐỘNG SIDEBAR ================= */}
             <Sidebar
                 isCollapsed={isCollapsed}
@@ -53,7 +48,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <main className="flex-1 p-4 md:p-8 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
-                
+
             </div>
 
             {/* ================= 5. TOAST NOTIFICATION DÙNG CHUNG ================= */}

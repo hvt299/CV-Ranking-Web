@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
+import Select from 'react-select';
 
 interface JobSearchBarProps {
     searchQuery: string;
@@ -10,6 +11,7 @@ interface JobSearchBarProps {
         location: string;
         workMode: string;
         jobLevel: string;
+        employmentType: string;
         salaryMin: string;
         salaryMax: string;
         skills: string[];
@@ -20,6 +22,7 @@ interface JobSearchBarProps {
         locations: string[];
         workModes: string[];
         jobLevels: string[];
+        employmentTypes: string[];
         skills: string[];
         companies: string[];
     };
@@ -50,10 +53,10 @@ export default function JobSearchBar({
     }, [searchQuery, filters, activeFiltersCount]);
 
     const toggleSkillFilter = (skill: string) => {
-        const newSkills = filters.skills.includes(skill) 
+        const newSkills = filters.skills.includes(skill)
             ? filters.skills.filter(s => s !== skill)
             : [...filters.skills, skill];
-        
+
         onFiltersChange({ ...filters, skills: newSkills });
     };
 
@@ -105,7 +108,7 @@ export default function JobSearchBar({
                         </button>
                     )}
                 </div>
-                
+
                 {activeFiltersCount > 0 && (
                     <button
                         onClick={onClearFilters}
@@ -180,64 +183,67 @@ export default function JobSearchBar({
             {/* Advanced Filters */}
             {showFilters && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-slate-600">
+                    <style jsx global>{`
+                        .dark-select__control { background-color: transparent !important; border-color: inherit !important; border-radius: 0.5rem !important; padding: 2px !important; }
+                        .dark .dark-select__control { border-color: #475569 !important; }
+                        .dark .dark-select__menu { background-color: #1e293b !important; border: 1px solid #475569 !important; }
+                        .dark .dark-select__option:hover { background-color: #334155 !important; }
+                        .dark .dark-select__single-value { color: white !important; }
+                    `}</style>
+
                     {/* Location Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Địa điểm</label>
-                        <select
-                            value={filters.location}
-                            onChange={(e) => onFiltersChange({ ...filters, location: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Tất cả địa điểm</option>
-                            {filterOptions.locations.map(location => (
-                                <option key={location} value={location}>{location}</option>
-                            ))}
-                        </select>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả địa điểm' }, ...filterOptions.locations.map(l => ({ value: l, label: l }))]}
+                            value={{ value: filters.location, label: filters.location || 'Tất cả địa điểm' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, location: selected?.value || '' })}
+                            placeholder="Tìm địa điểm..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Loại hình</label>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.employmentTypes?.map(m => ({ value: m, label: m }))]}
+                            value={{ value: filters.employmentType, label: filters.employmentType || 'Tất cả' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, employmentType: selected?.value || '' })}
+                        />
                     </div>
 
                     {/* Work Mode Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Hình thức làm việc</label>
-                        <select
-                            value={filters.workMode}
-                            onChange={(e) => onFiltersChange({ ...filters, workMode: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Tất cả hình thức</option>
-                            {filterOptions.workModes.map(mode => (
-                                <option key={mode} value={mode}>{mode}</option>
-                            ))}
-                        </select>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.workModes.map(m => ({ value: m, label: m }))]}
+                            value={{ value: filters.workMode, label: filters.workMode || 'Tất cả' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, workMode: selected?.value || '' })}
+                        />
                     </div>
 
                     {/* Job Level Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Cấp bậc</label>
-                        <select
-                            value={filters.jobLevel}
-                            onChange={(e) => onFiltersChange({ ...filters, jobLevel: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Tất cả cấp bậc</option>
-                            {filterOptions.jobLevels.map(level => (
-                                <option key={level} value={level}>{level}</option>
-                            ))}
-                        </select>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.jobLevels.map(l => ({ value: l, label: l }))]}
+                            value={{ value: filters.jobLevel, label: filters.jobLevel || 'Tất cả' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, jobLevel: selected?.value || '' })}
+                        />
                     </div>
 
                     {/* Company Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Công ty</label>
-                        <select
-                            value={filters.company}
-                            onChange={(e) => onFiltersChange({ ...filters, company: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Tất cả công ty</option>
-                            {filterOptions.companies.map(company => (
-                                <option key={company} value={company}>{company}</option>
-                            ))}
-                        </select>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả công ty' }, ...filterOptions.companies.map(c => ({ value: c, label: c }))]}
+                            value={{ value: filters.company, label: filters.company || 'Tất cả công ty' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, company: selected?.value || '' })}
+                        />
                     </div>
 
                     {/* Salary Range */}
@@ -271,11 +277,10 @@ export default function JobSearchBar({
                                 <button
                                     key={skill}
                                     onClick={() => toggleSkillFilter(skill)}
-                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                                        filters.skills.includes(skill)
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
-                                    }`}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filters.skills.includes(skill)
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
+                                        }`}
                                 >
                                     {skill}
                                 </button>

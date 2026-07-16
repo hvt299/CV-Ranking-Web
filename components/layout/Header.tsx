@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '@/components/ui/NotificationBell';
+import { UserRole } from '@/types';
 
 interface HeaderProps {
     setIsMobileOpen: (val: boolean) => void;
@@ -32,8 +33,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const role = user?.role || 'applicant';
-    const isApplicant = role === 'applicant';
+    const role = user?.role || UserRole.APPLICANT;
+    const isApplicant = role === UserRole.APPLICANT;
 
     const getPageTitle = () => {
         switch (pathname) {
@@ -45,8 +46,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
     };
 
     const getRoleDisplayName = () => {
-        if (role === 'hr') return 'Nhà tuyển dụng';
-        if (role === 'admin') return 'Quản trị viên';
+        if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) return 'Nhà tuyển dụng';
+        if (role === UserRole.ADMIN) return 'Quản trị viên';
         return 'Ứng viên';
     };
 
@@ -92,10 +93,9 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                     </button>
                 )}
 
-                {/* 2. Chuông Thông Báo (Dùng chung cho TẤT CẢ các Role) */}
-                <NotificationBell />
+                {/* 2. Chuông Thông Báo */}
+                {isApplicant && <NotificationBell />}
 
-                {/* Đường kẻ chia cách */}
                 <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1"></div>
 
                 {/* 3. User Avatar & Dropdown */}
@@ -121,7 +121,6 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                         <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
                     </button>
 
-                    {/* Dropdown Menu Nội dung động */}
                     {isDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 animate-in fade-in slide-in-from-top-2">
                             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2">
@@ -133,7 +132,6 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 <User className="w-4 h-4" /> Hồ sơ của bạn
                             </Link>
 
-                            {/* Nút Về Trang Chủ động theo Role */}
                             <Link href={isApplicant ? "/apply" : "/dashboard"} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                 <Home className="w-4 h-4" /> {isApplicant ? 'Về trang tìm việc' : 'Về trang chủ'}
                             </Link>

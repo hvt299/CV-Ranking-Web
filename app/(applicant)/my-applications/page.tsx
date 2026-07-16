@@ -5,19 +5,11 @@ import { FileText, Briefcase, Bell, Eye, Trash2 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import StatusBadge from '@/components/ui/StatusBadge';
-
-const STATUS_COLORS: Record<string, string> = {
-    'Mới': 'bg-blue-100 text-blue-700',
-    'Đang xem xét': 'bg-amber-100 text-amber-700',
-    'Phỏng vấn': 'bg-purple-100 text-purple-700',
-    'Đề nghị (Offer)': 'bg-indigo-100 text-indigo-700',
-    'Trúng tuyển': 'bg-emerald-100 text-emerald-700',
-    'Từ chối': 'bg-rose-100 text-rose-700',
-};
+import { Application, Notification, NotificationReadStatus } from '@/types';
 
 export default function MyApplicationsPage() {
-    const [apps, setApps] = useState<any[]>([]);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [apps, setApps] = useState<Application[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showNotifications, setShowNotifications] = useState(false);
 
@@ -26,19 +18,19 @@ export default function MyApplicationsPage() {
             api.get('/apply/my-applications'),
             api.get('/apply/notifications')
         ])
-        .then(([appsRes, notifRes]) => {
-            setApps(appsRes.data);
-            setNotifications(notifRes.data);
-        })
-        .catch(() => toast.error('Không thể tải dữ liệu'))
-        .finally(() => setIsLoading(false));
+            .then(([appsRes, notifRes]) => {
+                setApps(appsRes.data);
+                setNotifications(notifRes.data);
+            })
+            .catch(() => toast.error('Không thể tải dữ liệu'))
+            .finally(() => setIsLoading(false));
     }, []);
 
     const markNotificationAsRead = async (notificationId: string) => {
         try {
             await api.patch(`/apply/notifications/${notificationId}/read`);
-            setNotifications(prev => 
-                prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n)
+            setNotifications(prev =>
+                prev.map(n => n.id === notificationId ? { ...n, status: NotificationReadStatus.READ } : n)
             );
         } catch (error) {
             toast.error('Không thể đánh dấu thông báo');
@@ -55,7 +47,7 @@ export default function MyApplicationsPage() {
         }
     };
 
-    const unreadNotifications = notifications.filter(n => n.status === 'unread');
+    const unreadNotifications = notifications.filter(n => n.status === NotificationReadStatus.UNREAD);
 
     if (isLoading) return (
         <div className="flex justify-center py-20">
@@ -70,7 +62,7 @@ export default function MyApplicationsPage() {
                     <h1 className="text-3xl font-black text-slate-800 dark:text-white">Hồ sơ đã nộp</h1>
                     <p className="text-slate-500 mt-1">Theo dõi trạng thái ứng tuyển của bạn</p>
                 </div>
-                
+
                 {unreadNotifications.length > 0 && (
                     <button
                         onClick={() => setShowNotifications(!showNotifications)}
@@ -92,9 +84,9 @@ export default function MyApplicationsPage() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-slate-800 dark:text-white">{notification.title}</h3>
-                                        {notification.job_title && (
+                                        {notification.job_title_snapshot && (
                                             <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-0.5">
-                                                {notification.job_title}
+                                                {notification.job_title_snapshot}
                                             </p>
                                         )}
                                         <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
@@ -145,20 +137,19 @@ export default function MyApplicationsPage() {
                                         <div>
                                             <h3 className="font-bold text-slate-800 dark:text-white">{app.job_title}</h3>
                                             <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1">
-                                                <FileText className="w-3.5 h-3.5" /> {app.filename}
+                                                {/* FALLBACK TÊN FILE VÌ BE MỚI LƯU TRONG BẢNG CVS */}
+                                                <FileText className="w-3.5 h-3.5" /> {app.filename || 'CV đã đính kèm'}
                                             </p>
                                             <p className="text-xs text-slate-400 mt-1">
-                                                Nộp lúc: {new Date(app.submitted_at).toLocaleString('vi-VN')}
+                                                Nộp lúc: {new Date(app.applied_at).toLocaleString('vi-VN')}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-4">
-                                        {/* Status */}
                                         <StatusBadge status={app.status} showIcon={true} />
                                     </div>
                                 </div>
-
                             </div>
                         );
                     })}
