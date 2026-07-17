@@ -64,7 +64,20 @@ export default function RegisterPage() {
 
     const [isDarkMode, setIsDarkMode] = useState(false);
 
+    const [inviteToken, setInviteToken] = useState<string | null>(null);
+
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('invite_token');
+        if (token) {
+            setInviteToken(token);
+            setRole(UserRole.HR_MEMBER as any);
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.email) setEmail(payload.email);
+            } catch (e) { }
+        }
+
         const checkDark = () => {
             setIsDarkMode(document.documentElement.classList.contains('dark'));
         };
@@ -108,7 +121,8 @@ export default function RegisterPage() {
         try {
             await api.post('/auth/register', {
                 full_name: fullName, email, password, role,
-                ...(role === UserRole.HR_OWNER && {
+                invite_token: inviteToken,
+                ...(role === UserRole.HR_OWNER && !inviteToken && {
                     company_name: hrInfo.companyName,
                     tax_code: hrInfo.taxCode,
                     industry: hrInfo.industry,
@@ -118,7 +132,11 @@ export default function RegisterPage() {
                 })
             });
 
-            toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.', { duration: 5000 });
+            if (inviteToken) {
+                toast.success('Gia nhập công ty thành công! Đang chuyển hướng...', { duration: 3000 });
+            } else {
+                toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.', { duration: 5000 });
+            }
             router.push('/login');
         } catch (err: any) {
             const detail = err.response?.data?.detail;
@@ -263,20 +281,37 @@ export default function RegisterPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-semibold mb-2">Bạn là</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button type="button" onClick={() => setRole(UserRole.APPLICANT)} className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 transition-all ${role === UserRole.APPLICANT ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-blue-200'}`}>
-                                <User className="w-6 h-6 mb-1" />
-                                <span className="font-bold text-sm">Ứng viên</span>
-                            </button>
-                            <button type="button" onClick={() => setRole(UserRole.HR_OWNER)} className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 transition-all ${role === UserRole.HR_OWNER ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-blue-200'}`}>
-                                <Briefcase className="w-6 h-6 mb-1" />
-                                <span className="font-bold text-sm">Nhà tuyển dụng</span>
-                            </button>
+                    {/* Phần chọn vai trò (Chỉ hiển thị khi không có inviteToken) */}
+                    {!inviteToken && (
+                        <div>
+                            <label className="block text-sm font-semibold mb-2">Bạn là</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button type="button" onClick={() => setRole(UserRole.APPLICANT)} className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 transition-all ${role === UserRole.APPLICANT ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-blue-200'}`}>
+                                    <User className="w-6 h-6 mb-1" />
+                                    <span className="font-bold text-sm">Ứng viên</span>
+                                </button>
+                                <button type="button" onClick={() => setRole(UserRole.HR_OWNER)} className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 transition-all ${role === UserRole.HR_OWNER ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-blue-200'}`}>
+                                    <Briefcase className="w-6 h-6 mb-1" />
+                                    <span className="font-bold text-sm">Nhà tuyển dụng</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
+                    {/* Thông báo nếu có inviteToken */}
+                    {inviteToken && (
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-4 rounded-2xl flex items-center gap-3">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 rounded-full shrink-0">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-indigo-800 dark:text-indigo-400">Thư mời gia nhập Hệ thống</p>
+                                <p className="text-xs text-indigo-600/80 dark:text-indigo-400/80">Bạn đang tạo tài khoản nhân sự. Vui lòng thiết lập mật khẩu.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Thông tin cơ bản */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold mb-1.5">Họ và tên</label>
@@ -294,7 +329,7 @@ export default function RegisterPage() {
                         </div>
                     </div>
 
-                    {/* KHU VỰC THÔNG TIN NHÀ TUYỂN DỤNG */}
+                    {/* Khu vực thông tin nhà tuyển dụng (Sẽ hiển thị nếu role là HR_OWNER) */}
                     {role === UserRole.HR_OWNER && (
                         <div className="animate-in fade-in slide-in-from-top-2 p-5 bg-blue-50/50 dark:bg-slate-800/50 rounded-2xl border border-blue-100 dark:border-slate-700 space-y-4 mt-2">
                             <h3 className="text-sm font-bold text-blue-800 dark:text-blue-400 flex items-center gap-2"><Building className="w-4 h-4" /> Hồ sơ Doanh nghiệp</h3>
@@ -302,16 +337,15 @@ export default function RegisterPage() {
                                 <div>
                                     <label className="block text-xs font-semibold mb-1">Mã số thuế <span className="text-rose-500">*</span></label>
                                     <div className="flex gap-2">
-                                        <input type="text" required value={hrInfo.taxCode} onChange={e => setHrInfo({ ...hrInfo, taxCode: e.target.value })} className="min-w-0 flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="VD: 0312..." />
-                                        <button type="button" onClick={() => handleLookupTax(hrInfo.taxCode, false)} className="px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shrink-0"><Search className="w-4 h-4" /></button>
+                                        <input type="text" required value={hrInfo.taxCode} onChange={e => setHrInfo({ ...hrInfo, taxCode: e.target.value })} className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="VD: 0312..." />
+                                        <button type="button" onClick={() => handleLookupTax(hrInfo.taxCode, false)} className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shrink-0 transition-colors"><Search className="w-4 h-4" /></button>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold mb-1">Tên Công ty <span className="text-rose-500">*</span></label>
-                                    <input type="text" required value={hrInfo.companyName} onChange={e => setHrInfo({ ...hrInfo, companyName: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="TechCorp" />
+                                    <input type="text" required value={hrInfo.companyName} onChange={e => setHrInfo({ ...hrInfo, companyName: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="TechCorp" />
                                 </div>
 
-                                {/* SMART DROPDOWN NGÀNH NGHỀ */}
                                 <div>
                                     <label className="block text-xs font-semibold mb-1">Ngành nghề</label>
                                     <Select
@@ -326,8 +360,8 @@ export default function RegisterPage() {
                                 <div>
                                     <label className="block text-xs font-semibold mb-1">Quy mô</label>
                                     <div className="relative">
-                                        <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
-                                        <select value={hrInfo.size} onChange={e => setHrInfo({ ...hrInfo, size: e.target.value })} className="w-full pl-8 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white dark:bg-[#0f172a] text-sm outline-none">
+                                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                        <select value={hrInfo.size} onChange={e => setHrInfo({ ...hrInfo, size: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500 appearance-none">
                                             <option value="">Chọn quy mô</option>
                                             <option value="1-50">1-50 nhân sự</option>
                                             <option value="51-200">51-200 nhân sự</option>
@@ -339,32 +373,28 @@ export default function RegisterPage() {
                                 <div className="md:col-span-2">
                                     <label className="block text-xs font-semibold mb-1">Địa chỉ</label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
-                                        <input type="text" value={hrInfo.address} onChange={e => setHrInfo({ ...hrInfo, address: e.target.value })} className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 bg-white dark:bg-[#0f172a] text-sm outline-none" placeholder="Địa chỉ trụ sở chính" />
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                        <input type="text" value={hrInfo.address} onChange={e => setHrInfo({ ...hrInfo, address: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="Địa chỉ trụ sở chính" />
                                     </div>
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-xs font-semibold mb-1">Website (Tùy chọn)</label>
                                     <div className="relative">
-                                        <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
-                                        <input type="url" value={hrInfo.website} onChange={e => setHrInfo({ ...hrInfo, website: e.target.value })} className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 bg-white dark:bg-[#0f172a] text-sm outline-none" placeholder="https://www.company-website.com" />
+                                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                        <input type="url" value={hrInfo.website} onChange={e => setHrInfo({ ...hrInfo, website: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="https://www.company.com" />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
+                    {/* Phần mật khẩu */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold mb-1.5">Mật khẩu</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required minLength={8} value={password} onChange={e => setPassword(e.target.value)}
-                                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 rounded-xl outline-none focus:border-blue-500 text-sm"
-                                    placeholder="••••••••"
-                                />
+                                <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 rounded-xl outline-none focus:border-blue-500 text-sm" placeholder="••••••••" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -374,12 +404,7 @@ export default function RegisterPage() {
                             <label className="block text-sm font-semibold mb-1.5">Xác nhận mật khẩu</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                <input
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 rounded-xl outline-none focus:border-blue-500 text-sm"
-                                    placeholder="••••••••"
-                                />
+                                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 rounded-xl outline-none focus:border-blue-500 text-sm" placeholder="••••••••" />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -428,7 +453,7 @@ export default function RegisterPage() {
             {showRoleModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-[#1e293b] p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <h3 className="text-2xl font-bold text-center mb-2">Chào mừng người mới! 🎉</h3>
+                        <h3 className="text-2xl font-bold text-center mb-2">Chào mừng người mới!</h3>
                         <p className="text-slate-500 text-center text-sm mb-6">Vui lòng chọn vai trò để hoàn tất hồ sơ.</p>
 
                         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -448,35 +473,50 @@ export default function RegisterPage() {
                                     <div>
                                         <label className="block text-xs font-semibold mb-1">Mã số thuế <span className="text-rose-500">*</span></label>
                                         <div className="flex gap-2">
-                                            <input type="text" required value={socialHrInfo.taxCode} onChange={e => setSocialHrInfo({ ...socialHrInfo, taxCode: e.target.value })} className="min-w-0 flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm" placeholder="VD: 0312..." />
-                                            <button type="button" onClick={() => handleLookupTax(socialHrInfo.taxCode, true)} className="px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shrink-0"><Search className="w-4 h-4" /></button>
+                                            <input type="text" required value={socialHrInfo.taxCode} onChange={e => setSocialHrInfo({ ...socialHrInfo, taxCode: e.target.value })} className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="VD: 0312..." />
+                                            <button type="button" onClick={() => handleLookupTax(socialHrInfo.taxCode, true)} className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shrink-0 transition-colors"><Search className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold mb-1">Tên Công ty <span className="text-rose-500">*</span></label>
-                                        <input type="text" required value={socialHrInfo.companyName} onChange={e => setSocialHrInfo({ ...socialHrInfo, companyName: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 text-sm outline-none focus:border-blue-500" />
+                                        <input type="text" required value={socialHrInfo.companyName} onChange={e => setSocialHrInfo({ ...socialHrInfo, companyName: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="TechCorp" />
                                     </div>
-                                    {/* Smart Select trong Modal */}
                                     <div>
                                         <label className="block text-xs font-semibold mb-1">Ngành nghề</label>
                                         <Select
-                                            options={INDUSTRIES} styles={customSelectStyles} placeholder="Tìm..."
+                                            options={INDUSTRIES}
+                                            styles={customSelectStyles}
+                                            placeholder="Tìm..."
+                                            noOptionsMessage={() => "Không tìm thấy"}
                                             onChange={(selected: any) => setSocialHrInfo({ ...socialHrInfo, industry: selected?.value || '' })}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold mb-1">Quy mô</label>
-                                        <select value={socialHrInfo.size} onChange={e => setSocialHrInfo({ ...socialHrInfo, size: e.target.value })} className="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm outline-none">
-                                            <option value="">Chọn quy mô</option>
-                                            <option value="1-50">1-50 nhân sự</option>
-                                            <option value="51-200">51-200 nhân sự</option>
-                                            <option value="201-1000">201-1000 nhân sự</option>
-                                            <option value="1000+">Hơn 1000</option>
-                                        </select>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <select value={socialHrInfo.size} onChange={e => setSocialHrInfo({ ...socialHrInfo, size: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500 appearance-none">
+                                                <option value="">Chọn quy mô</option>
+                                                <option value="1-50">1-50 nhân sự</option>
+                                                <option value="51-200">51-200 nhân sự</option>
+                                                <option value="201-1000">201-1000 nhân sự</option>
+                                                <option value="1000+">Hơn 1000</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div className="md:col-span-2">
                                         <label className="block text-xs font-semibold mb-1">Địa chỉ</label>
-                                        <input type="text" value={socialHrInfo.address} onChange={e => setSocialHrInfo({ ...socialHrInfo, address: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 text-sm outline-none focus:border-blue-500" />
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <input type="text" value={socialHrInfo.address} onChange={e => setSocialHrInfo({ ...socialHrInfo, address: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="Địa chỉ trụ sở chính" />
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-semibold mb-1">Website (Tùy chọn)</label>
+                                        <div className="relative">
+                                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <input type="url" value={socialHrInfo.website} onChange={e => setSocialHrInfo({ ...socialHrInfo, website: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="https://www.company.com" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

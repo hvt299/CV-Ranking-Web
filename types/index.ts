@@ -149,11 +149,19 @@ export interface Job {
   company_id: string;
   company_name?: string;
   status: JobStatus;
+  
+  is_hot?: boolean;
+  industry?: string;
+  
   job_level: string;
   employment_type: string;
   work_mode: string;
   headcount?: number;
   deadline?: string;
+  probation_period?: string;
+  gender_requirement?: string;
+  languages?: string[];
+  required_certifications?: string[];
 
   required_skills: SkillDetail[];
   preferred_skills?: SkillDetail[];
@@ -260,6 +268,13 @@ export interface AIScore {
   skill_details: SkillMatchDetail[];
   missing_required_skills: string[];
   top_contributing_sentences: string[];
+}
+
+export interface InterviewSchedule {
+  interview_time: string;
+  location: string;
+  meeting_link?: string;
+  message?: string;
 }
 
 export interface NoteEntry {
