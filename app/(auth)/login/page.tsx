@@ -1,14 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Lock, Mail, ArrowRight, Search, Eye, EyeOff, User, Briefcase } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Search, Eye, EyeOff, User, Briefcase, Globe, MapPin, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useLinkedIn } from 'react-linkedin-login-oauth2';
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
+import Select from 'react-select';
+
+const INDUSTRIES = [
+    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
+    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
+    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
+    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
+    { label: 'Công nghệ Thông tin', value: 'it' },
+    { label: 'Lao động phổ thông', value: 'labor' },
+    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
+    { label: 'Bất động sản', value: 'realestate' },
+    { label: 'Xây dựng', value: 'construction' },
+    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
+    { label: 'Sản xuất', value: 'manufacturing' },
+    { label: 'Giáo dục/Đào tạo', value: 'education' },
+    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
+    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
+    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
+    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
+    { label: 'Tư vấn chuyên môn', value: 'consulting' },
+    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
+    { label: 'Thiết kế', value: 'design' },
+    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
+    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
+    { label: 'Tài xế', value: 'driver' },
+    { label: 'Biên phiên dịch', value: 'translation' },
+    { label: 'Luật', value: 'law' },
+    { label: 'Nhóm nghề khác', value: 'other' }
+];
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -24,14 +53,37 @@ export default function LoginPage() {
     const [socialProvider, setSocialProvider] = useState<'google' | 'linkedin'>('google');
 
     const [selectedSocialRole, setSelectedSocialRole] = useState<UserRole.HR_OWNER | UserRole.APPLICANT>(UserRole.APPLICANT);
-    const [socialCompanyName, setSocialCompanyName] = useState('');
-    const [socialTaxCode, setSocialTaxCode] = useState('');
 
+    // ĐÃ FIX: Gộp chung thành 1 object state đồng bộ với register
+    const [socialHrInfo, setSocialHrInfo] = useState({
+        companyName: '',
+        taxCode: '',
+        industry: '',
+        size: '',
+        address: '',
+        website: ''
+    });
+
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const checkDark = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
+        checkDark();
+        const observer = new MutationObserver(checkDark);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+
+    // ĐÃ FIX: Hàm lookup cập nhật đúng vào socialHrInfo
     const handleLookupTax = async (code: string) => {
         if (!code.trim()) return toast.error("Vui lòng nhập Mã số thuế");
         try {
             const res = await api.get(`/companies/lookup-tax/${code}`);
-            setSocialCompanyName(res.data.company_name);
+            setSocialHrInfo(prev => ({
+                ...prev,
+                companyName: res.data.company_name,
+                address: res.data.address || ''
+            }));
             toast.success("Đã tìm thấy thông tin công ty!");
         } catch (e: any) {
             toast.error(e.response?.data?.detail || "Không tìm thấy dữ liệu từ Mã số thuế này");
@@ -55,13 +107,21 @@ export default function LoginPage() {
         }
     };
 
-    const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', targetRole?: string, targetCompany?: string, targetTaxCode?: string) => {
+    // ĐÃ FIX: Payload đẩy lên Backend nhận đầy đủ thông tin HR
+    const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
         try {
             setIsLoading(true);
             const payload: any = { access_token: accessToken };
-            if (targetRole) payload.role = targetRole;
-            if (targetCompany) payload.company_name = targetCompany;
-            if (targetTaxCode) payload.tax_code = targetTaxCode;
+            if (roleToSubmit) payload.role = roleToSubmit;
+
+            if (companyData) {
+                payload.company_name = companyData.companyName;
+                payload.tax_code = companyData.taxCode;
+                payload.industry = companyData.industry;
+                payload.size = companyData.size;
+                payload.address = companyData.address;
+                payload.website = companyData.website;
+            }
 
             const endpoint = provider === 'google' ? '/auth/google' : '/auth/linkedin';
             const res = await api.post(endpoint, payload);
@@ -92,19 +152,48 @@ export default function LoginPage() {
     const { linkedInLogin } = useLinkedIn({
         clientId: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '',
         redirectUri: `${typeof window === 'object' && window.location.origin}/linkedin`,
-        
-        scope: 'openid profile email', 
-        
+        scope: 'openid profile email',
         onSuccess: (code) => handleSocialAuth(code, 'linkedin'),
         onError: () => toast.error('Đăng nhập LinkedIn thất bại')
     });
 
+    // ĐÃ FIX: Truyền socialHrInfo thay vì các biến cũ
     const submitSocialRole = () => {
-        if (selectedSocialRole === UserRole.HR_OWNER && (!socialCompanyName.trim() || !socialTaxCode.trim())) {
+        if (selectedSocialRole === UserRole.HR_OWNER && (!socialHrInfo.companyName.trim() || !socialHrInfo.taxCode.trim())) {
             toast.error('Vui lòng nhập Tên Công ty và Mã số thuế!');
             return;
         }
-        handleSocialAuth(tempSocialToken, socialProvider, selectedSocialRole, socialCompanyName, socialTaxCode);
+        handleSocialAuth(tempSocialToken, socialProvider, selectedSocialRole, socialHrInfo);
+    };
+
+    const customSelectStyles = {
+        control: (base: any, state: any) => ({
+            ...base,
+            backgroundColor: isDarkMode ? '#0f172a' : '#ffffff',
+            borderColor: state.isFocused ? '#3b82f6' : isDarkMode ? '#334155' : '#cbd5e1',
+            borderRadius: '0.75rem',
+            minHeight: '42px',
+            padding: '0 4px',
+            boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+            fontSize: '0.875rem',
+            color: isDarkMode ? '#e2e8f0' : '#334155',
+        }),
+        input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
+        singleValue: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
+        placeholder: (base: any) => ({ ...base, color: isDarkMode ? '#94a3b8' : '#64748b' }),
+        menu: (base: any) => ({
+            ...base, zIndex: 9999, backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+            borderRadius: '0.75rem', overflow: 'hidden', fontSize: '0.875rem',
+        }),
+        option: (base: any, state: any) => ({
+            ...base,
+            backgroundColor: state.isFocused ? isDarkMode ? '#334155' : '#eff6ff' : 'transparent',
+            color: isDarkMode ? '#e2e8f0' : '#334155',
+            cursor: 'pointer',
+            ':active': { backgroundColor: isDarkMode ? '#475569' : '#dbeafe' },
+        }),
+        dropdownIndicator: (base: any) => ({ ...base, color: isDarkMode ? '#94a3b8' : '#64748b' }),
+        clearIndicator: (base: any) => ({ ...base, color: isDarkMode ? '#94a3b8' : '#64748b' }),
     };
 
     return (
@@ -186,10 +275,10 @@ export default function LoginPage() {
                 </p>
             </div>
 
-            {/* MODAL CHỌN ROLE TỪ SOCIAL */}
+            {/* MODAL BỔ SUNG THÔNG TIN KHI DÙNG SOCIAL */}
             {showRoleModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-[#1e293b] p-8 rounded-3xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
+                    <div className="bg-white dark:bg-[#1e293b] p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
                         <h3 className="text-2xl font-bold text-center mb-2">Chào mừng người mới! 🎉</h3>
                         <p className="text-slate-500 text-center text-sm mb-6">Vui lòng chọn vai trò để hoàn tất hồ sơ.</p>
 
@@ -206,23 +295,60 @@ export default function LoginPage() {
 
                         {selectedSocialRole === UserRole.HR_OWNER && (
                             <div className="mb-6 space-y-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1.5">Mã số thuế <span className="text-rose-500">*</span></label>
-                                    <div className="flex gap-2">
-                                        <input type="text" required value={socialTaxCode} onChange={e => setSocialTaxCode(e.target.value)} className="min-w-0 flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="VD: 0312345678" />
-                                        <button type="button" onClick={() => handleLookupTax(socialTaxCode)} className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors shrink-0">
-                                            <Search className="w-5 h-5" />
-                                        </button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1">Mã số thuế <span className="text-rose-500">*</span></label>
+                                        <div className="flex gap-2">
+                                            <input type="text" required value={socialHrInfo.taxCode} onChange={e => setSocialHrInfo({ ...socialHrInfo, taxCode: e.target.value })} className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="VD: 0312..." />
+                                            <button type="button" onClick={() => handleLookupTax(socialHrInfo.taxCode)} className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shrink-0 transition-colors"><Search className="w-4 h-4" /></button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1.5">Tên Công ty <span className="text-rose-500">*</span></label>
-                                    <input type="text" required value={socialCompanyName} onChange={e => setSocialCompanyName(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="Tên công ty" />
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1">Tên Công ty <span className="text-rose-500">*</span></label>
+                                        <input type="text" required value={socialHrInfo.companyName} onChange={e => setSocialHrInfo({ ...socialHrInfo, companyName: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="TechCorp" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1">Ngành nghề</label>
+                                        <Select
+                                            options={INDUSTRIES}
+                                            styles={customSelectStyles}
+                                            placeholder="Tìm..."
+                                            noOptionsMessage={() => "Không tìm thấy"}
+                                            onChange={(selected: any) => setSocialHrInfo({ ...socialHrInfo, industry: selected?.value || '' })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1">Quy mô</label>
+                                        <div className="relative">
+                                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <select value={socialHrInfo.size} onChange={e => setSocialHrInfo({ ...socialHrInfo, size: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500 appearance-none">
+                                                <option value="">Chọn quy mô</option>
+                                                <option value="1-50">1-50 nhân sự</option>
+                                                <option value="51-200">51-200 nhân sự</option>
+                                                <option value="201-1000">201-1000 nhân sự</option>
+                                                <option value="1000+">Hơn 1000</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-semibold mb-1">Địa chỉ</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <input type="text" value={socialHrInfo.address} onChange={e => setSocialHrInfo({ ...socialHrInfo, address: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="Địa chỉ trụ sở chính" />
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-semibold mb-1">Website (Tùy chọn)</label>
+                                        <div className="relative">
+                                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                            <input type="url" value={socialHrInfo.website} onChange={e => setSocialHrInfo({ ...socialHrInfo, website: e.target.value })} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a] text-sm outline-none focus:border-blue-500" placeholder="https://www.company.com" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        <button onClick={submitSocialRole} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3.5 rounded-xl font-bold">
+                        <button onClick={submitSocialRole} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold">
                             {isLoading ? 'Đang xử lý...' : 'Hoàn tất'}
                         </button>
                     </div>

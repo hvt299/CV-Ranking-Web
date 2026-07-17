@@ -343,3 +343,23 @@ export interface DashboardAnalytics {
   total_cvs_in_pool: number;
   status_breakdown: Record<ApplicationStatus | string, number>;
 }
+
+// ==========================================
+// 10. INTERFACES CHO API REQUESTS (PAYLOADS)
+// ==========================================
+export interface ApplicationUpdatePayload {
+  status?: ApplicationStatus;
+  note_to_add?: string;
+  send_email?: boolean;
+  interview_schedule?: InterviewSchedule;
+}
+
+export interface ApplyJobRequest {
+  cv_document_id: string;
+  cover_letter?: string;
+}
+
+export interface SelfScoreRequest {
+  cv_document_id: string;
+  job_id: string;
+}
