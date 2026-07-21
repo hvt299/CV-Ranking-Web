@@ -215,7 +215,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 <label className="block text-sm font-semibold mb-2">Mã số thuế (MST) <span className="text-red-500">*</span></label>
                                 <div className="flex gap-2">
                                     <input type="text" value={taxCode} onChange={e => setTaxCode(e.target.value)} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="VD: 0312345678" />
-                                    <button onClick={handleLookupTax} className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold rounded-xl text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 whitespace-nowrap">Tra cứu VietQR</button>
+                                    <button onClick={handleLookupTax} className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold rounded-xl text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 whitespace-nowrap">Tra cứu</button>
                                 </div>
                             </div>
 

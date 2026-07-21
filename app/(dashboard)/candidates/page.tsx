@@ -18,6 +18,9 @@ export default function TalentPoolPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [filterEducation, setFilterEducation] = useState('All');
+    const [filterExperience, setFilterExperience] = useState('All');
+
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
@@ -117,9 +120,27 @@ export default function TalentPoolPage() {
 
     const filteredCandidates = candidates.filter(cv => {
         const term = searchTerm.toLowerCase();
-        return cv.filename?.toLowerCase().includes(term) ||
-            cv.candidate_info?.email?.toLowerCase().includes(term) ||
+        const cInfo = cv.candidate_info || {};
+
+        // 1. Lọc theo Text (Search)
+        const matchSearch = cv.filename?.toLowerCase().includes(term) ||
+            cInfo.email?.toLowerCase().includes(term) ||
             (cv.extracted_skills || []).some((s: string) => s.toLowerCase().includes(term));
+
+        // 2. Lọc theo Học vấn
+        const matchEdu = filterEducation === 'All' || cInfo.education_level === filterEducation;
+
+        // 3. Lọc theo Kinh nghiệm
+        let matchExp = true;
+        if (filterExperience !== 'All') {
+            const yoe = cInfo.years_of_experience || 0;
+            if (filterExperience === '0') matchExp = yoe < 1;
+            else if (filterExperience === '1-3') matchExp = yoe >= 1 && yoe <= 3;
+            else if (filterExperience === '3-5') matchExp = yoe > 3 && yoe <= 5;
+            else if (filterExperience === '5+') matchExp = yoe > 5;
+        }
+
+        return matchSearch && matchEdu && matchExp;
     });
 
     if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>;
@@ -154,20 +175,70 @@ export default function TalentPoolPage() {
                 )}
             </div>
 
-            {/* THANH TÌM KIẾM */}
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="relative w-full sm:w-1/2">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Tìm theo Tên, Email hoặc Kỹ năng..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            {/* THANH TÌM KIẾM & BỘ LỌC */}
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                    {/* Search Bar */}
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Tìm theo Tên, Email hoặc Kỹ năng..."
+                            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-blue-500 dark:text-white transition-colors placeholder:font-normal"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Dropdown Filters */}
+                    <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+                        <div className="relative min-w-42.5 grow sm:grow-0">
+                            <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                            <select
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none cursor-pointer focus:border-blue-500 dark:text-white transition-colors appearance-none"
+                                value={filterEducation}
+                                onChange={(e) => setFilterEducation(e.target.value)}
+                            >
+                                <option value="All">Tất cả học vấn</option>
+                                <option value="Không đề cập">Không đề cập</option>
+                                <option value="Trung cấp">Trung cấp</option>
+                                <option value="Cao đẳng">Cao đẳng</option>
+                                <option value="Cử nhân">Cử nhân / Đại học</option>
+                                <option value="Thạc sĩ">Thạc sĩ</option>
+                                <option value="Tiến sĩ">Tiến sĩ</option>
+                            </select>
+                        </div>
+
+                        <div className="relative min-w-45 grow sm:grow-0">
+                            <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                            <select
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none cursor-pointer focus:border-blue-500 dark:text-white transition-colors appearance-none"
+                                value={filterExperience}
+                                onChange={(e) => setFilterExperience(e.target.value)}
+                            >
+                                <option value="All">Tất cả kinh nghiệm</option>
+                                <option value="0">Chưa có kinh nghiệm</option>
+                                <option value="1-3">Từ 1 - 3 năm</option>
+                                <option value="3-5">Từ 3 - 5 năm</option>
+                                <option value="5+">Trên 5 năm</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div className="text-sm font-bold text-slate-500">
-                    Tổng cộng: <span className="text-blue-600">{filteredCandidates.length}</span> hồ sơ
+
+                {/* Footer Bộ Lọc */}
+                <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <div className="text-sm font-bold text-slate-500">
+                        Đã tìm thấy <span className="text-blue-600 dark:text-blue-400 text-base">{filteredCandidates.length}</span> hồ sơ
+                    </div>
+                    {(searchTerm || filterEducation !== 'All' || filterExperience !== 'All') && (
+                        <button
+                            onClick={() => { setSearchTerm(''); setFilterEducation('All'); setFilterExperience('All'); }}
+                            className="text-rose-500 hover:text-rose-600 text-xs font-bold hover:underline bg-rose-50 dark:bg-rose-900/20 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                            Xóa bộ lọc
+                        </button>
+                    )}
                 </div>
             </div>
 

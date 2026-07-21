@@ -78,6 +78,37 @@ export default function CreateEnterpriseJobPage() {
     const [languageInput, setLanguageInput] = useState('');
     const [aiWeights, setAiWeights] = useState({ skills: 40, nlp: 30, experience: 20, education: 10 });
 
+    const [locCountry, setLocCountry] = useState('Việt Nam');
+    const [locCity, setLocCity] = useState('');
+    const [locDistrict, setLocDistrict] = useState('');
+    const [locWard, setLocWard] = useState('');
+    const [locStreet, setLocStreet] = useState('');
+
+    useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            location: {
+                country: locCountry,
+                city: locCountry === 'Việt Nam' ? locCity : 'Nước ngoài',
+                address: locCountry === 'Việt Nam'
+                    ? [locStreet, locWard, locDistrict].filter(Boolean).join(', ')
+                    : locStreet
+            }
+        }));
+    }, [locCountry, locCity, locDistrict, locWard, locStreet]);
+
+    const handleNextStep = () => {
+        if (currentStep === 1) {
+            if (!formData.title.trim()) return toast.error("Vui lòng nhập Tên vị trí tuyển dụng!");
+            if (!formData.deadline) return toast.error("Vui lòng chọn Hạn nộp hồ sơ!");
+        }
+        if (currentStep === 2) {
+            if (!formData.description.trim() || formData.description === '<p></p>') return toast.error("Vui lòng nhập Mô tả công việc!");
+            if (!formData.requirements.trim() || formData.requirements === '<p></p>') return toast.error("Vui lòng nhập Yêu cầu công việc!");
+        }
+        setCurrentStep(prev => prev + 1);
+    };
+
     const parseCurrency = (val: string) => Number(val.replace(/[^0-9]/g, ''));
     const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN').format(val);
 
@@ -142,6 +173,11 @@ export default function CreateEnterpriseJobPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (currentStep < 3) {
+            handleNextStep();
+            return;
+        }
 
         const totalWeight = aiWeights.skills + aiWeights.nlp + aiWeights.experience + aiWeights.education;
         if (totalWeight !== 100) return toast.error(`Tổng trọng số AI phải bằng 100% (Hiện tại: ${totalWeight}%)`);
@@ -218,25 +254,33 @@ export default function CreateEnterpriseJobPage() {
                     </div>
                 </div>
 
-                {/* PROGRESS BAR ĐƯỢC FIX LẠI LEFT/RIGHT */}
-                <div className="relative flex justify-between items-center w-full px-2 mt-4">
-                    <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-slate-100 dark:bg-slate-700 rounded-full -z-10"></div>
-                    <div className="absolute left-8 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-300" style={{ width: `calc(${((currentStep - 1) / (STEPS.length - 1)) * 100}% - 4rem)` }}></div>
+                {/* PROGRESS BAR (Thanh nối liền các bước chuẩn UI) */}
+                <div className="relative flex justify-between items-center w-full max-w-3xl mx-auto px-4 mt-6 z-0">
+                    {/* Nền xám */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 dark:bg-slate-700 rounded-full -z-10"></div>
+                    {/* Thanh chạy màu xanh */}
+                    <div
+                        className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full -z-10 transition-all duration-500 ease-out"
+                        style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+                    ></div>
 
                     {STEPS.map((step) => {
                         const Icon = step.icon;
                         const isActive = currentStep === step.id;
                         const isCompleted = currentStep > step.id;
                         return (
-                            <div key={step.id} onClick={() => setCurrentStep(step.id)} className={`flex flex-col items-center cursor-pointer bg-white dark:bg-slate-800 px-2 ${isActive ? 'text-blue-600' : isCompleted ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors border-2 ${isActive ? 'bg-white border-blue-600 shadow-md' : isCompleted ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50 border-slate-300 dark:bg-slate-900 dark:border-slate-600'}`}>
-                                    {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                            <div key={step.id} className="flex flex-col items-center relative group">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4 ${isActive ? 'bg-blue-600 text-white border-blue-100 dark:border-blue-900 shadow-lg scale-110' : isCompleted ? 'bg-emerald-500 text-white border-emerald-100 dark:border-emerald-900' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-600'}`}>
+                                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
                                 </div>
-                                <span className="text-xs font-bold px-2">{step.title}</span>
+                                <span className={`absolute -bottom-7 w-32 text-center text-xs font-bold transition-colors ${isActive ? 'text-blue-600 dark:text-blue-400' : isCompleted ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}>
+                                    {step.title}
+                                </span>
                             </div>
                         )
                     })}
                 </div>
+                <div className="h-6"></div>
             </div>
 
             {/* CONTENT */}
@@ -300,9 +344,49 @@ export default function CreateEnterpriseJobPage() {
 
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Khu vực làm việc</label>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <input type="text" placeholder="Tỉnh / Thành phố" required className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={formData.location.city} onChange={e => setFormData({ ...formData, location: { ...formData.location, city: e.target.value } })} />
-                                    <input type="text" placeholder="Địa chỉ chi tiết (Tòa nhà, số nhà...)" className="md:col-span-2 w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={formData.location.address} onChange={e => setFormData({ ...formData, location: { ...formData.location, address: e.target.value } })} />
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                        <select
+                                            className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white"
+                                            value={locCountry}
+                                            onChange={e => setLocCountry(e.target.value)}
+                                        >
+                                            <option value="Việt Nam">Việt Nam</option>
+                                            <option value="Nước ngoài">Nước ngoài</option>
+                                        </select>
+
+                                        {locCountry === 'Việt Nam' ? (
+                                            <>
+                                                {/* Dropdown Tỉnh/Thành, Quận/Huyện, Xã/Phường: Tạm thời mock dữ liệu tĩnh, sau này bạn gọi API để bind vào options nhé */}
+                                                <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={locCity} onChange={e => setLocCity(e.target.value)}>
+                                                    <option value="" disabled>Tỉnh/Thành phố</option>
+                                                    <option value="Hà Nội">Hà Nội</option>
+                                                    <option value="TP.HCM">TP.HCM</option>
+                                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                                </select>
+                                                <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={locDistrict} onChange={e => setLocDistrict(e.target.value)}>
+                                                    <option value="" disabled>Quận/Huyện</option>
+                                                    <option value="Quận 1">Quận 1</option>
+                                                    <option value="Quận Cầu Giấy">Quận Cầu Giấy</option>
+                                                </select>
+                                                <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={locWard} onChange={e => setLocWard(e.target.value)}>
+                                                    <option value="" disabled>Phường/Xã</option>
+                                                    <option value="Phường Bến Nghé">Phường Bến Nghé</option>
+                                                </select>
+                                            </>
+                                        ) : (
+                                            <div className="md:col-span-3 text-sm text-slate-500 p-3.5 flex items-center">
+                                                Vui lòng nhập địa chỉ chi tiết ở ô bên dưới
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder={locCountry === 'Việt Nam' ? "Số nhà, tên đường, tòa nhà..." : "Nhập đầy đủ địa chỉ tại nước ngoài..."}
+                                        className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white"
+                                        value={locStreet}
+                                        onChange={e => setLocStreet(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -385,6 +469,10 @@ export default function CreateEnterpriseJobPage() {
                                     <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Quyền lợi</label>
                                     <RichTextEditor value={formData.benefits} onChange={(val) => setFormData({ ...formData, benefits: val })} placeholder="Bảo hiểm, thưởng, chế độ nghỉ phép..." />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Thông tin khác (Không bắt buộc)</label>
+                                    <RichTextEditor value={formData.other_info} onChange={(val) => setFormData({ ...formData, other_info: val })} placeholder="Cách thức phỏng vấn, quy trình tuyển dụng, hoặc ghi chú thêm..." />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -445,14 +533,25 @@ export default function CreateEnterpriseJobPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Học vấn tối thiểu</label>
-                                    <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.education.min_level} onChange={e => setFormData({ ...formData, education: { ...formData.education, min_level: e.target.value } })}>
-                                        <option value="Không yêu cầu">Không yêu cầu</option>
-                                        <option value="Trung cấp">Trung cấp</option>
-                                        <option value="Cao đẳng">Cao đẳng</option>
-                                        <option value="Cử nhân">Cử nhân / Đại học</option>
-                                        <option value="Thạc sĩ">Thạc sĩ</option>
-                                    </select>
+                                    <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Học vấn & Chuyên ngành</label>
+                                    <div className="space-y-3">
+                                        <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.education.min_level} onChange={e => setFormData({ ...formData, education: { ...formData.education, min_level: e.target.value } })}>
+                                            <option value="Không yêu cầu">Không yêu cầu tối thiểu</option>
+                                            <option value="Trung cấp">Trung cấp trở lên</option>
+                                            <option value="Cao đẳng">Cao đẳng trở lên</option>
+                                            <option value="Cử nhân">Cử nhân / Đại học trở lên</option>
+                                            <option value="Thạc sĩ">Thạc sĩ trở lên</option>
+                                        </select>
+
+                                        <div className="min-h-12 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-wrap gap-2 items-center">
+                                            {formData.education.preferred_majors.map((major, idx) => (
+                                                <span key={idx} className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1">
+                                                    {major} <button type="button" onClick={() => setFormData({ ...formData, education: { ...formData.education, preferred_majors: formData.education.preferred_majors.filter((_, i) => i !== idx) } })}><X className="w-3 h-3 hover:text-red-500" /></button>
+                                                </span>
+                                            ))}
+                                            <input type="text" className="flex-1 bg-transparent dark:text-white outline-none text-sm p-1 min-w-37.5" placeholder="Chuyên ngành ưu tiên (Nhấn Enter)" value={majorInput} onChange={e => setMajorInput(e.target.value)} onKeyDown={e => handleArrayInput(e, majorInput, setMajorInput, formData.education.preferred_majors, (arr: string[]) => setFormData({ ...formData, education: { ...formData.education, preferred_majors: arr } }))} />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -512,7 +611,7 @@ export default function CreateEnterpriseJobPage() {
                 </button>
 
                 {currentStep < 3 ? (
-                    <button type="button" onClick={() => setCurrentStep(prev => prev + 1)} className="px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-colors">
+                    <button type="button" onClick={(e) => { e.preventDefault(); handleNextStep(); }} className="px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-colors">
                         Tiếp tục <ChevronRight className="w-4 h-4" />
                     </button>
                 ) : (

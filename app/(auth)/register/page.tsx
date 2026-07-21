@@ -7,7 +7,7 @@ import { Lock, Mail, ArrowRight, UserPlus, Building, Search, Globe, MapPin, Brie
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useLinkedIn } from 'react-linkedin-login-oauth2';
+import { useLinkedInAuth } from '@/lib/useLinkedInAuth';
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import Select from 'react-select';
@@ -149,7 +149,9 @@ export default function RegisterPage() {
     const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
         try {
             setIsLoading(true);
-            const payload: any = { access_token: accessToken };
+            const payload: any = provider === 'google'
+                ? { access_token: accessToken }
+                : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
             if (roleToSubmit) payload.role = roleToSubmit;
             if (companyData) {
                 payload.company_name = companyData.companyName;
@@ -185,14 +187,9 @@ export default function RegisterPage() {
         onError: () => toast.error('Đăng nhập Google thất bại')
     });
 
-    const { linkedInLogin } = useLinkedIn({
-        clientId: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '',
-        redirectUri: `${typeof window === 'object' && window.location.origin}/linkedin`,
-
-        scope: 'openid profile email',
-
+    const { linkedInLogin } = useLinkedInAuth({
         onSuccess: (code) => handleSocialAuth(code, 'linkedin'),
-        onError: () => toast.error('Đăng nhập LinkedIn thất bại')
+        onError: (message) => toast.error(message),
     });
 
     const submitSocialRole = () => {

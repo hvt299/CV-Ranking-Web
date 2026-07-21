@@ -6,7 +6,7 @@ import { Lock, Mail, ArrowRight, Search, Eye, EyeOff, User, Briefcase, Globe, Ma
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useLinkedIn } from 'react-linkedin-login-oauth2';
+import { useLinkedInAuth } from '@/lib/useLinkedInAuth';
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import Select from 'react-select';
@@ -149,12 +149,9 @@ export default function LoginPage() {
         onError: () => toast.error('Đăng nhập Google thất bại')
     });
 
-    const { linkedInLogin } = useLinkedIn({
-        clientId: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '',
-        redirectUri: `${typeof window === 'object' && window.location.origin}/linkedin`,
-        scope: 'openid profile email',
+    const { linkedInLogin } = useLinkedInAuth({
         onSuccess: (code) => handleSocialAuth(code, 'linkedin'),
-        onError: () => toast.error('Đăng nhập LinkedIn thất bại')
+        onError: (message) => toast.error(message),
     });
 
     // ĐÃ FIX: Truyền socialHrInfo thay vì các biến cũ

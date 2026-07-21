@@ -22,7 +22,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <FileText className="w-4 h-4 text-blue-500" /> Mô tả công việc
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.description}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.description }}
+                        />
                     </div>
                 )}
 
@@ -31,7 +34,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Yêu cầu ứng viên
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.requirements}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.requirements }}
+                        />
                     </div>
                 )}
 
@@ -40,7 +46,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <Star className="w-4 h-4 text-amber-500" /> Quyền lợi & Chế độ
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.benefits}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.benefits }}
+                        />
                     </div>
                 )}
             </div>

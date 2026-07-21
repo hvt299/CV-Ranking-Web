@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp } from 'lucide-react';
+import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -64,16 +64,33 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-6">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-blue-400 dark:hover:border-slate-600 shadow-sm hover:shadow-md transition-all flex flex-col relative group overflow-hidden">
+            {/* Decor Hover Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="relative z-20">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{job.title}</h2>
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-500">
-                            <span className="flex items-center gap-1"><Building2 className="w-4 h-4" /> {job.company_name || 'Công ty Ẩn danh'}</span>
-                            {job.location?.city && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {job.location.city}</span>}
-                            <span className="flex items-center gap-1"><Briefcase className="w-4 h-4" /> {job.work_mode} • {job.job_level}</span>
-                            <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" /> {formatSalary(job.salary)}</span>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">{job.title}</h2>
+                            {job.is_hot && (
+                                <span className="flex items-center gap-1 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow-sm">
+                                    <Flame className="w-3 h-3" /> Hot
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                            <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-slate-400" /> {job.company_name || 'Công ty Ẩn danh'}</span>
+                            {job.location?.city && (
+                                <span className="flex items-center gap-1.5" title={job.location.address}>
+                                    <MapPin className="w-4 h-4 text-rose-500" /> {job.location.city === 'Nước ngoài' ? 'Nước ngoài' : job.location.city}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-blue-500" /> {job.work_mode} • {job.employment_type} • {job.job_level}</span>
+                            <span className="flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-emerald-500" /> {formatSalary(job.salary)}</span>
+                            {(job.min_yoe || 0) > 0 && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-amber-500" /> Từ {job.min_yoe} năm KN</span>}
+                            {job.education?.min_level && job.education.min_level !== 'Không yêu cầu' && <span className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-indigo-500" /> {job.education.min_level}</span>}
                         </div>
                         {job.deadline && (
                             <p className="text-xs text-amber-600 font-semibold mt-2 flex items-center gap-1">
@@ -105,7 +122,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
 
                 {/* FORM NỘP HỒ SƠ 1 CHẠM */}
                 {applyingJob && (
-                    <div className="mt-4 p-5 bg-blue-50 dark:bg-blue-500/10 rounded-2xl border border-blue-200 dark:border-blue-500/20 animate-in slide-in-from-top-2">
+                    <div className="mt-6 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 animate-in slide-in-from-top-2 relative z-20 shadow-inner">
                         <p className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-3">Chọn CV từ Thư viện để ứng tuyển</p>
 
                         {cvLibrary && cvLibrary.length > 0 ? (
@@ -166,10 +183,31 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
             </div>
 
             {expandedJob && (
-                <div className="px-6 pb-6 border-t border-slate-100 dark:border-slate-700 pt-4 space-y-4">
-                    {job.description && <div><h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Mô tả công việc</h3><p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.description}</p></div>}
-                    {job.requirements && <div><h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Yêu cầu ứng viên</h3><p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.requirements}</p></div>}
-                    {job.benefits && <div><h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Quyền lợi</h3><p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{job.benefits}</p></div>}
+                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 space-y-6 relative z-20">
+                    {job.description && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-blue-500 pl-2">Mô tả công việc</h3>
+                            <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.description }} />
+                        </div>
+                    )}
+                    {job.requirements && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-rose-500 pl-2">Yêu cầu ứng viên</h3>
+                            <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.requirements }} />
+                        </div>
+                    )}
+                    {job.benefits && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-emerald-500 pl-2">Quyền lợi & Chế độ</h3>
+                            <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.benefits }} />
+                        </div>
+                    )}
+                    {job.other_info && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-amber-500 pl-2">Thông tin khác</h3>
+                            <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.other_info }} />
+                        </div>
+                    )}
                 </div>
             )}
         </div>

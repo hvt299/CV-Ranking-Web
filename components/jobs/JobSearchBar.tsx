@@ -16,6 +16,8 @@ interface JobSearchBarProps {
         salaryMax: string;
         skills: string[];
         company: string;
+        industry: string;
+        education: string;
     };
     onFiltersChange: (filters: any) => void;
     filterOptions: {
@@ -25,6 +27,8 @@ interface JobSearchBarProps {
         employmentTypes: string[];
         skills: string[];
         companies: string[];
+        industries: string[];
+        educations: string[];
     };
     onClearFilters: () => void;
     activeFiltersCount: number;
@@ -61,7 +65,7 @@ export default function JobSearchBar({
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+        <div className="bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 space-y-5 shadow-sm">
             {/* Search Bar */}
             <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -70,16 +74,16 @@ export default function JobSearchBar({
                     placeholder="Tìm kiếm theo vị trí, công ty, kỹ năng..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-medium"
                 />
             </div>
 
             {/* Filter Toggle and Actions */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-colors border ${showFilters ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                     >
                         <SlidersHorizontal className="w-4 h-4" />
                         Bộ lọc
@@ -191,6 +195,17 @@ export default function JobSearchBar({
                         .dark .dark-select__single-value { color: white !important; }
                     `}</style>
 
+                    {/* Industry Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ngành nghề</label>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả ngành nghề' }, ...(filterOptions.industries || []).map(i => ({ value: i, label: i }))]}
+                            value={{ value: filters.industry, label: filters.industry || 'Tất cả ngành nghề' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, industry: selected?.value || '' })}
+                        />
+                    </div>
+
                     {/* Location Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Địa điểm</label>
@@ -232,6 +247,17 @@ export default function JobSearchBar({
                             options={[{ value: '', label: 'Tất cả' }, ...filterOptions.jobLevels.map(l => ({ value: l, label: l }))]}
                             value={{ value: filters.jobLevel, label: filters.jobLevel || 'Tất cả' }}
                             onChange={(selected: any) => onFiltersChange({ ...filters, jobLevel: selected?.value || '' })}
+                        />
+                    </div>
+
+                    {/* Education Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Học vấn tối thiểu</label>
+                        <Select
+                            classNamePrefix="dark-select"
+                            options={[{ value: '', label: 'Tất cả' }, ...(filterOptions.educations || []).map(e => ({ value: e, label: e }))]}
+                            value={{ value: filters.education, label: filters.education || 'Tất cả' }}
+                            onChange={(selected: any) => onFiltersChange({ ...filters, education: selected?.value || '' })}
                         />
                     </div>
 
