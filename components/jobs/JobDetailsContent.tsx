@@ -1,8 +1,9 @@
 import React from 'react';
 import { DollarSign, Clock, GraduationCap, CheckCircle2, Star, FileText, Zap } from 'lucide-react';
+import { Job } from '@/types';
 
 interface JobDetailsContentProps {
-    jobInfo: any;
+    jobInfo: Job;
 }
 
 const formatCurrency = (amount: number) => {
@@ -21,7 +22,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <FileText className="w-4 h-4 text-blue-500" /> Mô tả công việc
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.description}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.description }}
+                        />
                     </div>
                 )}
 
@@ -30,7 +34,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Yêu cầu ứng viên
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.requirements}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.requirements }}
+                        />
                     </div>
                 )}
 
@@ -39,7 +46,10 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-2 uppercase tracking-wider flex items-center gap-2">
                             <Star className="w-4 h-4 text-amber-500" /> Quyền lợi & Chế độ
                         </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{jobInfo.benefits}</p>
+                        <div
+                            className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300"
+                            dangerouslySetInnerHTML={{ __html: jobInfo.benefits }}
+                        />
                     </div>
                 )}
             </div>
@@ -53,7 +63,7 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                         <div>
                             <p className="text-[11px] text-slate-400 font-bold uppercase">Mức lương</p>
                             <p className="font-bold text-slate-700 dark:text-slate-200">
-                                {jobInfo.salary?.min_salary ? `${formatCurrency(jobInfo.salary.min_salary)} - ${formatCurrency(jobInfo.salary.max_salary)} ${jobInfo.salary.currency}` : 'Thỏa thuận'}
+                                {jobInfo.salary?.min_salary ? `${formatCurrency(jobInfo.salary.min_salary)} - ${formatCurrency(jobInfo.salary.max_salary!)} ${jobInfo.salary.currency}` : 'Thỏa thuận'}
                             </p>
                         </div>
                     </div>
@@ -87,7 +97,7 @@ export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
                             <div className="flex flex-wrap gap-1.5">
                                 {jobInfo.required_skills.map((skill: any, idx: number) => (
                                     <span key={idx} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-600">
-                                        {skill.name} {skill.min_years > 0 && <span className="text-blue-500 ml-1">({skill.min_years}y)</span>}
+                                        {skill.name} {(skill.min_years ?? 0) > 0 && <span className="text-blue-500 ml-1">({skill.min_years}y)</span>}
                                     </span>
                                 ))}
                             </div>

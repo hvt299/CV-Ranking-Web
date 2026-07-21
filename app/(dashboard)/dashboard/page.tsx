@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FileText, Users, Briefcase, Sparkles, TrendingUp } from 'lucide-react';
 import api from '@/lib/api';
+import { Application, DashboardAnalytics, Job, JobStatus, ApplicationStatus } from '@/types';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [recentApps, setRecentApps] = useState<any[]>([]);
-  const [openJobs, setOpenJobs] = useState<any[]>([]);
+  const [stats, setStats] = useState<DashboardAnalytics | null>(null);
+  const [recentApps, setRecentApps] = useState<Application[]>([]);
+  const [openJobs, setOpenJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function Dashboard() {
 
         setStats(statsRes.data);
         setRecentApps(appsRes.data);
-        setOpenJobs(jobsRes.data.filter((j: any) => j.status !== 'closed'));
+        setOpenJobs(jobsRes.data.filter((j: Job) => j.status !== JobStatus.CLOSED));
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu Dashboard:", error);
       } finally {
@@ -53,7 +54,7 @@ export default function Dashboard() {
         <StatCard title="Chiến dịch (Jobs)" value={stats?.total_jobs || 0} icon={Briefcase} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-500/10" />
         <StatCard title="CV Đã Phân Tích" value={stats?.total_cvs_in_pool || 0} icon={FileText} color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-500/10" />
         <StatCard title="AI Đề Xuất (>80đ)" value={highScoringApps} icon={Sparkles} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-500/10" />
-        <StatCard title="Đang Phỏng Vấn" value={stats?.status_breakdown?.['Phỏng vấn'] || 0} icon={Users} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-500/10" />
+        <StatCard title="Đang Phỏng Vấn" value={stats?.status_breakdown?.[ApplicationStatus.INTERVIEW] || 0} icon={Users} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-500/10" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,7 +87,7 @@ export default function Dashboard() {
                       role={app.job_title}
                       score={app.ai_score?.total_score || 0}
                       date={new Date(app.applied_at || new Date()).toLocaleDateString('vi-VN')}
-                      status={app.status || 'Mới'}
+                      status={app.status || ApplicationStatus.NEW}
                       jobId={app.job_id}
                     />
                   )
@@ -149,15 +150,16 @@ function StatCard({ title, value, icon: Icon, color, bg }: any) {
 
 function ApplicantRow({ name, role, score, date, status, jobId }: any) {
   const statusConfig: Record<string, any> = {
-    'Mới': { label: "Mới nộp", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20" },
-    'Đang xem xét': { label: "Đang xem", color: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" },
-    'Phỏng vấn': { label: "Phỏng vấn", color: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" },
-    'Đề nghị (Offer)': { label: "Gửi Offer", color: "bg-indigo-50 text-indigo-700 border-indigo-300 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20" },
-    'Trúng tuyển': { label: "Trúng tuyển", color: "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" },
-    'Từ chối': { label: "Đã loại", color: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20" }
+    [ApplicationStatus.NEW]: { label: "Mới nộp", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20" },
+    [ApplicationStatus.REVIEWING]: { label: "Đang xem", color: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" },
+    [ApplicationStatus.INTERVIEW]: { label: "Phỏng vấn", color: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" },
+    [ApplicationStatus.OFFERED]: { label: "Gửi Offer", color: "bg-indigo-50 text-indigo-700 border-indigo-300 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20" },
+    [ApplicationStatus.HIRED]: { label: "Trúng tuyển", color: "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" },
+    [ApplicationStatus.REJECTED]: { label: "Đã loại", color: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20" },
+    [ApplicationStatus.WITHDRAWN]: { label: "Rút hồ sơ", color: "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700" }
   };
 
-  const currentStatus = statusConfig[status] || statusConfig['Mới'];
+  const currentStatus = statusConfig[status] || statusConfig[ApplicationStatus.NEW];
   const formattedScore = Number(score).toFixed(1);
 
   const getScoreColor = (s: number) => {

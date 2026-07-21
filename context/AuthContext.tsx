@@ -4,17 +4,13 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
-
-interface User {
-    full_name: string;
-    email: string;
-    avatar: string;
-    role: 'hr' | 'applicant' | 'admin';
-}
+import { User, UserRole } from '@/types';
+import { clearAllAuthData } from '@/lib/auth-utils';
 
 interface AuthContextType {
     isAuthenticated: boolean;
     user: User | null;
+    loading: boolean;
     login: (token: string) => void;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
@@ -25,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     const fetchUserProfile = async () => {
@@ -39,46 +36,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
-        const token = Cookies.get('token');
-        if (token) {
-            setIsAuthenticated(true);
-            fetchUserProfile();
-        }
+        const initAuth = async () => {
+            const token = Cookies.get('token');
+
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const user = await fetchUserProfile();
+
+                if (user) {
+                    setIsAuthenticated(true);
+                } else {
+                    clearAllAuthData();
+                }
+            } catch {
+                clearAllAuthData();
+                setUser(null);
+                setIsAuthenticated(false);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     const login = (token: string) => {
-        Cookies.set('token', token, { expires: 1 });
-        setIsAuthenticated(true);
-        
-        // Fetch user profile và redirect dựa trên role
-        api.get('/auth/me').then(res => {
-            setUser(res.data);
-            const role = res.data.role;
-            
-            // Redirect dựa trên role
-            if (role === 'applicant') {
-                router.push('/apply');
-            } else if (role === 'hr' || role === 'admin') {
-                router.push('/dashboard');
-            } else {
-                // Fallback nếu role không xác định
-                router.push('/apply');
-            }
-        }).catch(() => {
-            // Nếu lỗi, mặc định về apply
-            router.push('/apply');
-        });
+        setLoading(true);
+
+        Cookies.set('token', token, { expires: 1, path: '/' });
+
+        api.get('/auth/me')
+            .then((res) => {
+                const fetchedUser: User = res.data;
+
+                setUser(fetchedUser);
+                setIsAuthenticated(true);
+
+                if (fetchedUser.role === UserRole.APPLICANT) {
+                    router.push('/apply');
+                } else if (
+                    fetchedUser.role === UserRole.HR_OWNER ||
+                    fetchedUser.role === UserRole.HR_MEMBER ||
+                    fetchedUser.role === UserRole.ADMIN
+                ) {
+                    router.push('/dashboard');
+                } else {
+                    router.push('/apply');
+                }
+            })
+            .catch(() => {
+                clearAllAuthData();
+                setUser(null);
+                setIsAuthenticated(false);
+                router.push('/login');
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     const logout = () => {
-        Cookies.remove('token');
-        Cookies.remove('token', { path: '/' });
-        
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-        }
-        
+        clearAllAuthData();
+
         setIsAuthenticated(false);
         setUser(null);
         router.push('/login');
@@ -91,7 +114,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser }}>
+        <AuthContext.Provider
+            value={{
+                isAuthenticated,
+                user,
+                loading,
+                login,
+                logout,
+                updateUser,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
@@ -99,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within an AuthProvider');
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
     return context;
 };
