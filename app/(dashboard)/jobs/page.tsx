@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Plus, Search, Edit2, Trash2,
-    ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter
+    ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter, DollarSign, Clock,
+    Flame
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -13,8 +14,13 @@ interface Job {
     id: string;
     title: string;
     company_name: string;
+    is_hot?: boolean;
     work_mode: string;
     job_level: string;
+    employment_type: string;
+    location?: { city: string; address?: string; country: string };
+    salary?: { min_salary?: number; max_salary?: number; currency: string } | null;
+    headcount?: number;
     status: string;
     created_at: string;
     deadline?: string | null;
@@ -27,6 +33,7 @@ export default function JobsListPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterLevel, setFilterLevel] = useState('All');
     const [filterMode, setFilterMode] = useState('All');
+    const [filterType, setFilterType] = useState('All');
 
     const fetchJobs = async () => {
         setIsLoading(true);
@@ -57,11 +64,12 @@ export default function JobsListPage() {
 
     const filteredJobs = jobs.filter(job => {
         const matchSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            job.company_name.toLowerCase().includes(searchTerm.toLowerCase());
+            (job.company_name && job.company_name.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchLevel = filterLevel === 'All' || job.job_level === filterLevel;
         const matchMode = filterMode === 'All' || job.work_mode === filterMode;
+        const matchType = filterType === 'All' || job.employment_type === filterType;
 
-        return matchSearch && matchLevel && matchMode;
+        return matchSearch && matchLevel && matchMode && matchType;
     });
 
     return (
@@ -93,16 +101,16 @@ export default function JobsListPage() {
                     />
                 </div>
 
-                <div className="flex gap-4">
-                    <div className="relative min-w-40">
+                <div className="flex flex-wrap md:flex-nowrap gap-3">
+                    <div className="relative min-w-35 flex-1">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
                             value={filterLevel}
                             onChange={(e) => setFilterLevel(e.target.value)}
                         >
-                            <option value="All">Tất cả Cấp bậc</option>
-                            <option value="Intern">Intern (Thực tập)</option>
+                            <option value="All">Cấp bậc</option>
+                            <option value="Intern">Intern</option>
                             <option value="Fresher">Fresher</option>
                             <option value="Junior">Junior</option>
                             <option value="Middle">Middle</option>
@@ -110,14 +118,27 @@ export default function JobsListPage() {
                             <option value="Manager">Manager</option>
                         </select>
                     </div>
-                    <div className="relative min-w-40">
+                    <div className="relative min-w-35 flex-1">
                         <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                        >
+                            <option value="All">Loại hình</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Freelance">Freelance</option>
+                        </select>
+                    </div>
+                    <div className="relative min-w-35 flex-1">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <select
+                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
                             value={filterMode}
                             onChange={(e) => setFilterMode(e.target.value)}
                         >
-                            <option value="All">Tất cả Hình thức</option>
+                            <option value="All">Hình thức</option>
                             <option value="Onsite">Onsite</option>
                             <option value="Remote">Remote</option>
                             <option value="Hybrid">Hybrid</option>
@@ -154,36 +175,74 @@ export default function JobsListPage() {
                                 {/* Dải màu trạng thái */}
                                 <div className={`absolute top-0 left-0 w-full h-1 ${stripeColor}`}></div>
 
-                                <div>
+                                {/* HIỆU ỨNG RUY BĂNG HOT JOB */}
+                                {job.is_hot && (
+                                    <div className="absolute -right-12 top-6 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 w-40 text-center shadow-lg rotate-45 z-10 flex items-center justify-center gap-1 tracking-widest uppercase pointer-events-none opacity-90">
+                                        <Flame className="w-3 h-3" /> HOT
+                                    </div>
+                                )}
+
+                                <div className="relative z-20 flex flex-col flex-1">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg ${badgeColor}`}>
                                             {statusText}
                                         </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-amber-600 transition-colors" title="Chỉnh sửa"><Edit2 className="w-4 h-4" /></Link>
-                                            <button onClick={() => handleDelete(job.id)} className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 rounded-md text-slate-400 hover:text-rose-600 transition-colors" title="Xóa chiến dịch"><Trash2 className="w-4 h-4" /></button>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20">
+                                            <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-amber-600 transition-colors shadow-sm" title="Chỉnh sửa">
+                                                <Edit2 className="w-4 h-4" />
+                                            </Link>
+                                            <button onClick={() => handleDelete(job.id)} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Xóa chiến dịch">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </div>
 
                                     <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-3 line-clamp-2 leading-tight" title={job.title}>{job.title}</h3>
 
-                                    <div className="space-y-2.5 mb-6">
-                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                            <Building2 className="w-4 h-4 text-slate-400" /> {job.company_name}
+                                    <div className="space-y-3 mb-6">
+                                        {/* Công ty */}
+                                        <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 font-bold">
+                                            <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                            <span className="line-clamp-2 leading-tight">{job.company_name}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                            <MapPin className="w-4 h-4 text-slate-400" /> {job.work_mode} • {job.job_level}
+
+                                        {/* Địa điểm & Lương */}
+                                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
+                                                <MapPin className="w-4 h-4 text-slate-400 shrink-0" /> {job.location?.city || 'Việt Nam'}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-black shrink-0 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
+                                                <DollarSign className="w-4 h-4" />
+                                                {job.salary ? (
+                                                    job.salary.min_salary && job.salary.max_salary
+                                                        ? `${(job.salary.min_salary / 1000000)} - ${(job.salary.max_salary / 1000000)} Tr`
+                                                        : 'Thỏa thuận'
+                                                ) : 'Thỏa thuận'}
+                                            </div>
+                                        </div>
+
+                                        {/* Các thẻ Tags: Level, Hình thức, SL */}
+                                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                                            <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1">
+                                                <Briefcase className="w-3 h-3" /> {job.job_level}
+                                            </span>
+                                            <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-blue-100 dark:border-blue-800/50">
+                                                <Clock className="w-3 h-3" /> {job.employment_type} • {job.work_mode}
+                                            </span>
+                                            <span className="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-purple-100 dark:border-purple-800/50">
+                                                <Users className="w-3 h-3" /> SL: {job.headcount || 1}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between mt-auto">
-                                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isExpired ? 'text-amber-500' : 'text-slate-500'}`}>
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        {job.deadline ? `Hạn nộp: ${new Date(job.deadline).toLocaleDateString('vi-VN')}` : 'Không thời hạn'}
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3 mt-auto">
+                                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isExpired ? 'text-amber-500' : 'text-slate-500'} shrink-0`}>
+                                        <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                        <span>{job.deadline ? `Hạn nộp: ${new Date(job.deadline).toLocaleDateString('vi-VN')}` : 'Không thời hạn'}</span>
                                     </div>
 
-                                    <Link href={`/jobs/${job.id}`} className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors">
+                                    <Link href={`/jobs/${job.id}`} className="flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors shrink-0">
                                         Mở Leaderboard <ExternalLink className="w-4 h-4" />
                                     </Link>
                                 </div>

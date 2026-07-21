@@ -1,173 +1,135 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Briefcase } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Briefcase, Layers } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import JobSearchBar from '@/components/shared/JobSearchBar';
-import JobCard from '@/components/shared/JobCard';
+import JobSearchBar from '@/components/jobs/JobSearchBar';
+import JobCard from '@/components/jobs/JobCard';
 
 export default function ApplyPage() {
     const [jobs, setJobs] = useState<any[]>([]);
-    const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
+    const [cvLibrary, setCvLibrary] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Search and filter states
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState('newest'); // newest, oldest, salary_high, salary_low, relevance
+    const [sortBy, setSortBy] = useState('newest');
     const [filters, setFilters] = useState({
-        location: '',
-        workMode: '',
-        jobLevel: '',
-        salaryMin: '',
-        salaryMax: '',
-        skills: [] as string[],
-        company: ''
+        location: '', workMode: '', jobLevel: '', employmentType: '',
+        salaryMin: '', salaryMax: '', skills: [] as string[], company: '',
+        industry: '', education: ''
     });
 
-    // Available filter options
     const [filterOptions, setFilterOptions] = useState({
-        locations: [] as string[],
-        workModes: [] as string[],
-        jobLevels: [] as string[],
-        skills: [] as string[],
-        companies: [] as string[]
+        locations: [] as string[], workModes: [] as string[], jobLevels: [] as string[],
+        employmentTypes: [] as string[], skills: [] as string[], companies: [] as string[],
+        industries: [] as string[], educations: [] as string[]
     });
 
-    useEffect(() => {
-        api.get('/apply/jobs').then(res => {
-            setJobs(res.data);
-            setFilteredJobs(res.data);
-            
-            // Extract filter options from jobs data
-            const locations = [...new Set(res.data.map((job: any) => job.location?.city).filter(Boolean))] as string[];
-            const workModes = [...new Set(res.data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
-            const jobLevels = [...new Set(res.data.map((job: any) => job.job_level).filter(Boolean))] as string[];
-            const skills = [...new Set(res.data.flatMap((job: any) => job.required_skills || []))] as string[];
-            const companies = [...new Set(res.data.map((job: any) => job.company_name).filter(Boolean))] as string[];
-            
-            setFilterOptions({
-                locations,
-                workModes,
-                jobLevels,
-                skills,
-                companies
-            });
-        }).catch(() => {
-            toast.error('Không thể tải danh sách việc làm');
-        }).finally(() => setIsLoading(false));
-    }, []);
+    const filteredJobs = useMemo(() => {
+        let result = [...jobs];
 
-    // Filter and search logic
-    useEffect(() => {
-        let filtered = jobs;
-
-        // Text search
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(job => 
+
+            result = result.filter(job =>
                 job.title?.toLowerCase().includes(query) ||
                 job.company_name?.toLowerCase().includes(query) ||
                 job.description?.toLowerCase().includes(query) ||
-                job.required_skills?.some((skill: string) => skill.toLowerCase().includes(query))
+                job.required_skills?.some((skill: any) => {
+                    const skillName = typeof skill === 'string' ? skill : skill.name;
+                    return skillName?.toLowerCase().includes(query);
+                })
             );
         }
 
-        // Apply filters
-        if (filters.location) {
-            filtered = filtered.filter(job => job.location?.city === filters.location);
-        }
-        if (filters.workMode) {
-            filtered = filtered.filter(job => job.work_mode === filters.workMode);
-        }
-        if (filters.jobLevel) {
-            filtered = filtered.filter(job => job.job_level === filters.jobLevel);
-        }
-        if (filters.company) {
-            filtered = filtered.filter(job => job.company_name === filters.company);
-        }
+        if (filters.location) result = result.filter(job => job.location?.city?.toLowerCase().includes(filters.location.toLowerCase()));
+        if (filters.workMode) result = result.filter(job => job.work_mode === filters.workMode);
+        if (filters.jobLevel) result = result.filter(job => job.job_level === filters.jobLevel);
+        if (filters.employmentType) result = result.filter(job => job.employment_type === filters.employmentType);
+        if (filters.company) result = result.filter(job => job.company_name === filters.company);
+        if (filters.industry) result = result.filter(job => job.industry === filters.industry);
+        if (filters.education) result = result.filter(job => job.education?.min_level === filters.education);
+
         if (filters.salaryMin) {
-            filtered = filtered.filter(job => 
-                job.salary?.min_salary && job.salary.min_salary >= parseInt(filters.salaryMin)
-            );
+            result = result.filter(job => job.salary?.min_salary && job.salary.min_salary >= Number(filters.salaryMin));
         }
         if (filters.salaryMax) {
-            filtered = filtered.filter(job => 
-                job.salary?.max_salary && job.salary.max_salary <= parseInt(filters.salaryMax)
-            );
+            result = result.filter(job => job.salary?.max_salary && job.salary.max_salary <= Number(filters.salaryMax));
         }
+
         if (filters.skills.length > 0) {
-            filtered = filtered.filter(job => 
-                filters.skills.some(skill => 
-                    job.required_skills?.includes(skill)
-                )
+            result = result.filter(job =>
+                filters.skills.some(skill => {
+                    const jobSkills = job.required_skills?.map((s: any) => typeof s === 'string' ? s : s.name) || [];
+                    return jobSkills.includes(skill);
+                })
             );
         }
 
-        setFilteredJobs(filtered);
-    }, [jobs, searchQuery, filters]);
-
-    // Sort jobs
-    useEffect(() => {
-        let sorted = [...filteredJobs];
-        
         switch (sortBy) {
             case 'newest':
-                sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+                result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
                 break;
             case 'oldest':
-                sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+                result.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
                 break;
             case 'salary_high':
-                sorted.sort((a, b) => (b.salary?.max_salary || 0) - (a.salary?.max_salary || 0));
+                result.sort((a, b) => (b.salary?.max_salary || 0) - (a.salary?.max_salary || 0));
                 break;
             case 'salary_low':
-                sorted.sort((a, b) => (a.salary?.min_salary || 0) - (b.salary?.min_salary || 0));
+                result.sort((a, b) => (a.salary?.min_salary || 0) - (b.salary?.min_salary || 0));
                 break;
             case 'relevance':
-                // Sort by number of matching skills if search query exists
                 if (searchQuery.trim()) {
                     const query = searchQuery.toLowerCase();
-                    sorted.sort((a, b) => {
-                        const aMatches = (a.required_skills || []).filter((skill: string) => 
-                            skill.toLowerCase().includes(query)
-                        ).length;
-                        const bMatches = (b.required_skills || []).filter((skill: string) => 
-                            skill.toLowerCase().includes(query)
-                        ).length;
+                    result.sort((a, b) => {
+                        const aSkills = a.required_skills?.map((s: any) => typeof s === 'string' ? s : s.name) || [];
+                        const bSkills = b.required_skills?.map((s: any) => typeof s === 'string' ? s : s.name) || [];
+
+                        const aMatches = aSkills.filter((s: string) => s.toLowerCase().includes(query)).length;
+                        const bMatches = bSkills.filter((s: string) => s.toLowerCase().includes(query)).length;
                         return bMatches - aMatches;
                     });
                 }
                 break;
         }
-        
-        setFilteredJobs(sorted);
-    }, [sortBy]); // Only depend on sortBy to avoid infinite loop
+
+        return result;
+    }, [jobs, searchQuery, filters, sortBy]);
+
+    useEffect(() => {
+        Promise.all([
+            api.get('/apply/jobs'),
+            api.get('/apply/library')
+        ]).then(([jobRes, cvRes]) => {
+            setJobs(jobRes.data);
+            setCvLibrary(cvRes.data);
+
+            const data = jobRes.data;
+            const locations = [...new Set(data.map((job: any) => job.location?.city).filter(Boolean))] as string[];
+            const workModes = [...new Set(data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
+            const jobLevels = [...new Set(data.map((job: any) => job.job_level).filter(Boolean))] as string[];
+            const employmentTypes = [...new Set(data.map((job: any) => job.employment_type).filter(Boolean))] as string[];
+            const skills = [...new Set(data.flatMap((job: any) => job.required_skills || []))] as string[];
+            const companies = [...new Set(data.map((job: any) => job.company_name).filter(Boolean))] as string[];
+            const industries = [...new Set(data.map((job: any) => job.industry).filter(Boolean))] as string[];
+            const educations = [...new Set(data.map((job: any) => job.education?.min_level).filter(Boolean))] as string[];
+
+            setFilterOptions({ locations, workModes, jobLevels, employmentTypes, skills, companies, industries, educations });
+        }).catch(() => {
+            toast.error('Không thể tải dữ liệu');
+        }).finally(() => setIsLoading(false));
+    }, []);
 
     const clearFilters = () => {
-        setFilters({
-            location: '',
-            workMode: '',
-            jobLevel: '',
-            salaryMin: '',
-            salaryMax: '',
-            skills: [],
-            company: ''
-        });
+        setFilters({ location: '', workMode: '', jobLevel: '', employmentType: '', salaryMin: '', salaryMax: '', skills: [], company: '', industry: '', education: '' });
         setSearchQuery('');
         setSortBy('newest');
     };
 
-    // Save and load filter presets
     const saveFilterPreset = (name: string) => {
-        const preset = {
-            searchQuery,
-            filters,
-            sortBy,
-            name,
-            savedAt: new Date().toISOString()
-        };
-        
+        const preset = { searchQuery, filters, sortBy, name, savedAt: new Date().toISOString() };
         const savedPresets = JSON.parse(localStorage.getItem('jobSearchPresets') || '[]');
         const updatedPresets = [...savedPresets.filter((p: any) => p.name !== name), preset];
         localStorage.setItem('jobSearchPresets', JSON.stringify(updatedPresets));
@@ -176,72 +138,56 @@ export default function ApplyPage() {
 
     const loadFilterPreset = (preset: any) => {
         setSearchQuery(preset.searchQuery || '');
-        setFilters(preset.filters || {
-            location: '',
-            workMode: '',
-            jobLevel: '',
-            salaryMin: '',
-            salaryMax: '',
-            skills: [],
-            company: ''
-        });
+        setFilters(preset.filters || { location: '', workMode: '', jobLevel: '', employmentType: '', salaryMin: '', salaryMax: '', skills: [], company: '', industry: '', education: '' });
         setSortBy(preset.sortBy || 'newest');
         toast.success(`Đã tải bộ lọc "${preset.name}"`);
     };
 
-    const getSavedPresets = () => {
-        return JSON.parse(localStorage.getItem('jobSearchPresets') || '[]');
-    };
+    const getSavedPresets = () => JSON.parse(localStorage.getItem('jobSearchPresets') || '[]');
+    const activeFiltersCount = Object.values(filters).filter(value => Array.isArray(value) ? value.length > 0 : value !== '').length + (searchQuery ? 1 : 0);
 
-    const activeFiltersCount = Object.values(filters).filter(value => 
-        Array.isArray(value) ? value.length > 0 : value !== ''
-    ).length + (searchQuery ? 1 : 0);
-
-    const handleApplySuccess = () => {
-        // Refresh jobs list or update UI as needed
-        // Could also show a success message or update application status
-    };
-
-    if (isLoading) return (
-        <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-        </div>
-    );
+    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>;
 
     return (
         <div className="max-w-6xl mx-auto py-10 px-4 pb-20 space-y-6">
-            <div>
-                <h1 className="text-3xl font-black text-slate-800 dark:text-white">Việc làm đang tuyển</h1>
-                <p className="text-slate-500 mt-1">Tìm vị trí phù hợp và nộp CV trực tiếp</p>
+
+            {/* TIÊU ĐỀ TRANG ĐƯỢC CHUẨN HÓA UI */}
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Layers className="w-8 h-8 text-blue-500" /> Khám phá Cơ hội
+                </h1>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">Lọc vị trí phù hợp với năng lực và nộp CV trực tiếp từ thư viện cá nhân.</p>
             </div>
 
-            {/* Search and Filter Section */}
+            {/* THANH TÌM KIẾM CHUNG */}
             <JobSearchBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                filters={filters}
-                onFiltersChange={setFilters}
-                filterOptions={filterOptions}
-                onClearFilters={clearFilters}
+                searchQuery={searchQuery} onSearchChange={setSearchQuery}
+                filters={filters} onFiltersChange={setFilters}
+                filterOptions={filterOptions} onClearFilters={clearFilters}
                 activeFiltersCount={activeFiltersCount}
-                onSavePreset={saveFilterPreset}
-                onLoadPreset={loadFilterPreset}
+                onSavePreset={saveFilterPreset} onLoadPreset={loadFilterPreset}
                 savedPresets={getSavedPresets()}
             />
 
-            {/* Results Summary and Sort */}
-            <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
-                <span>Tìm thấy {filteredJobs.length} việc làm</span>
+            {/* THANH SUMMARY & SORTING CHUẨN UI SAAS */}
+            <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                    Có <span className="text-blue-600 dark:text-blue-400">{filteredJobs.length}</span> vị trí phù hợp
+                </span>
+
                 <div className="flex items-center gap-4">
                     {activeFiltersCount > 0 && (
-                        <span>Đã áp dụng {activeFiltersCount} bộ lọc</span>
+                        <button onClick={clearFilters} className="text-rose-500 font-bold hover:underline hover:text-rose-600 transition-colors">
+                            Xóa ({activeFiltersCount}) bộ lọc
+                        </button>
                     )}
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium">Sắp xếp:</label>
+
+                    <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-4">
+                        <label className="font-bold hidden sm:block">Sắp xếp:</label>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="px-3 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
                         >
                             <option value="newest">Mới nhất</option>
                             <option value="oldest">Cũ nhất</option>
@@ -253,31 +199,26 @@ export default function ApplyPage() {
                 </div>
             </div>
 
+            {/* DANH SÁCH JOB CARD */}
             {filteredJobs.length === 0 ? (
-                <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
-                    <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">
-                        {jobs.length === 0 
-                            ? 'Hiện chưa có vị trí nào đang tuyển' 
-                            : 'Không tìm thấy việc làm phù hợp với tiêu chí tìm kiếm'
-                        }
+                <div className="text-center py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <Briefcase className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                    <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">
+                        {jobs.length === 0 ? 'Hệ thống hiện chưa có vị trí nào đang tuyển.' : 'Không tìm thấy việc làm phù hợp.'}
                     </p>
                     {activeFiltersCount > 0 && (
-                        <button
-                            onClick={clearFilters}
-                            className="mt-3 px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
-                        >
+                        <button onClick={clearFilters} className="mt-4 px-6 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-bold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
                             Xóa bộ lọc và thử lại
                         </button>
                     )}
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredJobs.map(job => (
-                        <JobCard 
-                            key={job.id} 
-                            job={job} 
-                            onApplySuccess={handleApplySuccess}
+                        <JobCard
+                            key={job.id}
+                            job={job}
+                            cvLibrary={cvLibrary}
                         />
                     ))}
                 </div>

@@ -3,23 +3,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-    Users, ArrowLeft, FileText, CheckCircle2,
-    XCircle, Award, Briefcase, Mail, Phone,
-    GraduationCap, Building2, GitCommitHorizontal, ChevronDown, ChevronUp,
-    DollarSign, Clock, MapPin, Search, Filter, Trash2, Globe, AlertTriangle, Eye
+    ArrowLeft, FileText,
+    Award, Briefcase, Mail, Phone,
+    Building2, GitCommitHorizontal, ChevronDown, ChevronUp,
+    Clock, MapPin, Search, Filter, Trash2, AlertTriangle, Eye, LayoutList, Kanban, Send,
+    Lightbulb, Sparkles, Mail as MailClosed,
+    MailOpen
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import CandidateSkillsModal from '@/components/shared/CandidateSkillsModal';
-import JobDetailsContent from '@/components/shared/JobDetailsContent';
+import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
+import JobDetailsContent from '@/components/jobs/JobDetailsContent';
+import CandidateKanban from '@/components/candidates/CandidateKanban';
+import DocumentViewer from '@/components/ui/DocumentViewer';
+import InterviewEmailModal from '@/components/candidates/InterviewEmailModal';
+import { ApplicationStatus } from '@/types';
 
 const CV_STATUSES = [
-    { value: 'Mới', label: 'Mới', color: 'bg-blue-100 text-blue-700' },
-    { value: 'Đang xem xét', label: 'Đang xem xét', color: 'bg-amber-100 text-amber-700' },
-    { value: 'Phỏng vấn', label: 'Phỏng vấn', color: 'bg-purple-100 text-purple-700' },
-    { value: 'Đề nghị (Offer)', label: 'Đề nghị (Offer)', color: 'bg-indigo-100 text-indigo-700' },
-    { value: 'Trúng tuyển', label: 'Trúng tuyển', color: 'bg-emerald-100 text-emerald-700' },
-    { value: 'Từ chối', label: 'Từ chối', color: 'bg-rose-100 text-rose-700' },
+    { value: ApplicationStatus.NEW, label: 'Mới nộp', color: 'bg-blue-100 text-blue-700' },
+    { value: ApplicationStatus.REVIEWING, label: 'Đang xem xét', color: 'bg-amber-100 text-amber-700' },
+    { value: ApplicationStatus.INTERVIEW, label: 'Phỏng vấn', color: 'bg-purple-100 text-purple-700' },
+    { value: ApplicationStatus.OFFERED, label: 'Đề nghị (Offer)', color: 'bg-indigo-100 text-indigo-700' },
+    { value: ApplicationStatus.HIRED, label: 'Trúng tuyển', color: 'bg-emerald-100 text-emerald-700' },
+    { value: ApplicationStatus.REJECTED, label: 'Từ chối', color: 'bg-rose-100 text-rose-700' },
+    { value: ApplicationStatus.WITHDRAWN, label: 'Đã rút hồ sơ', color: 'bg-slate-100 text-slate-500' },
 ];
 
 export default function JobLeaderboardPage() {
@@ -28,24 +35,37 @@ export default function JobLeaderboardPage() {
     const jobId = params.id as string;
 
     const [jobInfo, setJobInfo] = useState<any>(null);
+    const [companyInfo, setCompanyInfo] = useState<any>(null);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [showJobDetails, setShowJobDetails] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [suitabilityFilter, setSuitabilityFilter] = useState('All');
+    const [sortBy, setSortBy] = useState('score_high');
 
-    const [editingNote, setEditingNote] = useState<{ id: string, currentNote: string } | null>(null);
+    const [editingNote, setEditingNote] = useState<{ id: string } | null>(null);
     const [noteInput, setNoteInput] = useState('');
     const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any>(null);
+
+    const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+    const [previewFile, setPreviewFile] = useState<{ url: string, name: string, appId: string } | null>(null);
+    const [emailModalData, setEmailModalData] = useState<any>(null);
+
+    const [expandedInsights, setExpandedInsights] = useState<Record<string, boolean>>({});
+
+    const [isGeneratingInterview, setIsGeneratingInterview] = useState<string | null>(null);
+    const [interviewQuestions, setInterviewQuestions] = useState<{ appId: string, questions: any[] } | null>(null);
 
     const fetchRanking = useCallback(async () => {
         try {
             const res = await api.get(`/jobs/${jobId}/ranking`);
             setJobInfo(res.data.job_info);
             setCandidates(res.data.leaderboard);
+            if (res.data.company_info) setCompanyInfo(res.data.company_info);
         } catch (error) {
-            toast.error("Không thể tải bảng xếp hạng!");
+            toast.error("Không thể tải danh sách ứng viên!");
             router.push('/jobs');
         } finally {
             setIsLoading(false);
@@ -56,63 +76,186 @@ export default function JobLeaderboardPage() {
         fetchRanking();
     }, [fetchRanking]);
 
-    const handleStatusChange = async (appId: string, newStatus: string) => {
+    const handleStatusChange = async (appId: string, newStatus: string, candidateInfo?: any) => {
+        if (newStatus === ApplicationStatus.INTERVIEW) {
+            setEmailModalData({ appId, newStatus, ...candidateInfo });
+            return;
+        }
+        await executeStatusUpdate(appId, newStatus);
+    };
+
+    const executeStatusUpdate = async (appId: string, newStatus: string, emailData?: any) => {
         try {
-            await api.patch(`/cv/applications/${appId}`, { status: newStatus });
+            const payload: any = { status: newStatus };
+
+            if (emailData) {
+                payload.send_email = emailData.send_email || false;
+                if (emailData.interview_schedule) {
+                    payload.interview_schedule = emailData.interview_schedule;
+                }
+            }
+
+            await api.patch(`/cv/applications/${appId}`, payload);
             toast.success("Cập nhật trạng thái thành công");
             setCandidates(prev => prev.map(cv => cv.id === appId ? { ...cv, status: newStatus } : cv));
-        } catch (error) {
-            toast.error("Lỗi khi cập nhật trạng thái");
+            setEmailModalData(null);
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi cập nhật trạng thái");
+        }
+    };
+
+    const handleToggleView = async (cv: any) => {
+        const newStatus = !cv.is_viewed;
+        try {
+            await api.patch(`/cv/applications/${cv.id}/view`, { is_viewed: newStatus });
+            setCandidates(prev => prev.map(c => c.id === cv.id ? { ...c, is_viewed: newStatus } : c));
+            toast.success(newStatus ? "Đã đánh dấu Đã xem" : "Đã đánh dấu Chưa xem");
+        } catch (e) {
+            toast.error("Lỗi cập nhật trạng thái");
+        }
+    };
+
+    const handleViewCV = async (cv: any) => {
+        const fileUrl = cv.cv_snapshot?.file_url || cv.file_url;
+        const filename = cv.cv_snapshot?.filename || cv.filename;
+        setPreviewFile({ url: fileUrl, name: filename, appId: cv.id });
+
+        if (!cv.is_viewed) {
+            try {
+                await api.patch(`/cv/applications/${cv.id}/view`, { is_viewed: true });
+                setCandidates(prev => prev.map(c => c.id === cv.id ? { ...c, is_viewed: true } : c));
+            } catch (e) {
+                console.error("Lỗi đánh dấu đã xem", e);
+            }
         }
     };
 
     const handleRemoveFromJob = async (appId: string, filename: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn gỡ CV ${filename} khỏi chiến dịch này? (CV gốc vẫn sẽ được giữ lại trong Kho Talent Pool)`)) return;
+        if (!confirm(`Bạn có chắc chắn muốn gỡ CV ${filename} khỏi chiến dịch này?`)) return;
         try {
             await api.delete(`/cv/applications/${appId}`);
             toast.success("Đã gỡ CV khỏi chiến dịch!");
             setCandidates(prev => prev.filter(cv => cv.id !== appId));
-        } catch (error) {
+        } catch (error: any) {
             toast.error("Lỗi khi gỡ CV");
         }
     };
 
     const handleSaveNote = async () => {
-        if (!editingNote) return;
+        if (!editingNote || !noteInput.trim()) return toast.error("Vui lòng nhập nội dung!");
         try {
-            await api.patch(`/cv/applications/${editingNote.id}`, { note: noteInput });
-            if (noteInput.trim() === '') toast.success("Đã xóa trắng ghi chú");
-            else toast.success("Đã lưu ghi chú!");
-
-            setCandidates(prev => prev.map(cv => {
-                if (cv.id === editingNote.id) return { ...cv, note: noteInput };
-                return cv;
-            }));
-
+            await api.patch(`/cv/applications/${editingNote.id}`, { note_to_add: noteInput });
+            toast.success("Đã thêm ghi chú mới!");
+            setCandidates(prev => prev.map(cv => cv.id === editingNote.id ? { ...cv, notes: [...(cv.notes || []), noteInput] } : cv));
             setEditingNote(null);
             setNoteInput('');
-        } catch (error) {
+        } catch (error: any) {
             toast.error("Lỗi khi lưu ghi chú");
         }
     };
 
+    const handleGenerateInterviewQuestions = async (appId: string) => {
+        setIsGeneratingInterview(appId);
+        try {
+            const res = await api.get(`/cv/applications/${appId}/ai-interview`);
+            setInterviewQuestions({ appId, questions: res.data.data });
+            toast.success("AI đã phân tích và sinh câu hỏi thành công!");
+
+            setCandidates(prev => prev.map(cv =>
+                cv.id === appId ? { ...cv, ai_interview_questions: res.data.data } : cv
+            ));
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi sinh câu hỏi phỏng vấn");
+        } finally {
+            setIsGeneratingInterview(null);
+        }
+    };
+
+    const toggleInsightExpand = (id: string) => {
+        setExpandedInsights(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const getSubScoreClass = (val: number) => {
+        if (val >= 80) return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+        if (val >= 50) return 'bg-amber-50 text-amber-600 border border-amber-100';
+        return 'bg-rose-50 text-rose-600 border border-rose-100';
+    };
+
+    const getScoreTheme = (score: number) => {
+        if (score >= 80) return { ring: 'text-emerald-500', bg: 'text-emerald-100', border: 'border-emerald-500', badge: 'bg-emerald-100 text-emerald-700', label: 'Phù hợp' };
+        if (score >= 50) return { ring: 'text-amber-500', bg: 'text-amber-100', border: 'border-amber-500', badge: 'bg-amber-100 text-amber-700', label: 'Tạm ổn' };
+        return { ring: 'text-rose-500', bg: 'text-rose-100', border: 'border-rose-500', badge: 'bg-rose-100 text-rose-700', label: 'Chưa đạt' };
+    };
+
+    const getPenaltyReasons = (cvInfo: any, breakdown: any) => {
+        const reasons = [];
+
+        const fraudReasons = breakdown?.fraud_analysis?.reasons || [];
+        if (fraudReasons.length > 0) {
+            const translated = fraudReasons.map((r: string) => {
+                if (r === 'Keyword stuffing') return 'Nhồi nhét từ khóa';
+                if (r === 'White text') return 'Chèn chữ tàng hình (màu trắng)';
+                if (r.includes('Tiny font') || r.includes('Very small font')) return 'Dùng font chữ siêu nhỏ';
+                if (r === 'Hidden flag') return 'Cố tình ẩn chữ (Hidden text)';
+                if (r === 'Outside page') return 'Chèn chữ ngoài lề trang';
+                return r;
+            });
+            reasons.push(...translated);
+        } else if (breakdown?.fraud_analysis?.detected) {
+            reasons.push('Có dấu hiệu gian lận CV');
+        }
+
+        const yoe = cvInfo?.years_of_experience || 0;
+        const hops = cvInfo?.job_hops || 1;
+        const gaps = cvInfo?.gap_months || 0;
+
+        if (yoe > 0 && (yoe / Math.max(hops, 1)) < 0.8) {
+            reasons.push("Nhảy việc quá nhiều");
+        }
+        if (gaps > 12) {
+            reasons.push(`Khoảng trống sự nghiệp dài (${gaps} tháng)`);
+        }
+
+        return reasons.length > 0 ? reasons.join(' + ') : 'Vi phạm tiêu chí hệ thống';
+    };
+
     const filteredCandidates = candidates.filter(cv => {
-        const matchesSearch = cv.filename?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            cv.candidate_info?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        const snapshot = cv.cv_snapshot || {};
+        const cInfo = snapshot.candidate_info || {};
+        const filename = snapshot.filename || '';
+
+        const matchesSearch = filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (cInfo.email && cInfo.email.toLowerCase().includes(searchTerm.toLowerCase()));
+
         const matchesStatus = statusFilter === 'All' || cv.status === statusFilter;
-        return matchesSearch && matchesStatus;
+
+        const matchesSuitability = suitabilityFilter === 'All' || (cv.ai_score?.total_score || 0) >= 50;
+
+        return matchesSearch && matchesStatus && matchesSuitability;
+    }).sort((a, b) => {
+        if (sortBy === 'score_high') return (b.ai_score?.total_score || 0) - (a.ai_score?.total_score || 0);
+        if (sortBy === 'score_low') return (a.ai_score?.total_score || 0) - (b.ai_score?.total_score || 0);
+
+        const dateA = new Date(a.applied_at?.$date || a.applied_at || 0).getTime();
+        const dateB = new Date(b.applied_at?.$date || b.applied_at || 0).getTime();
+
+        if (sortBy === 'newest') return dateB - dateA;
+        if (sortBy === 'oldest') return dateA - dateB;
+
+        return 0;
     });
 
-    const formatCurrency = (val: number | null | undefined) => {
-        if (!val) return 'Thỏa thuận';
-        return new Intl.NumberFormat('vi-VN').format(val);
-    };
+    const kanbanCandidates = filteredCandidates.map(c => ({
+        ...c,
+        filename: c.cv_snapshot?.filename || c.filename,
+        file_url: c.cv_snapshot?.file_url || c.file_url,
+        candidate_info: c.cv_snapshot?.candidate_info || c.candidate_info,
+    }));
 
     if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>;
 
     return (
-        <div className="max-w-350 mx-auto pb-20 space-y-6">
-            {/* HEADER & JOB DETAILS */}
+        <div className="max-w-7xl mx-auto pb-20 space-y-6">
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div className="p-6 flex flex-col md:flex-row justify-between gap-4">
                     <div>
@@ -121,7 +264,7 @@ export default function JobLeaderboardPage() {
                         </button>
                         <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2">{jobInfo?.title}</h1>
                         <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
-                            <span className="flex items-center gap-1"><Building2 className="w-4 h-4" /> {jobInfo?.company_name}</span>
+                            <span className="flex items-center gap-1"><Building2 className="w-4 h-4" /> {companyInfo?.name || jobInfo?.company_name || 'Công ty của tôi'}</span>
                             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {jobInfo?.location?.city || 'Việt Nam'}</span>
                             <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
                                 {jobInfo?.work_mode} • {jobInfo?.job_level}
@@ -136,195 +279,321 @@ export default function JobLeaderboardPage() {
                     </div>
                 </div>
 
-                {/* KHU VỰC CHI TIẾT JOB */}
-                {showJobDetails && (
-                    <JobDetailsContent jobInfo={jobInfo} />
-                )}
+                {showJobDetails && <JobDetailsContent jobInfo={jobInfo} />}
             </div>
 
-            {/* BẢNG XẾP HẠNG */}
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50 dark:bg-slate-900/20">
-                    <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> Bảng xếp hạng AI ({filteredCandidates.length})</h2>
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="relative w-full sm:w-64">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input type="text" placeholder="Tìm tên CV, Email..." className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-blue-500" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
+                    {/* DÒNG 1: Tiêu đề & Chế độ xem */}
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                            <Award className="w-5 h-5 text-amber-500" /> CV Ứng tuyển ({filteredCandidates.length})
+                        </h2>
+                        <div className="flex bg-slate-200 dark:bg-slate-700 p-1 rounded-lg">
+                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-bold transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                <LayoutList className="w-4 h-4" /> Danh sách
+                            </button>
+                            <button onClick={() => setViewMode('kanban')} className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-bold transition-colors ${viewMode === 'kanban' ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                <Kanban className="w-4 h-4" /> Kanban
+                            </button>
                         </div>
-                        <div className="relative min-w-35">
-                            <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <select className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium outline-none appearance-none cursor-pointer focus:border-blue-500 dark:text-white" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                                <option value="All">Tất cả trạng thái</option>
-                                {CV_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                            </select>
+                    </div>
+
+                    {/* DÒNG 2: Thanh Tìm Kiếm & Các Bộ Lọc */}
+                    <div className="flex flex-col xl:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input type="text" placeholder="Tìm kiếm theo Tên ứng viên, Email..." className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:border-blue-500 transition-colors dark:text-white placeholder:font-normal" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        </div>
+
+                        <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+                            <div className="relative min-w-45 grow sm:grow-0">
+                                <select className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none cursor-pointer focus:border-blue-500 dark:text-white transition-colors" value={suitabilityFilter} onChange={e => setSuitabilityFilter(e.target.value)}>
+                                    <option value="All">Tất cả Mức độ</option>
+                                    <option value="Suitable">Chỉ CV Phù hợp (≥50đ)</option>
+                                </select>
+                            </div>
+
+                            <div className="relative min-w-42.5 grow sm:grow-0">
+                                <Filter className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <select className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none appearance-none cursor-pointer focus:border-blue-500 dark:text-white transition-colors" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                                    <option value="All">Tất cả Trạng thái</option>
+                                    {CV_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="relative min-w-42.5 grow sm:grow-0">
+                                <select className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none cursor-pointer focus:border-blue-500 dark:text-white transition-colors" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                    <option value="score_high">Điểm AI: Giảm dần</option>
+                                    <option value="score_low">Điểm AI: Tăng dần</option>
+                                    <option value="newest">Ngày nộp: Mới nhất</option>
+                                    <option value="oldest">Ngày nộp: Cũ nhất</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {filteredCandidates.length === 0 ? (
-                    <div className="p-16 text-center text-slate-500 font-medium">Chưa có ứng viên nào. Hãy vào <strong className="text-blue-500 cursor-pointer" onClick={() => router.push('/candidates')}>Kho Hồ Sơ</strong> để đối chiếu ứng viên với chiến dịch này!</div>
+                    <div className="p-16 text-center text-slate-500 font-medium">Chưa có ứng viên nào. Hãy vào <strong className="text-blue-500 cursor-pointer hover:underline" onClick={() => router.push('/candidates')}>Kho Hồ Sơ</strong> để đối chiếu ứng viên với chiến dịch này!</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500 font-bold">
-                                    <th className="p-4 pl-6 w-12 text-center">Top</th>
-                                    <th className="p-4 w-1/4">Thông tin Liên hệ</th>
-                                    <th className="p-4 w-1/4">Học vấn & Kỹ năng</th>
-                                    <th className="p-4 w-48 text-right">AI Score</th>
-                                    <th className="p-4 pr-6 w-40 text-center">Quản lý</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                                {filteredCandidates.map((cv, index) => {
-                                    const score = cv.ai_score?.total_score || 0;
-                                    const breakdown = cv.ai_score?.score_breakdown || {};
-                                    const skillExp = cv.candidate_info?.skill_experience || {};
+                    viewMode === 'kanban' ? (
+                        <div className="p-4 bg-slate-100/50 dark:bg-slate-900 h-full min-h-150">
+                            <CandidateKanban
+                                candidates={kanbanCandidates}
+                                onStatusChange={(id, status) => {
+                                    const cv = candidates.find(c => c.id === id);
+                                    handleStatusChange(id, status, cv);
+                                }}
+                                onPreviewCV={(url, name) => handleViewCV({ id: candidates.find(c => c.cv_snapshot?.file_url === url || c.file_url === url)?.id, file_url: url, filename: name })}
+                            />
+                        </div>
+                    ) : (
+                        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 space-y-4">
+                            {filteredCandidates.map((cv) => {
+                                const snapshot = cv.cv_snapshot || {};
+                                const cInfo = snapshot.candidate_info || {};
+                                const score = cv.ai_score?.total_score || 0;
+                                const breakdown = cv.ai_score?.score_breakdown || {};
+                                const notes = cv.notes || [];
+                                const isViewed = cv.is_viewed;
+                                const filename = snapshot.filename || cv.filename || 'CV Không tên';
 
-                                    let rankColor = "bg-slate-100 text-slate-600";
-                                    if (statusFilter === 'All') {
-                                        if (index === 0) rankColor = "bg-amber-100 text-amber-600 border border-amber-200 shadow-sm";
-                                        if (index === 1) rankColor = "bg-slate-200 text-slate-700 border border-slate-300 shadow-sm";
-                                        if (index === 2) rankColor = "bg-orange-100 text-orange-600 border border-orange-200 shadow-sm";
-                                    }
+                                const aiSentences = cv.ai_score?.top_contributing_sentences || [];
+                                const fullInsightText = aiSentences.length > 0
+                                    ? aiSentences.join(' ')
+                                    : 'Hồ sơ có nhiều điểm kỹ năng tương đồng với yêu cầu công việc.';
 
-                                    return (
-                                        <tr key={cv.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
-                                            {/* CỘT 1: Hạng */}
-                                            <td className="p-4 pl-6 text-center"><div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center font-black text-sm ${rankColor}`}>{statusFilter === 'All' ? `#${index + 1}` : '-'}</div></td>
+                                const isExpanded = expandedInsights[cv.id];
+                                const isLongText = fullInsightText.length > 150;
+                                const displayText = (isLongText && !isExpanded) ? fullInsightText.substring(0, 150) + '...' : fullInsightText;
 
-                                            {/* CỘT 2: Thông tin & Social Links */}
-                                            <td className="p-4">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 mt-1"><FileText className="w-4 h-4" /></div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <p className="font-bold text-sm text-slate-800 dark:text-white line-clamp-1" title={cv.filename}>{cv.filename}</p>
-                                                            {cv.note && <span title={cv.note} className="text-amber-500 cursor-help"><FileText className="w-3.5 h-3.5" /></span>}
-                                                        </div>
-                                                        <div className="space-y-1.5 mt-1">
-                                                            {cv.candidate_info?.email && (
-                                                                <a href={`mailto:${cv.candidate_info.email}`} className="text-[11px] text-slate-500 hover:text-blue-600 flex items-center gap-1.5 w-max">
-                                                                    <Mail className="w-3 h-3 shrink-0" /> {cv.candidate_info.email}
-                                                                </a>
-                                                            )}
-                                                            {cv.candidate_info?.phone && (
-                                                                <a href={`tel:${cv.candidate_info.phone.replace(/[^0-9+]/g, '')}`} className="text-[11px] text-slate-500 hover:text-blue-600 flex items-center gap-1.5 w-max">
-                                                                    <Phone className="w-3 h-3 shrink-0" /> {cv.candidate_info.phone}
-                                                                </a>
-                                                            )}
-                                                            {cv.candidate_info?.linkedin && (
-                                                                <a href={cv.candidate_info.linkedin.startsWith('http') ? cv.candidate_info.linkedin : `https://${cv.candidate_info.linkedin}`} target="_blank" rel="noreferrer" className="text-[11px] text-slate-500 hover:text-blue-600 flex items-center gap-1.5 w-max">
-                                                                    <Users className="w-3 h-3 shrink-0" />
-                                                                    <span className="truncate max-w-45">{cv.candidate_info.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>
-                                                                </a>
-                                                            )}
-                                                            {cv.candidate_info?.github && (
-                                                                <a href={cv.candidate_info.github.startsWith('http') ? cv.candidate_info.github : `https://${cv.candidate_info.github}`} target="_blank" rel="noreferrer" className="text-[11px] text-slate-500 hover:text-blue-600 flex items-center gap-1.5 w-max">
-                                                                    <GitCommitHorizontal className="w-3 h-3 shrink-0" />
-                                                                    <span className="truncate max-w-45">{cv.candidate_info.github.replace(/^https?:\/\/(www\.)?/, '')}</span>
-                                                                </a>
-                                                            )}
-                                                            {cv.candidate_info?.portfolio && cv.candidate_info.portfolio.length > 0 && cv.candidate_info.portfolio.map((link: string, i: number) => (
-                                                                <a key={i} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noreferrer" className="text-[11px] text-slate-500 hover:text-blue-600 flex items-center gap-1.5 w-max">
-                                                                    <Globe className="w-3 h-3 shrink-0" />
-                                                                    <span className="truncate max-w-45">{link.replace(/^https?:\/\/(www\.)?/, '')}</span>
-                                                                </a>
-                                                            ))}
+                                const theme = getScoreTheme(score);
+                                const radius = 20;
+                                const strokeDasharray = 2 * Math.PI * radius;
+                                const strokeDashoffset = strokeDasharray - (score / 100) * strokeDasharray;
+
+                                return (
+                                    <div key={cv.id} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
+                                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start xl:items-center">
+
+                                            {/* CỘT 1: THÔNG TIN CƠ BẢN */}
+                                            <div className="xl:col-span-4 flex items-start gap-4">
+                                                <div className="flex flex-col items-center gap-2 shrink-0">
+                                                    <div className="relative">
+                                                        <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center font-black text-2xl shrink-0 ${isViewed ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-blue-100 text-blue-600 border-blue-200'}`}>
+                                                            {filename.charAt(0).toUpperCase()}
                                                         </div>
                                                     </div>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap shrink-0 ${isViewed ? 'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-700'}`}>
+                                                        {isViewed ? 'Đã xem' : 'Chưa xem'}
+                                                    </span>
                                                 </div>
-                                            </td>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-slate-800 dark:text-white mb-2 leading-tight" title={filename}>{filename}</h3>
+                                                    <div className="space-y-1.5">
+                                                        {cInfo.email && <a href={`mailto:${cInfo.email}`} className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{cInfo.email}</span></a>}
+                                                        {cInfo.phone && <a href={`tel:${cInfo.phone}`} className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1.5 truncate"><Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{cInfo.phone}</span></a>}
+                                                        <p className="text-xs text-slate-500 flex items-center gap-1.5 truncate"><Clock className="w-3.5 h-3.5 shrink-0" /> Nộp lúc: {new Date(cv.applied_at?.$date || cv.applied_at || Date.now()).toLocaleDateString('vi-VN')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                            {/* CỘT 3: Kỹ năng & Kinh nghiệm */}
-                                            <td className="p-4">
-                                                <div className="space-y-2 mb-2">
-                                                    <div className="flex items-center gap-2 text-xs"><GraduationCap className="w-3 h-3 text-slate-400" /> <span className="font-semibold text-slate-700 dark:text-slate-200">{cv.candidate_info?.education_level || 'Không đề cập'}</span></div>
-                                                    <div className="flex items-center gap-2 text-xs">
-                                                        <Briefcase className="w-3 h-3 text-slate-400" />
-                                                        <span className="font-semibold text-slate-700 dark:text-slate-200">{cv.candidate_info?.years_of_experience || 0} năm KN</span>
+                                            <div className="xl:col-span-6 flex flex-col xl:flex-row items-start gap-4 border-t xl:border-t-0 xl:border-l border-slate-100 dark:border-slate-700 pt-4 xl:pt-0 xl:pl-6 h-full">
+                                                <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
+                                                    <div className="relative w-14 h-14">
+                                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 48 48">
+                                                            <circle cx="24" cy="24" r="20" className={`stroke-current ${theme.bg}`} strokeWidth="4" fill="transparent" />
+                                                            <circle cx="24" cy="24" r="20" className={`stroke-current ${theme.ring}`} strokeWidth="4" fill="transparent" strokeDasharray={strokeDasharray} strokeDashoffset={strokeDashoffset} strokeLinecap="round" />
+                                                        </svg>
+                                                        <div className="absolute inset-0 flex items-center justify-center font-bold text-sm text-slate-700 dark:text-white">
+                                                            {score.toFixed(0)}%
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${theme.badge}`}>{theme.label}</span>
+                                                </div>
+
+                                                <div className="flex-1 w-full min-w-0">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        {/* 4 THÔNG SỐ ĐIỂM CON */}
+                                                        <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+                                                            <span className={`px-2 py-1 rounded ${getSubScoreClass(breakdown.skills_score || 0)}`}>Kỹ năng: {breakdown.skills_score?.toFixed(0)}</span>
+                                                            <span className={`px-2 py-1 rounded ${getSubScoreClass(breakdown.nlp_score || 0)}`}>Ngữ nghĩa: {breakdown.nlp_score?.toFixed(0)}</span>
+                                                            <span className={`px-2 py-1 rounded ${getSubScoreClass(breakdown.experience_score || 0)}`}>K.Nghiệm: {breakdown.experience_score?.toFixed(0)}</span>
+                                                            <span className={`px-2 py-1 rounded ${getSubScoreClass(breakdown.education_score || 0)}`}>Học vấn: {breakdown.education_score?.toFixed(0)}</span>
+                                                        </div>
+                                                        <button onClick={() => setSelectedCandidateForSkills(cv)} className="text-[10px] text-blue-600 font-bold hover:underline shrink-0 ml-2">Chi tiết</button>
                                                     </div>
 
-                                                    {/* NÚT MỞ MODAL XEM CHI TIẾT */}
-                                                    <button
-                                                        onClick={() => setSelectedCandidateForSkills(cv)}
-                                                        className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 px-2 py-1.5 rounded-md transition-colors w-max mt-1"
-                                                    >
-                                                        <Eye className="w-3.5 h-3.5" /> Xem chi tiết Kỹ năng
-                                                    </button>
-                                                </div>
-                                                <div className="flex flex-wrap gap-1 max-h-12 overflow-y-auto custom-scrollbar">
-                                                    {cv.ai_score?.matched_skills?.map((skill: string, idx: number) => <span key={idx} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold uppercase"><CheckCircle2 className="w-2 h-2 inline mr-1" />{skill}</span>)}
-                                                    {cv.ai_score?.missing_required_skills?.map((skill: string, idx: number) => <span key={idx} className="px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded text-[9px] font-bold uppercase opacity-75"><XCircle className="w-2 h-2 inline mr-1" />{skill}</span>)}
-                                                </div>
-                                            </td>
+                                                    {/* INSIGHTS (GẠCH ĐẦU DÒNG) */}
+                                                    {aiSentences.length > 0 && (
+                                                        <div className="bg-amber-50/70 dark:bg-slate-900/50 p-3 rounded-lg border border-amber-100 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2 relative">
+                                                            <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                                            <div className="flex-1">
+                                                                <ul className="list-disc pl-4 space-y-1.5">
+                                                                    {aiSentences.slice(0, isExpanded ? undefined : 2).map((sentence: string, idx: number) => (
+                                                                        <li key={idx} className="italic text-justify leading-relaxed">{sentence}</li>
+                                                                    ))}
+                                                                </ul>
+                                                                {aiSentences.length > 2 && (
+                                                                    <button onClick={() => toggleInsightExpand(cv.id)} className="text-[10px] text-amber-600 font-bold hover:underline mt-2 inline-block">
+                                                                        {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
 
-                                            {/* CỘT 4: Điểm AI */}
-                                            <td className="p-4 pr-6">
-                                                {/* HIỂN THỊ CẢNH BÁO PHẠT NẾU CÓ */}
-                                                {breakdown.penalty_score > 0 && (
-                                                    <div className="flex items-center justify-end gap-1 text-[10px] font-bold text-rose-500 mb-1" title="CV quá sơ sài, hệ thống tự động trừ điểm">
-                                                        <AlertTriangle className="w-3 h-3" />
-                                                        Bị phạt trừ {breakdown.penalty_score}đ
+                                                    {/* Cảnh báo Penalty */}
+                                                    {(breakdown.penalty_score > 0 || (breakdown.fraud_analysis?.reasons && breakdown.fraud_analysis.reasons.length > 0)) && (
+                                                        <div className="bg-rose-50 dark:bg-rose-900/20 p-2.5 rounded-lg border border-rose-100 dark:border-rose-800 flex items-start gap-2 mt-2">
+                                                            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                                                            <p className="text-[10px] text-rose-600 dark:text-rose-400 leading-relaxed">
+                                                                <strong className="block font-bold">Cảnh báo rủi ro: Bị trừ {breakdown.penalty_score || 0}đ</strong>
+                                                                {getPenaltyReasons(cInfo, breakdown)}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* NÚT SINH CÂU HỎI AI */}
+                                                    <div className="mt-3 flex justify-between items-center">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (cv.ai_interview_questions) {
+                                                                    setInterviewQuestions({ appId: cv.id, questions: cv.ai_interview_questions });
+                                                                } else {
+                                                                    handleGenerateInterviewQuestions(cv.id);
+                                                                }
+                                                            }}
+                                                            disabled={isGeneratingInterview === cv.id}
+                                                            className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                                        >
+                                                            {isGeneratingInterview === cv.id ? (
+                                                                <><span className="animate-spin w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full"></span> Đang phân tích...</>
+                                                            ) : (
+                                                                <><Sparkles className="w-3.5 h-3.5" /> {cv.ai_interview_questions ? 'Xem lại bộ câu hỏi AI' : 'Sinh bộ câu hỏi phỏng vấn'}</>
+                                                            )}
+                                                        </button>
                                                     </div>
-                                                )}
-                                                <div className="text-right mb-1"><span className={`text-xl font-black ${score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>{score.toFixed(1)}</span><span className="text-[10px] text-slate-400 font-bold ml-1">/100</span></div>
-                                                <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
-                                                    <div className="flex flex-col gap-0.5 text-[8px] font-bold text-slate-500"><div className="flex justify-between"><span>K.NĂNG</span><span>{breakdown.skills_score?.toFixed(0) || 0}</span></div><div className="w-full h-1 bg-slate-100 rounded-full"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, breakdown.skills_score || 0)}%` }}></div></div></div>
-                                                    <div className="flex flex-col gap-0.5 text-[8px] font-bold text-slate-500"><div className="flex justify-between"><span>N.NGHĨA</span><span>{breakdown.nlp_score?.toFixed(0) || 0}</span></div><div className="w-full h-1 bg-slate-100 rounded-full"><div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, breakdown.nlp_score || 0)}%` }}></div></div></div>
-                                                    <div className="flex flex-col gap-0.5 text-[8px] font-bold text-slate-500"><div className="flex justify-between"><span>K.NGHIỆM</span><span>{breakdown.experience_score?.toFixed(0) || 0}</span></div><div className="w-full h-1 bg-slate-100 rounded-full"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, breakdown.experience_score || 0)}%` }}></div></div></div>
-                                                    <div className="flex flex-col gap-0.5 text-[8px] font-bold text-slate-500"><div className="flex justify-between"><span>H.VẤN</span><span>{breakdown.education_score?.toFixed(0) || 0}</span></div><div className="w-full h-1 bg-slate-100 rounded-full"><div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, breakdown.education_score || 0)}%` }}></div></div></div>
+
+                                                    {breakdown.fraud_analysis?.detected && (
+                                                        <p className="text-[10px] text-rose-500 font-bold flex items-center gap-1 mt-2"><AlertTriangle className="w-3 h-3" /> Cảnh báo: CV có dấu hiệu nhồi nhét từ khóa (Bị trừ {breakdown.penalty_score}đ)</p>
+                                                    )}
                                                 </div>
-                                            </td>
+                                            </div>
 
-                                            {/* CỘT 5: Quản lý */}
-                                            <td className="p-4 pr-6 text-center">
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <select className={`text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer appearance-none text-center border-none shadow-sm transition-colors ${CV_STATUSES.find(s => s.value === (cv.status || 'Mới'))?.color || 'bg-slate-100 text-slate-700'}`} value={cv.status || 'Mới'} onChange={(e) => handleStatusChange(cv.id, e.target.value)}>
-                                                        {CV_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                                                    </select>
+                                            <div className="xl:col-span-2 flex flex-row xl:flex-col justify-between items-center xl:items-end border-t xl:border-t-0 xl:border-l border-slate-100 dark:border-slate-700 pt-4 xl:pt-0 xl:pl-6 h-full w-full">
+                                                <select
+                                                    className={`w-1/2 xl:w-full text-xs font-bold px-3 py-2 rounded-xl outline-none cursor-pointer text-center transition-colors ${CV_STATUSES.find(s => s.value === (cv.status || ApplicationStatus.NEW))?.color || 'bg-slate-100 text-slate-700'}`}
+                                                    value={cv.status || ApplicationStatus.NEW}
+                                                    onChange={(e) => handleStatusChange(cv.id, e.target.value, cv)}
+                                                >
+                                                    {CV_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                                </select>
 
-                                                    {/* NÚT GỠ KHỎI JOB */}
-                                                    <button onClick={() => handleRemoveFromJob(cv.id, cv.filename)} className="text-[10px] flex items-center gap-1 font-bold text-slate-400 hover:text-rose-600 px-2 py-1 rounded hover:bg-rose-50 transition-colors">
-                                                        <Trash2 className="w-3 h-3" /> Gỡ khỏi Job
+                                                <div className="flex items-center gap-1 mt-0 xl:mt-auto">
+                                                    <button onClick={() => handleToggleView(cv)} className={`p-2 rounded-lg transition-colors ${isViewed ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-100' : 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'}`} title={isViewed ? "Đánh dấu chưa xem" : "Đánh dấu đã xem"}>
+                                                        {isViewed ? <MailOpen className="w-4 h-4" /> : <MailClosed className="w-4 h-4" />}
                                                     </button>
-
-                                                    <button onClick={() => { setEditingNote({ id: cv.id, currentNote: cv.note || '' }); setNoteInput(cv.note || ''); }} className="text-[10px] flex items-center gap-1 font-bold text-slate-400 hover:text-blue-600 px-2 py-1 rounded hover:bg-blue-50 transition-colors">
-                                                        <FileText className="w-3 h-3" /> Ghi chú
+                                                    <button onClick={() => handleViewCV(cv)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Mở xem CV gốc">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => { setEditingNote({ id: cv.id }); setNoteInput(''); }} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors relative" title="Ghi chú nội bộ">
+                                                        <FileText className="w-4 h-4" />
+                                                        {notes.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-full"></span>}
+                                                    </button>
+                                                    <button onClick={() => handleRemoveFromJob(cv.id, filename)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Gỡ khỏi Job">
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )
                 )}
             </div>
 
-            {/* MODAL GHI CHÚ */}
+            {/* MODALS */}
+            {emailModalData && (
+                <InterviewEmailModal
+                    isOpen={!!emailModalData}
+                    onClose={() => setEmailModalData(null)}
+                    candidateName={emailModalData.filename || 'Ứng viên'}
+                    onConfirm={(data) => executeStatusUpdate(emailModalData.appId, emailModalData.newStatus, data)}
+                />
+            )}
+
             {editingNote && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-blue-500" /> {editingNote.currentNote ? 'Thay đổi ghi chú' : 'Thêm Ghi chú'}
-                        </h3>
-                        <textarea rows={4} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm mb-4 resize-none focus:border-blue-500 transition-colors" placeholder="Nhập đánh giá, ghi chú phỏng vấn..." value={noteInput} onChange={e => setNoteInput(e.target.value)}></textarea>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500" /> Thêm ghi chú</h3>
+                        <textarea rows={4} value={noteInput} onChange={e => setNoteInput(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm mb-4 resize-none" placeholder="Nhập ghi chú..."></textarea>
                         <div className="flex justify-end gap-3">
-                            <button onClick={() => setEditingNote(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl">Hủy</button>
-                            <button onClick={handleSaveNote} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl">Lưu lại</button>
+                            <button onClick={() => setEditingNote(null)} className="px-4 py-2 font-bold text-slate-500">Hủy</button>
+                            <button onClick={handleSaveNote} className="px-5 py-2 font-bold text-white bg-blue-600 rounded-xl">Lưu</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* MODAL KỸ NĂNG */}
-            <CandidateSkillsModal
-                isOpen={!!selectedCandidateForSkills}
-                onClose={() => setSelectedCandidateForSkills(null)}
-                candidate={selectedCandidateForSkills}
-            />
+            {/* MODAL HIỂN THỊ CÂU HỎI PHỎNG VẤN */}
+            {interviewQuestions && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200 dark:border-slate-700">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-indigo-50/50 dark:bg-slate-900/50">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> Bộ câu hỏi thực chiến
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-1">Được AI phân tích chuyên sâu dựa trên điểm yếu của CV so với JD</p>
+                            </div>
+                            <button onClick={() => setInterviewQuestions(null)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors">
+                                X Đóng
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50 dark:bg-slate-900">
+                            {interviewQuestions.questions.map((q: any, index: number) => (
+                                <div key={index} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative group">
+                                    <div className="absolute top-4 left-4 w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-black rounded-xl flex items-center justify-center">
+                                        Q{index + 1}
+                                    </div>
+                                    <div className="pl-12">
+                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-2">{q.question}</h4>
+                                        <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 text-xs p-3 rounded-xl mb-3 border border-rose-100 dark:border-rose-800/30">
+                                            <strong className="block mb-1">🎯 Mục đích hỏi:</strong>
+                                            {q.reason}
+                                        </div>
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+                                            <strong className="block mb-1">✅ Gợi ý đánh giá (Đỗ/Trượt):</strong>
+                                            {q.suggested_answer}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <CandidateSkillsModal isOpen={!!selectedCandidateForSkills} onClose={() => setSelectedCandidateForSkills(null)} candidate={{ ...selectedCandidateForSkills, extracted_skills: selectedCandidateForSkills?.cv_snapshot?.extracted_skills || selectedCandidateForSkills?.extracted_skills }} />
+            {previewFile && (
+                <DocumentViewer
+                    url={previewFile.url}
+                    filename={previewFile.name}
+                    candidate={candidates.find(c => c.id === previewFile.appId)}
+                    jobTitle={jobInfo?.title}
+                    onClose={() => setPreviewFile(null)}
+                    onStatusChange={(newStatus) => {
+                        const cv = candidates.find(c => c.id === previewFile.appId);
+                        if (cv) handleStatusChange(cv.id, newStatus, cv);
+                    }}
+                />
+            )}
         </div>
     );
 }
