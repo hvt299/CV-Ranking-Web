@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Plus, Search, Edit2, Trash2,
-    ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter, DollarSign, Clock
+    ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter, DollarSign, Clock,
+    Flame
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -177,7 +178,7 @@ export default function JobsListPage() {
                                 {/* HIỆU ỨNG RUY BĂNG HOT JOB */}
                                 {job.is_hot && (
                                     <div className="absolute -right-12 top-6 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 w-40 text-center shadow-lg rotate-45 z-10 flex items-center justify-center gap-1 tracking-widest uppercase pointer-events-none opacity-90">
-                                        HOT
+                                        <Flame className="w-3 h-3" /> HOT
                                     </div>
                                 )}
 

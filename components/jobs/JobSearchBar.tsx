@@ -4,6 +4,89 @@ import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import Select from 'react-select';
 
+const INDUSTRIES = [
+    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
+    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
+    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
+    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
+    { label: 'Công nghệ Thông tin', value: 'it' },
+    { label: 'Lao động phổ thông', value: 'labor' },
+    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
+    { label: 'Bất động sản', value: 'realestate' },
+    { label: 'Xây dựng', value: 'construction' },
+    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
+    { label: 'Sản xuất', value: 'manufacturing' },
+    { label: 'Giáo dục/Đào tạo', value: 'education' },
+    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
+    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
+    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
+    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
+    { label: 'Tư vấn chuyên môn', value: 'consulting' },
+    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
+    { label: 'Thiết kế', value: 'design' },
+    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
+    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
+    { label: 'Tài xế', value: 'driver' },
+    { label: 'Biên phiên dịch', value: 'translation' },
+    { label: 'Luật', value: 'law' },
+    { label: 'Nhóm nghề khác', value: 'other' }
+];
+
+const getIndustryLabel = (value: string) => {
+    return INDUSTRIES.find(
+        industry => industry.value === value
+    )?.label || value;
+};
+
+export const customSelectStyles = {
+    control: (base: any, state: any) => ({
+        ...base,
+        minHeight: '50px',
+        padding: '2px 6px',
+        borderRadius: '0.75rem',
+        borderColor: state.isFocused ? '#3b82f6' : '#e2e8f0',
+        backgroundColor: 'transparent',
+        boxShadow: state.isFocused
+            ? '0 0 0 2px rgba(59,130,246,.2)'
+            : 'none',
+        '&:hover': {
+            borderColor: '#3b82f6'
+        }
+    }),
+
+    menu: (base: any) => ({
+        ...base,
+        borderRadius: '0.75rem',
+        overflow: 'hidden',
+        zIndex: 50
+    }),
+
+    option: (base: any, state: any) => ({
+        ...base,
+        padding: '10px 12px',
+        backgroundColor: state.isSelected
+            ? '#2563eb'
+            : state.isFocused
+                ? '#eff6ff'
+                : 'white',
+        color: state.isSelected
+            ? 'white'
+            : '#334155',
+        cursor: 'pointer'
+    }),
+
+    singleValue: (base: any) => ({
+        ...base,
+        color: '#334155',
+        fontWeight: 500
+    }),
+
+    placeholder: (base: any) => ({
+        ...base,
+        color: '#94a3b8'
+    })
+};
+
 interface JobSearchBarProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
@@ -187,22 +270,33 @@ export default function JobSearchBar({
             {/* Advanced Filters */}
             {showFilters && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-slate-600">
-                    <style jsx global>{`
-                        .dark-select__control { background-color: transparent !important; border-color: inherit !important; border-radius: 0.5rem !important; padding: 2px !important; }
-                        .dark .dark-select__control { border-color: #475569 !important; }
-                        .dark .dark-select__menu { background-color: #1e293b !important; border: 1px solid #475569 !important; }
-                        .dark .dark-select__option:hover { background-color: #334155 !important; }
-                        .dark .dark-select__single-value { color: white !important; }
-                    `}</style>
-
                     {/* Industry Filter */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ngành nghề</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả ngành nghề' }, ...(filterOptions.industries || []).map(i => ({ value: i, label: i }))]}
-                            value={{ value: filters.industry, label: filters.industry || 'Tất cả ngành nghề' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, industry: selected?.value || '' })}
+                            options={[
+                                { value: '', label: 'Tất cả ngành nghề' },
+                                ...(filterOptions.industries || []).map(i => ({
+                                    value: i,
+                                    label: getIndustryLabel(i)
+                                }))
+                            ]}
+                            styles={customSelectStyles}
+                            placeholder="Tất cả ngành nghề"
+                            value={
+                                INDUSTRIES.find(
+                                    item => item.value === filters.industry
+                                ) || {
+                                    value: '',
+                                    label: 'Tất cả ngành nghề'
+                                }
+                            }
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    industry: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -210,10 +304,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Địa điểm</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả địa điểm' }, ...filterOptions.locations.map(l => ({ value: l, label: l }))]}
-                            value={{ value: filters.location, label: filters.location || 'Tất cả địa điểm' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, location: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả địa điểm' },
+                                ...filterOptions.locations.map(l => ({
+                                    value: l,
+                                    label: l
+                                }))
+                            ]}
+                            value={{
+                                value: filters.location,
+                                label: filters.location || 'Tất cả địa điểm'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    location: selected?.value || ''
+                                })
+                            }
                             placeholder="Tìm địa điểm..."
                         />
                     </div>
@@ -221,10 +329,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Loại hình</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.employmentTypes?.map(m => ({ value: m, label: m }))]}
-                            value={{ value: filters.employmentType, label: filters.employmentType || 'Tất cả' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, employmentType: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả' },
+                                ...filterOptions.employmentTypes.map(m => ({
+                                    value: m,
+                                    label: m
+                                }))
+                            ]}
+                            value={{
+                                value: filters.employmentType,
+                                label: filters.employmentType || 'Tất cả'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    employmentType: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -232,10 +354,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Hình thức làm việc</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.workModes.map(m => ({ value: m, label: m }))]}
-                            value={{ value: filters.workMode, label: filters.workMode || 'Tất cả' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, workMode: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả' },
+                                ...filterOptions.workModes.map(m => ({
+                                    value: m,
+                                    label: m
+                                }))
+                            ]}
+                            value={{
+                                value: filters.workMode,
+                                label: filters.workMode || 'Tất cả'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    workMode: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -243,10 +379,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Cấp bậc</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả' }, ...filterOptions.jobLevels.map(l => ({ value: l, label: l }))]}
-                            value={{ value: filters.jobLevel, label: filters.jobLevel || 'Tất cả' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, jobLevel: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả' },
+                                ...filterOptions.jobLevels.map(l => ({
+                                    value: l,
+                                    label: l
+                                }))
+                            ]}
+                            value={{
+                                value: filters.jobLevel,
+                                label: filters.jobLevel || 'Tất cả'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    jobLevel: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -254,10 +404,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Học vấn tối thiểu</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả' }, ...(filterOptions.educations || []).map(e => ({ value: e, label: e }))]}
-                            value={{ value: filters.education, label: filters.education || 'Tất cả' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, education: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả' },
+                                ...(filterOptions.educations || []).map(e => ({
+                                    value: e,
+                                    label: e
+                                }))
+                            ]}
+                            value={{
+                                value: filters.education,
+                                label: filters.education || 'Tất cả'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    education: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -265,10 +429,24 @@ export default function JobSearchBar({
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Công ty</label>
                         <Select
-                            classNamePrefix="dark-select"
-                            options={[{ value: '', label: 'Tất cả công ty' }, ...filterOptions.companies.map(c => ({ value: c, label: c }))]}
-                            value={{ value: filters.company, label: filters.company || 'Tất cả công ty' }}
-                            onChange={(selected: any) => onFiltersChange({ ...filters, company: selected?.value || '' })}
+                            styles={customSelectStyles}
+                            options={[
+                                { value: '', label: 'Tất cả công ty' },
+                                ...filterOptions.companies.map(c => ({
+                                    value: c,
+                                    label: c
+                                }))
+                            ]}
+                            value={{
+                                value: filters.company,
+                                label: filters.company || 'Tất cả công ty'
+                            }}
+                            onChange={(selected: any) =>
+                                onFiltersChange({
+                                    ...filters,
+                                    company: selected?.value || ''
+                                })
+                            }
                         />
                     </div>
 
@@ -280,7 +458,7 @@ export default function JobSearchBar({
                             placeholder="VD: 10000000"
                             value={filters.salaryMin}
                             onChange={(e) => onFiltersChange({ ...filters, salaryMin: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500"
                         />
                     </div>
 
@@ -291,7 +469,7 @@ export default function JobSearchBar({
                             placeholder="VD: 50000000"
                             value={filters.salaryMax}
                             onChange={(e) => onFiltersChange({ ...filters, salaryMax: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500"
                         />
                     </div>
 

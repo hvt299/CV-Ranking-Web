@@ -14,6 +14,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
+import HotJobsSection from '@/components/landing/HotJobsSection';
 
 // ==========================================
 // STATIC DATA (Chỉ dùng cho Text hiển thị / Tính năng)
@@ -263,9 +264,9 @@ export default function LandingPage() {
                     </Link>
 
                     <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
-                        <a href="#features" className="hover:text-blue-600 dark:hover:text-white transition-colors">Tính năng</a>
-                        <a href="#jobs" className="hover:text-blue-600 dark:hover:text-white transition-colors">Việc làm</a>
-                        <a href="#workflow" className="hover:text-blue-600 dark:hover:text-white transition-colors">Quy trình</a>
+                        <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 dark:hover:text-white transition-colors">Tính năng</button>
+                        <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 dark:hover:text-white transition-colors">Việc làm</button>
+                        <button onClick={() => document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-blue-600 dark:hover:text-white transition-colors">Quy trình</button>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -356,7 +357,7 @@ export default function LandingPage() {
             )}
 
             {/* ================= FEATURES SECTION ================= */}
-            <section id="features" className="py-32 px-6 relative">
+            <section id="features" className="py-32 px-6 relative scroll-mt-20">
                 <div className="max-w-7xl mx-auto">
                     <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={staggerContainer} className="mb-16">
                         <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">Tuyển dụng. <span className="text-slate-400 dark:text-slate-500">Nhưng thông minh hơn.</span></motion.h2>
@@ -390,62 +391,10 @@ export default function LandingPage() {
             </section>
 
             {/* ================= HOT JOBS SECTION (REAL DATA) ================= */}
-            <section id="jobs" className="py-32 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-end mb-12">
-                        <div>
-                            <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">Cơ hội <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-rose-500">Việc Làm Hot</span></h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">Những vị trí có mức đãi ngộ tốt nhất đang mở tuyển.</p>
-                        </div>
-                        <button onClick={scrollToJobs} className="hidden md:flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                            Xem tất cả <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {displayHotJobs.map((job) => (
-                            <motion.div key={job.id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-blue-400 dark:hover:border-slate-600 shadow-sm hover:shadow-md transition-all flex flex-col h-full relative group overflow-hidden">
-                                {/* Decor Hover Glow */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                {job.is_hot && (
-                                    <div className="absolute -right-12 top-6 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 w-40 text-center shadow-lg rotate-45 z-10 tracking-widest uppercase pointer-events-none opacity-90">
-                                        HOT
-                                    </div>
-                                )}
-
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 relative z-20">
-                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" /> {job.company_name}</span>
-                                    <span>•</span>
-                                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location?.city || 'Việt Nam'}</span>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 relative z-20">{job.title}</h3>
-
-                                <div className="flex flex-wrap gap-2 mb-6 relative z-20">
-                                    {job.required_skills?.slice(0, 4).map((skill: any, i: number) => (
-                                        <span key={i} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700">
-                                            {typeof skill === 'string' ? skill : skill.name}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between relative z-20">
-                                    <div className="text-emerald-600 dark:text-emerald-400 font-black flex items-center gap-1">
-                                        <DollarSign className="w-4 h-4" />
-                                        {job.salary?.min_salary && job.salary?.max_salary
-                                            ? `${new Intl.NumberFormat('vi-VN').format(job.salary.min_salary / 1000000)} - ${new Intl.NumberFormat('vi-VN').format(job.salary.max_salary / 1000000)} Tr`
-                                            : 'Thỏa thuận'}
-                                    </div>
-                                    <Link href={`/jobs/${job.id}`} className="px-4 py-2 bg-blue-50 dark:bg-white text-blue-600 dark:text-black text-sm font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-slate-200 transition-colors">Chi tiết</Link>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            <HotJobsSection jobs={displayHotJobs} onScrollToJobs={scrollToJobs} />
 
             {/* ================= MAIN JOBS LISTING (FILTERABLE) ================= */}
-            <div ref={jobsSectionRef} className="max-w-7xl mx-auto py-20 px-4 space-y-8 scroll-mt-20">
+            <div id="jobs" ref={jobsSectionRef} className="max-w-7xl mx-auto py-20 px-4 space-y-8 scroll-mt-24">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white">Tất cả <span className="text-blue-600">Việc làm</span></h2>
                     <p className="text-slate-500 mt-3 font-medium">Khám phá {filteredJobs.length} cơ hội nghề nghiệp với hệ thống xếp hạng công bằng AI.</p>
@@ -505,7 +454,7 @@ export default function LandingPage() {
             </div>
 
             {/* ================= WORKFLOW SECTION ================= */}
-            <section id="workflow" className="py-32 px-6 bg-slate-100 dark:bg-slate-900/20 border-y border-slate-200 dark:border-slate-800">
+            <section id="workflow" className="py-32 px-6 bg-slate-100 dark:bg-slate-900/20 border-y border-slate-200 dark:border-slate-800 scroll-mt-20">
                 <div className="max-w-7xl mx-auto text-center">
                     <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-16">Quy trình đơn giản. <br />Hiệu quả tối đa.</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
@@ -577,9 +526,11 @@ export default function LandingPage() {
             <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#050505] pt-20 pb-10 px-6">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                     <div className="md:col-span-2">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Hexagon className="w-6 h-6 text-blue-600" fill="currentColor" />
-                            <span className="text-xl font-black text-slate-900 dark:text-white">ATS<span className="text-blue-600">SYSTEM</span></span>
+                        <div className="flex items-center gap-2 mb-4 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                            <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                                <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
+                            </div>
+                            <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">ATS<span className="text-blue-500">SYSTEM</span></span>
                         </div>
                         <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm leading-relaxed font-medium">Nền tảng Quản trị Tuyển dụng Ứng dụng Trí tuệ Nhân tạo. Giúp doanh nghiệp tìm đúng người, giúp ứng viên tìm đúng việc.</p>
                     </div>
