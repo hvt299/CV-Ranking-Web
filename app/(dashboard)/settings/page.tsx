@@ -2,47 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, Search, Building2, Users, Save, CheckCircle, Mail, Briefcase, ExternalLink, Globe, MapPin } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { UserRole, CompanyStatus } from '@/types';
 import Select from 'react-select';
-
-const INDUSTRIES = [
-    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
-    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
-    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
-    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
-    { label: 'Công nghệ Thông tin', value: 'it' },
-    { label: 'Lao động phổ thông', value: 'labor' },
-    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
-    { label: 'Bất động sản', value: 'realestate' },
-    { label: 'Xây dựng', value: 'construction' },
-    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
-    { label: 'Sản xuất', value: 'manufacturing' },
-    { label: 'Giáo dục/Đào tạo', value: 'education' },
-    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
-    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
-    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
-    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
-    { label: 'Tư vấn chuyên môn', value: 'consulting' },
-    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
-    { label: 'Thiết kế', value: 'design' },
-    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
-    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
-    { label: 'Tài xế', value: 'driver' },
-    { label: 'Biên phiên dịch', value: 'translation' },
-    { label: 'Luật', value: 'law' },
-    { label: 'Nhóm nghề khác', value: 'other' }
-];
-
-const ROLES = [
-    { value: UserRole.APPLICANT, label: 'Ứng viên', color: 'bg-slate-100 text-slate-700' },
-    { value: UserRole.HR_OWNER, label: 'HR Owner', color: 'bg-blue-100 text-blue-700' },
-    { value: UserRole.HR_MEMBER, label: 'HR Member', color: 'bg-indigo-100 text-indigo-700' },
-    { value: UserRole.ADMIN, label: 'Admin', color: 'bg-purple-100 text-purple-700' },
-];
+import { INDUSTRIES } from '@/constants/job.constants';
+import { ROLES } from '@/constants/user.constants';
 
 export default function SettingsPage() {
     const { user } = useAuth();
@@ -105,12 +72,12 @@ function CompanySettingsSection({ user }: { user: any }) {
     };
 
     useEffect(() => {
-        api.get('/companies/settings').then(res => {
+        apiClient.get('/companies/settings').then(res => {
             setCompany(res.data);
             setTaxCode(res.data.tax_code || '');
         }).catch(err => console.error(err));
 
-        api.get('/companies/members').then(res => {
+        apiClient.get('/companies/members').then(res => {
             setMembers(res.data);
         }).catch(err => console.error(err));
     }, []);
@@ -118,7 +85,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleLookupTax = async () => {
         if (!taxCode.trim()) return toast.error("Vui lòng nhập mã số thuế");
         try {
-            const res = await api.get(`/companies/lookup-tax/${taxCode}`);
+            const res = await apiClient.get(`/companies/lookup-tax/${taxCode}`);
             setCompany((prev: any) => ({
                 ...prev,
                 name: res.data.company_name,
@@ -133,7 +100,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleSaveCompany = async () => {
         setIsSaving(true);
         try {
-            await api.patch('/companies/settings', {
+            await apiClient.patch('/companies/settings', {
                 tax_code: taxCode,
                 name: company.name,
                 industry: company.industry,
@@ -143,7 +110,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                 license_file_url: company.license_file_url
             });
             toast.success("Đã cập nhật thông tin công ty. Nếu đổi MST, vui lòng đợi Admin duyệt lại.");
-            const res = await api.get('/companies/settings');
+            const res = await apiClient.get('/companies/settings');
             setCompany(res.data);
         } catch (e: any) {
             toast.error(e.response?.data?.detail || "Lỗi khi lưu thông tin");
@@ -155,7 +122,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleInviteMember = async () => {
         if (!inviteEmail.trim()) return toast.error("Vui lòng nhập Email");
         try {
-            await api.post('/companies/invite', { email: inviteEmail });
+            await apiClient.post('/companies/invite', { email: inviteEmail });
             toast.success("Đã gửi thư mời gia nhập công ty thành công!");
             setInviteEmail('');
         } catch (e: any) {
@@ -402,7 +369,7 @@ function AdminSettingsSection({ user }: { user: any }) {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
 
     useEffect(() => {
-        api.get('/admin/users')
+        apiClient.get('/admin/users')
             .then(res => setUsers(res.data))
             .catch(() => toast.error('Không thể tải danh sách người dùng'))
             .finally(() => setIsLoading(false));
@@ -411,7 +378,7 @@ function AdminSettingsSection({ user }: { user: any }) {
     const handleRoleChange = async (userId: string, newRole: string) => {
         setUpdatingId(userId);
         try {
-            await api.patch(`/admin/users/${userId}/role`, { role: newRole });
+            await apiClient.patch(`/admin/users/${userId}/role`, { role: newRole });
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
             toast.success('Đã cập nhật role thành công');
         } catch (err: any) {

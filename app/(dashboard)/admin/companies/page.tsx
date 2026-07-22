@@ -2,40 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Building2, Search, CheckCircle, XCircle, AlertCircle, ExternalLink, Save, Briefcase } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { UserRole, CompanyStatus } from '@/types';
 import Select from 'react-select';
-
-const INDUSTRIES = [
-    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
-    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
-    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
-    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
-    { label: 'Công nghệ Thông tin', value: 'it' },
-    { label: 'Lao động phổ thông', value: 'labor' },
-    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
-    { label: 'Bất động sản', value: 'realestate' },
-    { label: 'Xây dựng', value: 'construction' },
-    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
-    { label: 'Sản xuất', value: 'manufacturing' },
-    { label: 'Giáo dục/Đào tạo', value: 'education' },
-    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
-    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
-    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
-    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
-    { label: 'Tư vấn chuyên môn', value: 'consulting' },
-    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
-    { label: 'Thiết kế', value: 'design' },
-    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
-    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
-    { label: 'Tài xế', value: 'driver' },
-    { label: 'Biên phiên dịch', value: 'translation' },
-    { label: 'Luật', value: 'law' },
-    { label: 'Nhóm nghề khác', value: 'other' }
-];
+import { INDUSTRIES } from '@/constants/job.constants';
 
 export default function AdminCompaniesPage() {
     const { user } = useAuth();
@@ -64,7 +37,7 @@ export default function AdminCompaniesPage() {
         formData.append('file', file);
 
         try {
-            const res = await api.post('/upload', formData, {
+            const res = await apiClient.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setEditingCompany({ ...editingCompany, license_file_url: res.data.file_url || res.data.url });
@@ -117,7 +90,7 @@ export default function AdminCompaniesPage() {
     }, [user, router]);
 
     const fetchCompanies = () => {
-        api.get('/admin/companies')
+        apiClient.get('/admin/companies')
             .then(res => setCompanies(res.data))
             .catch(() => toast.error('Không thể tải danh sách công ty'))
             .finally(() => setIsLoading(false));
@@ -130,7 +103,7 @@ export default function AdminCompaniesPage() {
         }
 
         try {
-            await api.patch(`/admin/companies/${companyId}/verify`, {
+            await apiClient.patch(`/admin/companies/${companyId}/verify`, {
                 approve,
                 rejection_reason: approve ? null : rejectionReason
             });
@@ -421,7 +394,7 @@ export default function AdminCompaniesPage() {
                             <button disabled={isSaving} onClick={async () => {
                                 setIsSaving(true);
                                 try {
-                                    await api.patch(`/admin/companies/${editingCompany.id}`, editingCompany);
+                                    await apiClient.patch(`/admin/companies/${editingCompany.id}`, editingCompany);
                                     toast.success("Cập nhật thông tin thành công!");
                                     setEditingCompany(null);
                                     fetchCompanies();

@@ -15,15 +15,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Mail, Phone, Eye, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { ApplicationStatus } from '@/types';
-
-const KANBAN_COLUMNS = [
-    { id: ApplicationStatus.NEW, label: 'Mới nộp', borderColor: 'border-blue-500', headerBg: 'bg-blue-100 text-blue-700' },
-    { id: ApplicationStatus.REVIEWING, label: 'Đang xem xét', borderColor: 'border-amber-500', headerBg: 'bg-amber-100 text-amber-700' },
-    { id: ApplicationStatus.INTERVIEW, label: 'Phỏng vấn', borderColor: 'border-purple-500', headerBg: 'bg-purple-100 text-purple-700' },
-    { id: ApplicationStatus.OFFERED, label: 'Đề nghị (Offer)', borderColor: 'border-indigo-500', headerBg: 'bg-indigo-100 text-indigo-700' },
-    { id: ApplicationStatus.HIRED, label: 'Trúng tuyển', borderColor: 'border-emerald-500', headerBg: 'bg-emerald-100 text-emerald-700' },
-    { id: ApplicationStatus.REJECTED, label: 'Từ chối', borderColor: 'border-rose-500', headerBg: 'bg-rose-100 text-rose-700' },
-];
+import { KANBAN_COLUMNS } from '@/constants/application.constants';
 
 interface CandidateKanbanProps {
     candidates: any[];

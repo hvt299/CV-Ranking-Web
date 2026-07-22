@@ -1,4 +1,3 @@
-import React from 'react';
 import { DollarSign, Clock, GraduationCap, CheckCircle2, Star, FileText, Zap } from 'lucide-react';
 import { Job } from '@/types';
 

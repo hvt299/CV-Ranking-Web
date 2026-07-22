@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowRight, KeyRound, CheckCircle2 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await api.post('/auth/forgot-password', { email });
+            await apiClient.post('/auth/forgot-password', { email });
             setIsSent(true);
             toast.success('Link khôi phục đã được gửi!');
         } catch (error) {

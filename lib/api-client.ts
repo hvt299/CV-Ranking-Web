@@ -2,14 +2,15 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { clearAllAuthData } from './auth-utils';
 
-const api = axios.create({
+const apiClient = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-api.interceptors.request.use(
+// Request Interceptor: Tự động đính kèm token
+apiClient.interceptors.request.use(
     (config) => {
         const token = Cookies.get('token');
         if (token && config.headers) {
@@ -22,7 +23,8 @@ api.interceptors.request.use(
     }
 );
 
-api.interceptors.response.use(
+// Response Interceptor: Xử lý lỗi tập trung (401, 403, 500...)
+apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
@@ -34,8 +36,14 @@ api.interceptors.response.use(
                 }
             }
         }
+
+        // Thêm xử lý lỗi 403 Forbidden nếu cần
+        if (error.response?.status === 403) {
+            console.error("Bạn không có quyền thực hiện thao tác này.");
+        }
+
         return Promise.reject(error);
     }
 );
 
-export default api;
+export default apiClient;

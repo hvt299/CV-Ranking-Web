@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 
 function ResetPasswordContent() {
@@ -31,7 +31,7 @@ function ResetPasswordContent() {
 
         setIsLoading(true);
         try {
-            await api.post('/auth/reset-password', {
+            await apiClient.post('/auth/reset-password', {
                 token: token,
                 new_password: password
             });

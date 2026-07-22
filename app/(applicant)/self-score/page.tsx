@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bot, FileText, Briefcase, Play, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 
 export default function SelfScorePage() {
@@ -17,8 +17,8 @@ export default function SelfScorePage() {
 
     useEffect(() => {
         Promise.all([
-            api.get('/apply/jobs'),
-            api.get('/apply/library')
+            apiClient.get('/apply/jobs'),
+            apiClient.get('/apply/library')
         ]).then(([jobRes, cvRes]) => {
             setJobs(jobRes.data);
             setCvs(cvRes.data);
@@ -35,7 +35,7 @@ export default function SelfScorePage() {
         setIsScoring(true);
         setResult(null);
         try {
-            const res = await api.post('/apply/self-score', {
+            const res = await apiClient.post('/apply/self-score', {
                 job_id: selectedJob,
                 cv_document_id: selectedCv
             });

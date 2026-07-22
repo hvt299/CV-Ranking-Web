@@ -6,7 +6,7 @@ import {
     GitCommitHorizontal, UploadCloud, FolderOutput, Trash2,
     Users, Globe, Eye, Clock
 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 import DocumentViewer from '@/components/ui/DocumentViewer';
@@ -32,8 +32,8 @@ export default function TalentPoolPage() {
     const fetchData = async () => {
         try {
             const [cvRes, jobRes] = await Promise.all([
-                api.get('/cv/pool'),
-                api.get('/jobs')
+                apiClient.get('/cv/pool'),
+                apiClient.get('/jobs')
             ]);
             setCandidates(cvRes.data);
             setJobs(jobRes.data.filter((j: Job) => j.status === JobStatus.OPEN));
@@ -74,7 +74,7 @@ export default function TalentPoolPage() {
             setUploadProgress(prev => ({ ...prev, current: i + 1 }));
 
             try {
-                const res = await api.post('/cv/upload', formData, {
+                const res = await apiClient.post('/cv/upload', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 if (res.data.is_existing) {
@@ -98,7 +98,7 @@ export default function TalentPoolPage() {
         if (!mappingCvId || !selectedJobId) return toast.error("Vui lòng chọn một chiến dịch!");
 
         try {
-            await api.post(`/cv/${mappingCvId}/map`, { job_id: selectedJobId });
+            await apiClient.post(`/cv/${mappingCvId}/map`, { job_id: selectedJobId });
             toast.success("Đã đưa ứng viên vào chiến dịch & bắt đầu chấm điểm AI!");
             setMappingCvId(null);
             setSelectedJobId('');
@@ -110,7 +110,7 @@ export default function TalentPoolPage() {
     const handleDeleteCV = async (cvId: string, filename: string) => {
         if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${filename} khỏi hệ thống không? Dữ liệu ứng tuyển ở các chiến dịch cũng sẽ bị xóa!`)) return;
         try {
-            await api.delete(`/cv/${cvId}`);
+            await apiClient.delete(`/cv/${cvId}`);
             toast.success("Đã xóa vĩnh viễn CV!");
             setCandidates(prev => prev.filter(cv => cv.id !== cvId));
         } catch (error) {

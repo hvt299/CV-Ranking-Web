@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FileText, Users, Briefcase, Sparkles, TrendingUp } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import { Application, DashboardAnalytics, Job, JobStatus, ApplicationStatus } from '@/types';
 
 export default function Dashboard() {
@@ -16,9 +16,9 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const [statsRes, appsRes, jobsRes] = await Promise.all([
-          api.get('/jobs/dashboard/analytics'),
-          api.get('/cv/applications/recent'),
-          api.get('/jobs')
+          apiClient.get('/jobs/dashboard/analytics'),
+          apiClient.get('/cv/applications/recent'),
+          apiClient.get('/jobs')
         ]);
 
         setStats(statsRes.data);

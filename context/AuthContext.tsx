@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client';
 import { User, UserRole } from '@/types';
 import { clearAllAuthData } from '@/lib/auth-utils';
 
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchUserProfile = async () => {
         try {
-            const res = await api.get('/auth/me');
+            const res = await apiClient.get('/auth/me');
             setUser(res.data);
             return res.data;
         } catch (error) {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         Cookies.set('token', token, { expires: 1, path: '/' });
 
-        api.get('/auth/me')
+        apiClient.get('/auth/me')
             .then((res) => {
                 const fetchedUser: User = res.data;
 

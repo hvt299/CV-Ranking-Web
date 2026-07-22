@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Notification, NotificationReadStatus, NotificationType, ApplicationStatus, UserRole } from '@/types';
@@ -70,7 +70,7 @@ export default function NotificationBell() {
     const fetchNotifications = async () => {
         if (!isAuthenticated || !isApplicant) return;
         try {
-            const response = await api.get('/apply/notifications');
+            const response = await apiClient.get('/apply/notifications');
             setNotifications(response.data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -93,7 +93,7 @@ export default function NotificationBell() {
 
     const markAsRead = async (notificationId: string) => {
         try {
-            await api.patch(`/apply/notifications/${notificationId}/read`);
+            await apiClient.patch(`/apply/notifications/${notificationId}/read`);
             setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, status: NotificationReadStatus.READ } : n)
             );
@@ -104,7 +104,7 @@ export default function NotificationBell() {
 
     const markAllAsRead = async () => {
         try {
-            await api.patch('/apply/notifications/read-all');
+            await apiClient.patch('/apply/notifications/read-all');
             setNotifications(prev => prev.map(n => ({ ...n, status: NotificationReadStatus.READ })));
             toast.success('Đã đánh dấu tất cả thông báo là đã đọc');
         } catch (error) {
@@ -114,7 +114,7 @@ export default function NotificationBell() {
 
     const deleteNotification = async (notificationId: string) => {
         try {
-            await api.delete(`/apply/notifications/${notificationId}`);
+            await apiClient.delete(`/apply/notifications/${notificationId}`);
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
             toast.success('Đã xóa thông báo');
         } catch (error) {

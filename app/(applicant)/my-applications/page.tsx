@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, Briefcase, Bell, Eye, Trash2 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Application, Notification, NotificationReadStatus } from '@/types';
@@ -15,8 +15,8 @@ export default function MyApplicationsPage() {
 
     useEffect(() => {
         Promise.all([
-            api.get('/apply/my-applications'),
-            api.get('/apply/notifications')
+            apiClient.get('/apply/my-applications'),
+            apiClient.get('/apply/notifications')
         ])
             .then(([appsRes, notifRes]) => {
                 setApps(appsRes.data);
@@ -28,7 +28,7 @@ export default function MyApplicationsPage() {
 
     const markNotificationAsRead = async (notificationId: string) => {
         try {
-            await api.patch(`/apply/notifications/${notificationId}/read`);
+            await apiClient.patch(`/apply/notifications/${notificationId}/read`);
             setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, status: NotificationReadStatus.READ } : n)
             );
@@ -39,7 +39,7 @@ export default function MyApplicationsPage() {
 
     const deleteNotification = async (notificationId: string) => {
         try {
-            await api.delete(`/apply/notifications/${notificationId}`);
+            await apiClient.delete(`/apply/notifications/${notificationId}`);
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
             toast.success('Đã xóa thông báo');
         } catch (error) {

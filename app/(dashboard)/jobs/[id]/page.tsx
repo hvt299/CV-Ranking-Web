@@ -10,7 +10,7 @@ import {
     Lightbulb, Sparkles, Mail as MailClosed,
     MailOpen
 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 import JobDetailsContent from '@/components/jobs/JobDetailsContent';
@@ -60,7 +60,7 @@ export default function JobLeaderboardPage() {
 
     const fetchRanking = useCallback(async () => {
         try {
-            const res = await api.get(`/jobs/${jobId}/ranking`);
+            const res = await apiClient.get(`/jobs/${jobId}/ranking`);
             setJobInfo(res.data.job_info);
             setCandidates(res.data.leaderboard);
             if (res.data.company_info) setCompanyInfo(res.data.company_info);
@@ -95,7 +95,7 @@ export default function JobLeaderboardPage() {
                 }
             }
 
-            await api.patch(`/cv/applications/${appId}`, payload);
+            await apiClient.patch(`/cv/applications/${appId}`, payload);
             toast.success("Cập nhật trạng thái thành công");
             setCandidates(prev => prev.map(cv => cv.id === appId ? { ...cv, status: newStatus } : cv));
             setEmailModalData(null);
@@ -107,7 +107,7 @@ export default function JobLeaderboardPage() {
     const handleToggleView = async (cv: any) => {
         const newStatus = !cv.is_viewed;
         try {
-            await api.patch(`/cv/applications/${cv.id}/view`, { is_viewed: newStatus });
+            await apiClient.patch(`/cv/applications/${cv.id}/view`, { is_viewed: newStatus });
             setCandidates(prev => prev.map(c => c.id === cv.id ? { ...c, is_viewed: newStatus } : c));
             toast.success(newStatus ? "Đã đánh dấu Đã xem" : "Đã đánh dấu Chưa xem");
         } catch (e) {
@@ -122,7 +122,7 @@ export default function JobLeaderboardPage() {
 
         if (!cv.is_viewed) {
             try {
-                await api.patch(`/cv/applications/${cv.id}/view`, { is_viewed: true });
+                await apiClient.patch(`/cv/applications/${cv.id}/view`, { is_viewed: true });
                 setCandidates(prev => prev.map(c => c.id === cv.id ? { ...c, is_viewed: true } : c));
             } catch (e) {
                 console.error("Lỗi đánh dấu đã xem", e);
@@ -133,7 +133,7 @@ export default function JobLeaderboardPage() {
     const handleRemoveFromJob = async (appId: string, filename: string) => {
         if (!confirm(`Bạn có chắc chắn muốn gỡ CV ${filename} khỏi chiến dịch này?`)) return;
         try {
-            await api.delete(`/cv/applications/${appId}`);
+            await apiClient.delete(`/cv/applications/${appId}`);
             toast.success("Đã gỡ CV khỏi chiến dịch!");
             setCandidates(prev => prev.filter(cv => cv.id !== appId));
         } catch (error: any) {
@@ -144,7 +144,7 @@ export default function JobLeaderboardPage() {
     const handleSaveNote = async () => {
         if (!editingNote || !noteInput.trim()) return toast.error("Vui lòng nhập nội dung!");
         try {
-            await api.patch(`/cv/applications/${editingNote.id}`, { note_to_add: noteInput });
+            await apiClient.patch(`/cv/applications/${editingNote.id}`, { note_to_add: noteInput });
             toast.success("Đã thêm ghi chú mới!");
             setCandidates(prev => prev.map(cv => cv.id === editingNote.id ? { ...cv, notes: [...(cv.notes || []), noteInput] } : cv));
             setEditingNote(null);
@@ -157,7 +157,7 @@ export default function JobLeaderboardPage() {
     const handleGenerateInterviewQuestions = async (appId: string) => {
         setIsGeneratingInterview(appId);
         try {
-            const res = await api.get(`/cv/applications/${appId}/ai-interview`);
+            const res = await apiClient.get(`/cv/applications/${appId}/ai-interview`);
             setInterviewQuestions({ appId, questions: res.data.data });
             toast.success("AI đã phân tích và sinh câu hỏi thành công!");
 

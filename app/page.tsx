@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Job, UserRole } from '@/types';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
@@ -131,7 +131,7 @@ export default function LandingPage() {
     }, []);
 
     useEffect(() => {
-        api.get('/apply/jobs').then(res => {
+        apiClient.get('/apply/jobs').then(res => {
             const data = res.data;
             setJobs(data);
             setFilteredJobs(data);

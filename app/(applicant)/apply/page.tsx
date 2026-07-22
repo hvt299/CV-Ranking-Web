@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Briefcase, Layers } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
@@ -100,8 +100,8 @@ export default function ApplyPage() {
 
     useEffect(() => {
         Promise.all([
-            api.get('/apply/jobs'),
-            api.get('/apply/library')
+            apiClient.get('/apply/jobs'),
+            apiClient.get('/apply/library')
         ]).then(([jobRes, cvRes]) => {
             setJobs(jobRes.data);
             setCvLibrary(cvRes.data);

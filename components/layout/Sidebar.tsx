@@ -8,12 +8,9 @@ import {
     ChevronRight, Hexagon, X, FileText, User as UserIcon,
     Building2, ShieldCheck, ClipboardCheck, FolderOpen
 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types";
-
-function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
+import { cn } from "@/utils/utils";
 
 type MenuItem = {
     name: string;

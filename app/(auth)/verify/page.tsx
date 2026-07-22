@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 
 function VerifyContent() {
     const searchParams = useSearchParams();
@@ -23,7 +23,7 @@ function VerifyContent() {
 
         const verifyAccount = async () => {
             try {
-                const res = await api.get(`/auth/verify?token=${token}`);
+                const res = await apiClient.get(`/auth/verify?token=${token}`);
                 setStatus('success');
                 setMessage(res.data.message || 'Tài khoản của bạn đã được kích hoạt thành công!');
             } catch (error: any) {

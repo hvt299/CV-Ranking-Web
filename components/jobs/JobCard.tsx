@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { Job } from '@/types';
+import { formatSalaryRange } from '@/utils/format';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
@@ -44,7 +45,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
 
         setUploadingId(true);
         try {
-            const res = await api.post(`/apply/jobs/${job.id}`, {
+            const res = await apiClient.post(`/apply/jobs/${job.id}`, {
                 cv_document_id: selectedCvId,
                 cover_letter: coverLetter
             });
@@ -56,11 +57,6 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
         } finally {
             setUploadingId(false);
         }
-    };
-
-    const formatSalary = (salary: any) => {
-        if (!salary?.min_salary) return 'Thỏa thuận';
-        return `${new Intl.NumberFormat('vi-VN').format(salary.min_salary)} - ${new Intl.NumberFormat('vi-VN').format(salary.max_salary)} ${salary.currency}`;
     };
 
     return (
@@ -88,7 +84,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
                                 </span>
                             )}
                             <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-blue-500" /> {job.work_mode} • {job.employment_type} • {job.job_level}</span>
-                            <span className="flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-emerald-500" /> {formatSalary(job.salary)}</span>
+                            <span className="flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-emerald-500" /> {formatSalaryRange(job.salary)}</span>
                             {(job.min_yoe || 0) > 0 && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-amber-500" /> Từ {job.min_yoe} năm KN</span>}
                             {job.education?.min_level && job.education.min_level !== 'Không yêu cầu' && <span className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-indigo-500" /> {job.education.min_level}</span>}
                         </div>

@@ -7,24 +7,9 @@ import {
     ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter, DollarSign, Clock,
     Flame
 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
-
-interface Job {
-    id: string;
-    title: string;
-    company_name: string;
-    is_hot?: boolean;
-    work_mode: string;
-    job_level: string;
-    employment_type: string;
-    location?: { city: string; address?: string; country: string };
-    salary?: { min_salary?: number; max_salary?: number; currency: string } | null;
-    headcount?: number;
-    status: string;
-    created_at: string;
-    deadline?: string | null;
-}
+import { Job } from '@/types';
 
 export default function JobsListPage() {
     const [jobs, setJobs] = useState<Job[]>([]);
@@ -38,7 +23,7 @@ export default function JobsListPage() {
     const fetchJobs = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/jobs');
+            const res = await apiClient.get('/jobs');
             setJobs(res.data);
         } catch (error) {
             toast.error("Không thể tải danh sách công việc");
@@ -54,7 +39,7 @@ export default function JobsListPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Cảnh báo: Xóa chiến dịch này sẽ xóa TOÀN BỘ CV bên trong. Bạn chắc chứ?")) return;
         try {
-            await api.delete(`/jobs/${id}`);
+            await apiClient.delete(`/jobs/${id}`);
             toast.success("Đã xóa chiến dịch và CV liên quan");
             setJobs(jobs.filter(job => job.id !== id));
         } catch (error) {

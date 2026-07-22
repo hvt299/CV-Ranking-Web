@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Globe, Link, Save } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 
 interface UserProfile {
@@ -36,7 +36,7 @@ export default function ProfilePage() {
 
     const fetchProfile = async () => {
         try {
-            const response = await api.get('/auth/profile');
+            const response = await apiClient.get('/auth/profile');
             setProfile(response.data);
         } catch (error) {
             toast.error('Không thể tải thông tin profile');
@@ -50,7 +50,7 @@ export default function ProfilePage() {
         setIsSaving(true);
 
         try {
-            const response = await api.patch('/auth/profile', profile);
+            const response = await apiClient.patch('/auth/profile', profile);
             toast.success('Cập nhật thông tin thành công!');
             
             // Update user context if name changed

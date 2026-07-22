@@ -8,52 +8,17 @@ import {
     X, ArrowLeft, Save, GraduationCap, ChevronRight, ChevronLeft,
     FileText, CheckCircle2, Clock, Users, Languages, Trash2
 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Select from 'react-select';
+import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { parseCurrency, formatCurrency } from '@/utils/format';
 
 const RichTextEditor = dynamic(() => import('@/components/ui/RichTextEditor'), {
     ssr: false,
     loading: () => <div className="h-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700"></div>
 });
-
-const INDUSTRIES = [
-    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
-    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
-    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
-    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
-    { label: 'Công nghệ Thông tin', value: 'it' },
-    { label: 'Lao động phổ thông', value: 'labor' },
-    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
-    { label: 'Bất động sản', value: 'realestate' },
-    { label: 'Xây dựng', value: 'construction' },
-    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
-    { label: 'Sản xuất', value: 'manufacturing' },
-    { label: 'Giáo dục/Đào tạo', value: 'education' },
-    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
-    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
-    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
-    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
-    { label: 'Tư vấn chuyên môn', value: 'consulting' },
-    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
-    { label: 'Thiết kế', value: 'design' },
-    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
-    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
-    { label: 'Tài xế', value: 'driver' },
-    { label: 'Biên phiên dịch', value: 'translation' },
-    { label: 'Luật', value: 'law' },
-    { label: 'Nhóm nghề khác', value: 'other' }
-];
-
-const JOB_LEVELS = [
-    { value: 'Intern', label: 'Thực tập sinh (Intern)' },
-    { value: 'Fresher', label: 'Mới tốt nghiệp (Fresher)' },
-    { value: 'Junior', label: 'Nhân viên (Junior)' },
-    { value: 'Middle', label: 'Chuyên viên (Middle)' },
-    { value: 'Senior', label: 'Chuyên viên cao cấp (Senior)' },
-    { value: 'Manager', label: 'Quản lý (Manager)' },
-];
 
 export default function CreateEnterpriseJobPage() {
     const router = useRouter();
@@ -108,9 +73,6 @@ export default function CreateEnterpriseJobPage() {
         }
         setCurrentStep(prev => prev + 1);
     };
-
-    const parseCurrency = (val: string) => Number(val.replace(/[^0-9]/g, ''));
-    const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN').format(val);
 
     const handleManualSalaryChange = (type: 'min' | 'max', value: string) => {
         const numVal = parseCurrency(value);
@@ -199,7 +161,7 @@ export default function CreateEnterpriseJobPage() {
                     experience_weight: aiWeights.experience / 100, education_weight: aiWeights.education / 100
                 }
             };
-            await api.post('/jobs/', payload);
+            await apiClient.post('/jobs/', payload);
             toast.success('Xuất bản chiến dịch tuyển dụng thành công!');
             router.push('/jobs');
         } catch (error: any) {
@@ -319,17 +281,28 @@ export default function CreateEnterpriseJobPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Loại hình & Hình thức</label>
+                                <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                                    Loại hình & Hình thức
+                                </label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={formData.employment_type} onChange={e => setFormData({ ...formData, employment_type: e.target.value })}>
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Freelance">Freelance</option>
+                                    <select
+                                        className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white"
+                                        value={formData.employment_type}
+                                        onChange={e => setFormData({ ...formData, employment_type: e.target.value })}
+                                    >
+                                        {EMPLOYMENT_TYPES.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
                                     </select>
-                                    <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white" value={formData.work_mode} onChange={e => setFormData({ ...formData, work_mode: e.target.value })}>
-                                        <option value="Onsite">Onsite</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="Hybrid">Hybrid</option>
+
+                                    <select
+                                        className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white"
+                                        value={formData.work_mode}
+                                        onChange={e => setFormData({ ...formData, work_mode: e.target.value })}
+                                    >
+                                        {WORK_MODES.map(mode => (
+                                            <option key={mode.value} value={mode.value}>{mode.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

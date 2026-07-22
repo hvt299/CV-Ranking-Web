@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Activity, Search, Clock, User, Target } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 
 export default function AuditLogsPage() {
@@ -11,7 +11,7 @@ export default function AuditLogsPage() {
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        api.get('/admin/audit-logs')
+        apiClient.get('/admin/audit-logs')
             .then(res => setLogs(res.data))
             .catch(() => toast.error('Không thể tải Audit Logs'))
             .finally(() => setIsLoading(false));

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 
@@ -50,7 +50,7 @@ export default function NotificationToast() {
         if (!isAuthenticated || !isApplicant) return;
 
         try {
-            const response = await api.get('/apply/notifications');
+            const response = await apiClient.get('/apply/notifications');
             const notifications = response.data;
 
             const newNotifications = notifications.filter(

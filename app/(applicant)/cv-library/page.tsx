@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, CheckCircle2 } from 'lucide-react';
-import api from '@/lib/api';
+import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import DocumentViewer from '@/components/ui/DocumentViewer';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
@@ -22,7 +22,7 @@ export default function CVLibraryPage() {
     const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any | null>(null);
 
     const fetchLibrary = () => {
-        api.get('/apply/library')
+        apiClient.get('/apply/library')
             .then(res => setCvs(res.data))
             .catch(() => toast.error('Lỗi tải thư viện CV'))
             .finally(() => setIsLoading(false));
@@ -61,7 +61,7 @@ export default function CVLibraryPage() {
             setUploadProgress(prev => ({ ...prev, current: i + 1 }));
 
             try {
-                await api.post('/apply/library/upload', formData, {
+                await apiClient.post('/apply/library/upload', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 successCount++;
@@ -82,7 +82,7 @@ export default function CVLibraryPage() {
         if (!confirm(`Bạn có chắc chắn muốn xóa CV "${name}" khỏi thư viện? Các hồ sơ đã nộp bằng CV này sẽ KHÔNG bị ảnh hưởng.`)) return;
 
         try {
-            await api.delete(`/apply/library/${cvId}`);
+            await apiClient.delete(`/apply/library/${cvId}`);
             toast.success("Đã xóa CV thành công!");
             setCvs(prev => prev.filter(cv => cv.id !== cvId));
         } catch (error: any) {
