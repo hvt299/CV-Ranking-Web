@@ -2,18 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Lock, Mail, ArrowRight, UserPlus, Building, Search, Globe, MapPin, Briefcase, Users, Eye, EyeOff, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import apiClient from '@/lib/api-client'
 import { useGoogleLogin } from '@react-oauth/google';
 import { useLinkedInAuth } from '@/hooks/useLinkedInAuth'
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { authService } from '@/features/auth/auth.service';
+import { companyService } from '@/features/company/company.service';
+import { useAuthFlow } from '@/features/auth/useAuthFlow';
 
 export default function RegisterPage() {
+    const { register: handleRegister, isLoading, socialLoginFlow } = useAuthFlow();
+
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,8 +28,6 @@ export default function RegisterPage() {
     const [hrInfo, setHrInfo] = useState({ companyName: '', taxCode: '', industry: '', size: '', address: '', website: '' });
 
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
     const { login } = useAuth();
 
     const [showRoleModal, setShowRoleModal] = useState(false);
@@ -69,7 +70,7 @@ export default function RegisterPage() {
     const handleLookupTax = async (code: string, isSocialForm: boolean = false) => {
         if (!code.trim()) return toast.error("Vui lòng nhập Mã số thuế");
         try {
-            const res = await apiClient.get(`/companies/lookup-tax/${code}`);
+            const res = await companyService.lookupTax(code);
             if (isSocialForm) {
                 setSocialHrInfo(prev => ({ ...prev, companyName: res.data.company_name, address: res.data.address || '' }));
             } else {
@@ -90,68 +91,48 @@ export default function RegisterPage() {
             return setError('Vui lòng nhập Tên công ty và Mã số thuế!');
         }
 
-        setIsLoading(true);
-        try {
-            await apiClient.post('/auth/register', {
-                full_name: fullName, email, password, role,
-                invite_token: inviteToken,
-                ...(role === UserRole.HR_OWNER && !inviteToken && {
-                    company_name: hrInfo.companyName,
-                    tax_code: hrInfo.taxCode,
-                    industry: hrInfo.industry,
-                    size: hrInfo.size,
-                    address: hrInfo.address,
-                    website: hrInfo.website
-                })
-            });
+        const payload = {
+            full_name: fullName, email, password, role,
+            invite_token: inviteToken,
+            ...(role === UserRole.HR_OWNER && !inviteToken && {
+                company_name: hrInfo.companyName,
+                tax_code: hrInfo.taxCode,
+                industry: hrInfo.industry,
+                size: hrInfo.size,
+                address: hrInfo.address,
+                website: hrInfo.website
+            })
+        };
 
-            if (inviteToken) {
-                toast.success('Gia nhập công ty thành công! Đang chuyển hướng...', { duration: 3000 });
-            } else {
-                toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.', { duration: 5000 });
-            }
-            router.push('/login');
-        } catch (err: any) {
-            const detail = err.response?.data?.detail;
-            setError(typeof detail === 'string' ? detail : (Array.isArray(detail) ? detail[0].msg.replace('Value error, ', '') : 'Lỗi kết nối máy chủ'));
-        } finally {
-            setIsLoading(false);
-        }
+        await handleRegister(payload, !!inviteToken);
     };
 
     const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
-        try {
-            setIsLoading(true);
-            const payload: any = provider === 'google'
-                ? { access_token: accessToken }
-                : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
-            if (roleToSubmit) payload.role = roleToSubmit;
-            if (companyData) {
-                payload.company_name = companyData.companyName;
-                payload.tax_code = companyData.taxCode;
-                payload.industry = companyData.industry;
-                payload.size = companyData.size;
-                payload.address = companyData.address;
-                payload.website = companyData.website;
-            }
+        // Chuẩn hóa payload thống nhất cho cả 2 file
+        const payload: any = provider === 'google'
+            ? { access_token: accessToken }
+            : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
 
-            const endpoint = provider === 'google' ? '/auth/google' : '/auth/linkedin';
-            const res = await apiClient.post(endpoint, payload);
+        if (roleToSubmit) payload.role = roleToSubmit;
+        if (companyData) {
+            payload.company_name = companyData.companyName;
+            payload.tax_code = companyData.taxCode;
+            payload.industry = companyData.industry;
+            payload.size = companyData.size;
+            payload.address = companyData.address;
+            payload.website = companyData.website;
+        }
 
-            if (res.status === 202 && res.data.action === 'require_role') {
-                setTempSocialToken(accessToken);
-                setSocialProvider(provider);
-                setShowRoleModal(true);
-                setIsLoading(false);
-                return;
-            }
+        // Đẩy toàn bộ tác vụ gọi mạng, try-catch, loading cho Hook xử lý
+        const result = await socialLoginFlow(provider, payload);
 
-            login(res.data.access_token);
-            toast.success('Đăng ký/Đăng nhập thành công!');
+        // Chỉ xử lý rẽ nhánh giao diện (UI) ở đây
+        if (result?.requireRole) {
+            setTempSocialToken(accessToken);
+            setSocialProvider(provider);
+            setShowRoleModal(true);
+        } else if (result?.success) {
             setShowRoleModal(false);
-        } catch (err: any) {
-            toast.error(err.response?.data?.detail || `Lỗi đăng nhập ${provider}`);
-            setIsLoading(false);
         }
     };
 

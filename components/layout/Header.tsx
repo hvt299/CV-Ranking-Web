@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
-import NotificationBell from '@/components/ui/NotificationBell';
+import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 
 interface HeaderProps {

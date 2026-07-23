@@ -2,92 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, CheckCircle2 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
-import toast from 'react-hot-toast';
-import DocumentViewer from '@/components/ui/DocumentViewer';
+import DocumentViewer from '@/components/shared/DocumentViewer';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
+import { useMyCvLibrary } from '@/features/application/useApplication';
 
 export default function CVLibraryPage() {
-    const [cvs, setCvs] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+    const { cvs, isLoading, isUploading, uploadProgress, uploadFiles, deleteCV } = useMyCvLibrary();
 
     const [previewDocument, setPreviewDocument] = useState<{
         url: string;
         filename: string;
     } | null>(null);
-    
+
     const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any | null>(null);
 
-    const fetchLibrary = () => {
-        apiClient.get('/apply/library')
-            .then(res => setCvs(res.data))
-            .catch(() => toast.error('Lỗi tải thư viện CV'))
-            .finally(() => setIsLoading(false));
-    };
-
-    useEffect(() => {
-        fetchLibrary();
-    }, []);
-
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        const MAX_FILE_SIZE = 5 * 1024 * 1024;
-        const validFiles = Array.from(files).filter(file => file.size <= MAX_FILE_SIZE);
-
-        if (validFiles.length < files.length) {
-            toast.error(`Đã bỏ qua ${files.length - validFiles.length} file vì vượt quá giới hạn 5MB.`);
-        }
-
-        if (validFiles.length === 0) {
-            e.target.value = '';
-            return;
-        }
-
-        setIsUploading(true);
-        setUploadProgress({ current: 0, total: validFiles.length });
-        let successCount = 0;
-
-        for (let i = 0; i < validFiles.length; i++) {
-            const file = validFiles[i];
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('display_name', file.name.split('.')[0]);
-
-            setUploadProgress(prev => ({ ...prev, current: i + 1 }));
-
-            try {
-                await apiClient.post('/apply/library/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                successCount++;
-            } catch (error: any) {
-                toast.error(`Lỗi tải lên ${file.name}: ${error.response?.data?.detail || "Không rõ lỗi"}`);
-            }
-        }
-
-        setIsUploading(false);
-        if (successCount > 0) {
-            toast.success(`Đã tải lên thành công ${successCount} CV!`);
-            fetchLibrary();
-        }
-        e.target.value = '';
-    };
-
-    const handleDelete = async (cvId: string, name: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa CV "${name}" khỏi thư viện? Các hồ sơ đã nộp bằng CV này sẽ KHÔNG bị ảnh hưởng.`)) return;
-
-        try {
-            await apiClient.delete(`/apply/library/${cvId}`);
-            toast.success("Đã xóa CV thành công!");
-            setCvs(prev => prev.filter(cv => cv.id !== cvId));
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || "Lỗi khi xóa CV");
-        }
+        await uploadFiles(e.target.files);
+        e.target.value = ''; // Reset input
     };
 
     if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin h-10 w-10 border-b-2 border-blue-600 rounded-full"></div></div>;
@@ -145,7 +76,7 @@ export default function CVLibraryPage() {
                                     <p className="text-xs text-slate-500 truncate" title={cv.filename}>{cv.filename}</p>
                                     <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-1.5">
                                         <Clock className="w-3 h-3" />
-                                        {new Date(cv.created_at?.$date || cv.created_at || Date.now()).toLocaleDateString('vi-VN')}
+                                        {new Date(cv.created_at || Date.now()).toLocaleDateString('vi-VN')}
                                     </p>
                                 </div>
                             </div>
@@ -177,7 +108,7 @@ export default function CVLibraryPage() {
                                         </span>
                                     ))}
                                     {skills.length > 4 && (
-                                        <span 
+                                        <span
                                             onClick={() => setSelectedCandidateForSkills(cv)}
                                             className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-[10px] font-bold border border-blue-200 cursor-pointer transition-colors"
                                         >
@@ -193,13 +124,13 @@ export default function CVLibraryPage() {
                             {/* Footer Hành động */}
                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
                                 <button
-                                    onClick={() => setPreviewDocument({ url: cv.file_url, filename: displayName })}
+                                    onClick={() => setPreviewDocument({ url: cv.file_url || '', filename: displayName })}
                                     className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
                                 >
                                     <Eye className="w-4 h-4" /> Xem chi tiết
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(cv.id, displayName)}
+                                    onClick={() => deleteCV(cv.id, displayName)}
                                     className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                                     title="Xóa CV"
                                 >

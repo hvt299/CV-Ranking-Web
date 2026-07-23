@@ -1,69 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Globe, Link, Save } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import apiClient from '@/lib/api-client'
-import toast from 'react-hot-toast';
-
-interface UserProfile {
-    full_name: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    github?: string;
-    linkedin?: string;
-    bio?: string;
-}
+import { useMyProfile } from '@/features/application/useApplication';
 
 export default function ProfilePage() {
     const { user, updateUser } = useAuth();
-    const [profile, setProfile] = useState<UserProfile>({
-        full_name: '',
-        email: '',
-        phone: '',
-        address: '',
-        github: '',
-        linkedin: '',
-        bio: ''
-    });
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-
-    useEffect(() => {
-        fetchProfile();
-    }, []);
-
-    const fetchProfile = async () => {
-        try {
-            const response = await apiClient.get('/auth/profile');
-            setProfile(response.data);
-        } catch (error) {
-            toast.error('Không thể tải thông tin profile');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { profile, setProfile, isLoading, isSaving, updateProfile } = useMyProfile();
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-
-        try {
-            const response = await apiClient.patch('/auth/profile', profile);
-            toast.success('Cập nhật thông tin thành công!');
-            
-            // Update user context if name changed
-            if (updateUser) {
-                updateUser({
-                    ...user,
-                    full_name: profile.full_name
-                });
-            }
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể cập nhật thông tin');
-        } finally {
-            setIsSaving(false);
+        // Truyền hàm updateUser của AuthContext vào để Hook tự sync
+        if (updateUser) {
+            await updateProfile(profile, updateUser);
         }
     };
 
@@ -85,7 +34,7 @@ export default function ProfilePage() {
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Thông tin cơ bản</h2>
-                    
+
                     <form onSubmit={handleProfileUpdate} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -97,7 +46,7 @@ export default function ProfilePage() {
                                     <input
                                         type="text"
                                         value={profile.full_name}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, full_name: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
                                     />
@@ -131,7 +80,7 @@ export default function ProfilePage() {
                                     <input
                                         type="tel"
                                         value={profile.phone || ''}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, phone: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="0123456789"
                                     />
@@ -147,7 +96,7 @@ export default function ProfilePage() {
                                     <input
                                         type="text"
                                         value={profile.address || ''}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, address: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Thành phố, Quốc gia"
                                     />
@@ -165,7 +114,7 @@ export default function ProfilePage() {
                                     <input
                                         type="url"
                                         value={profile.github || ''}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, github: e.target.value }))}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, github: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://github.com/username"
                                     />
@@ -181,7 +130,7 @@ export default function ProfilePage() {
                                     <input
                                         type="url"
                                         value={profile.linkedin || ''}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, linkedin: e.target.value }))}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, linkedin: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://linkedin.com/in/username"
                                     />
@@ -195,7 +144,7 @@ export default function ProfilePage() {
                             </label>
                             <textarea
                                 value={profile.bio || ''}
-                                onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                                onChange={(e) => setProfile((prev: any) => ({ ...prev, bio: e.target.value }))}
                                 rows={4}
                                 className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                 placeholder="Viết vài dòng giới thiệu về bản thân..."

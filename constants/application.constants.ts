@@ -1,4 +1,4 @@
-import { ApplicationStatus } from '@/types';
+import { ApplicationStatus, NotificationType } from '@/types';
 import { Briefcase, Clock, AlertTriangle, Award, CheckCircle2, XCircle, X } from 'lucide-react';
 
 export const CV_STATUS_OPTIONS = [
@@ -56,4 +56,18 @@ export const STATUS_CONFIG: Record<string, any> = {
         label: 'Đã rút',
         icon: X
     }
+};
+
+export const NOTIFICATION_ICONS = {
+    [NotificationType.SUCCESS]: CheckCircle2,
+    [NotificationType.ERROR]: XCircle,
+    [NotificationType.INFO]: Briefcase,
+    [NotificationType.WARNING]: Clock
+};
+
+export const NOTIFICATION_COLORS = {
+    [NotificationType.SUCCESS]: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10',
+    [NotificationType.ERROR]: 'text-rose-600 bg-rose-50 dark:bg-rose-500/10',
+    [NotificationType.INFO]: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10',
+    [NotificationType.WARNING]: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10'
 };

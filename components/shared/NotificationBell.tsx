@@ -2,62 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
-import { Notification, NotificationReadStatus, NotificationType, ApplicationStatus, UserRole } from '@/types';
-
-const NOTIFICATION_ICONS = {
-    [NotificationType.SUCCESS]: CheckCircle2,
-    [NotificationType.ERROR]: XCircle,
-    [NotificationType.INFO]: Briefcase,
-    [NotificationType.WARNING]: Clock
-};
-
-const NOTIFICATION_COLORS = {
-    [NotificationType.SUCCESS]: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10',
-    [NotificationType.ERROR]: 'text-rose-600 bg-rose-50 dark:bg-rose-500/10',
-    [NotificationType.INFO]: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10',
-    [NotificationType.WARNING]: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10'
-};
-
-const APPLICATION_STATUS_CONFIG: Record<
-    ApplicationStatus,
-    { label: string; colorClass: string }
-> = {
-    [ApplicationStatus.NEW]: {
-        label: 'Mới nộp',
-        colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
-    },
-    [ApplicationStatus.REVIEWING]: {
-        label: 'Đang xem xét',
-        colorClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
-    },
-    [ApplicationStatus.INTERVIEW]: {
-        label: 'Phỏng vấn',
-        colorClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400'
-    },
-    [ApplicationStatus.OFFERED]: {
-        label: 'Đề nghị (Offer)',
-        colorClass: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400'
-    },
-    [ApplicationStatus.HIRED]: {
-        label: 'Trúng tuyển',
-        colorClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
-    },
-    [ApplicationStatus.REJECTED]: {
-        label: 'Từ chối',
-        colorClass: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
-    },
-    [ApplicationStatus.WITHDRAWN]: {
-        label: 'Đã rút hồ sơ',
-        colorClass: 'bg-slate-100 text-slate-500 dark:bg-slate-700/50 dark:text-slate-400'
-    },
-    [ApplicationStatus.EXPIRED]: {
-        label: 'Hết hạn',
-        colorClass: 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
-    }
-};
+import { Notification, NotificationReadStatus, ApplicationStatus, UserRole } from '@/types';
+import { applicationService } from '@/features/application/application.service';
+import { NOTIFICATION_COLORS, NOTIFICATION_ICONS, STATUS_CONFIG } from "@/constants/application.constants"
 
 export default function NotificationBell() {
     const { user, isAuthenticated, loading } = useAuth();
@@ -70,8 +19,8 @@ export default function NotificationBell() {
     const fetchNotifications = async () => {
         if (!isAuthenticated || !isApplicant) return;
         try {
-            const response = await apiClient.get('/apply/notifications');
-            setNotifications(response.data);
+            const data = await applicationService.getMyNotifications();
+            setNotifications(data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
@@ -93,7 +42,7 @@ export default function NotificationBell() {
 
     const markAsRead = async (notificationId: string) => {
         try {
-            await apiClient.patch(`/apply/notifications/${notificationId}/read`);
+            await applicationService.markNotificationAsRead(notificationId);
             setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, status: NotificationReadStatus.READ } : n)
             );
@@ -104,7 +53,7 @@ export default function NotificationBell() {
 
     const markAllAsRead = async () => {
         try {
-            await apiClient.patch('/apply/notifications/read-all');
+            await applicationService.markAllNotificationsAsRead();
             setNotifications(prev => prev.map(n => ({ ...n, status: NotificationReadStatus.READ })));
             toast.success('Đã đánh dấu tất cả thông báo là đã đọc');
         } catch (error) {
@@ -114,7 +63,7 @@ export default function NotificationBell() {
 
     const deleteNotification = async (notificationId: string) => {
         try {
-            await apiClient.delete(`/apply/notifications/${notificationId}`);
+            await applicationService.deleteNotification(notificationId);
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
             toast.success('Đã xóa thông báo');
         } catch (error) {
@@ -127,7 +76,7 @@ export default function NotificationBell() {
     };
 
     const getStatusText = (status: string) => {
-        return APPLICATION_STATUS_CONFIG[status as ApplicationStatus]?.label || status;
+        return STATUS_CONFIG[status as ApplicationStatus]?.label || status;
     };
 
     return (
@@ -208,7 +157,7 @@ export default function NotificationBell() {
 
                                                             {notification.application_status_snapshot && (() => {
                                                                 const statusKey = notification.application_status_snapshot as ApplicationStatus;
-                                                                const statusInfo = APPLICATION_STATUS_CONFIG[statusKey];
+                                                                const statusInfo = STATUS_CONFIG[statusKey];
                                                                 const badgeColor = statusInfo?.colorClass || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
 
                                                                 return (

@@ -8,14 +8,14 @@ import {
     X, ArrowLeft, Save, GraduationCap, ChevronRight, ChevronLeft,
     FileText, CheckCircle2, Clock, Users, Languages, Trash2
 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Select from 'react-select';
 import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
 import { parseCurrency, formatCurrency } from '@/utils/format';
+import { jobService } from '@/features/job/job.service';
 
-const RichTextEditor = dynamic(() => import('@/components/ui/RichTextEditor'), {
+const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
     ssr: false,
     loading: () => <div className="h-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700"></div>
 });
@@ -85,8 +85,7 @@ export default function EditEnterpriseJobPage() {
     const fetchJobDetail = async () => {
         setIsFetching(true);
         try {
-            const res = await apiClient.get(`/jobs/${jobId}`);
-            const data = res.data;
+            const data = await jobService.getJobById(jobId);
 
             setFormData({
                 title: data.title || '',
@@ -100,30 +99,39 @@ export default function EditEnterpriseJobPage() {
                 gender_requirement: data.gender_requirement || 'Không yêu cầu',
                 languages: data.languages || [],
                 min_yoe: data.min_yoe || 0,
-                education: data.education || { min_level: 'Không yêu cầu', preferred_majors: [] },
-                salary: data.salary || { min_salary: 10000000, max_salary: 30000000, currency: 'VND' },
+                education: {
+                    min_level: data.education?.min_level || 'Không yêu cầu',
+                    preferred_majors: data.education?.preferred_majors || []
+                },
+                salary: {
+                    min_salary: data.salary?.min_salary ?? 10000000,
+                    max_salary: data.salary?.max_salary ?? 30000000,
+                    currency: data.salary?.currency || 'VND'
+                },
                 working_hours: data.working_hours || '',
-                location: data.location || { city: '', address: '', country: 'Việt Nam' },
+                location: {
+                    city: data.location?.city || '',
+                    address: data.location?.address || '',
+                    country: data.location?.country || 'Việt Nam'
+                },
                 description: data.description || '',
                 requirements: data.requirements || '',
                 benefits: data.benefits || '',
                 other_info: data.other_info || ''
             });
 
-            // Parse Location data back to Smart Location states
             if (data.location) {
                 setLocCountry(data.location.country || 'Việt Nam');
                 if (data.location.country === 'Việt Nam') {
                     setLocCity(data.location.city || '');
 
-                    // Thử tách address (Phường X, Quận Y) bằng dấu phẩy
                     const addressParts = (data.location.address || '').split(',').map((s: string) => s.trim());
                     if (addressParts.length >= 3) {
                         setLocStreet(addressParts.slice(0, -2).join(', '));
                         setLocWard(addressParts[addressParts.length - 2]);
                         setLocDistrict(addressParts[addressParts.length - 1]);
                     } else {
-                        setLocStreet(data.location.address || ''); // Fallback nếu dữ liệu cũ không có dấu phẩy
+                        setLocStreet(data.location.address || '');
                     }
                 } else {
                     setLocStreet(data.location.address || '');
@@ -139,7 +147,7 @@ export default function EditEnterpriseJobPage() {
                 });
             }
 
-            if (data.salary && data.salary.min_salary !== null) {
+            if (data.salary && data.salary.min_salary !== null && data.salary.min_salary !== undefined) {
                 setSalaryStr({
                     min: formatCurrency(data.salary.min_salary),
                     max: formatCurrency(data.salary.max_salary || 0)
@@ -149,9 +157,23 @@ export default function EditEnterpriseJobPage() {
                 setIsNegotiable(true);
             }
 
-            if (data.required_skills?.length > 0) setRequiredSkills(data.required_skills);
-            if (data.preferred_skills?.length > 0) setPreferredSkills(data.preferred_skills);
-            else setPreferredSkills([]);
+            if (data.required_skills && data.required_skills.length > 0) {
+                setRequiredSkills(data.required_skills.map(s => ({
+                    name: s.name,
+                    weight: s.weight ?? 0.5,
+                    min_years: s.min_years ?? 0
+                })));
+            }
+
+            if (data.preferred_skills && data.preferred_skills.length > 0) {
+                setPreferredSkills(data.preferred_skills.map(s => ({
+                    name: s.name,
+                    weight: s.weight ?? 0.2,
+                    min_years: s.min_years ?? 0
+                })));
+            } else {
+                setPreferredSkills([]);
+            }
 
         } catch (error) {
             toast.error("Không thể tải thông tin chiến dịch!");
@@ -222,7 +244,7 @@ export default function EditEnterpriseJobPage() {
         try {
             const payload = {
                 ...formData,
-                company_id: user?.company_id || "temp_id",
+                company_id: user?.company_id || "",
                 deadline: formData.deadline ? new Date(`${formData.deadline}T23:59:59Z`).toISOString() : null,
                 salary: isNegotiable ? null : formData.salary,
                 required_skills: validReqSkills,
@@ -232,7 +254,7 @@ export default function EditEnterpriseJobPage() {
                     experience_weight: aiWeights.experience / 100, education_weight: aiWeights.education / 100
                 }
             };
-            await apiClient.put(`/jobs/${jobId}`, payload);
+            await jobService.updateJob(jobId, payload);
             toast.success('Cập nhật chiến dịch thành công!');
             router.push('/jobs');
         } catch (error: any) {

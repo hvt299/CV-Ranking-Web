@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame } from 'lucide-react';
 import Link from 'next/link';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { Job } from '@/types';
 import { formatSalaryRange } from '@/utils/format';
+import { applicationService } from '@/features/application/application.service';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
@@ -45,11 +45,11 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
 
         setUploadingId(true);
         try {
-            const res = await apiClient.post(`/apply/jobs/${job.id}`, {
+            const res = await applicationService.applyForJob(job.id!, {
                 cv_document_id: selectedCvId,
                 cover_letter: coverLetter
             });
-            toast.success(res.data.message || 'Nộp hồ sơ thành công!');
+            toast.success(res.message || 'Nộp hồ sơ thành công!');
             setApplyingJob(false);
             onApplySuccess?.();
         } catch (err: any) {
@@ -63,7 +63,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
         <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-blue-400 dark:hover:border-slate-600 shadow-sm hover:shadow-md transition-all flex flex-col relative group overflow-hidden">
             {/* Decor Hover Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity" />
-            
+
             <div className="relative z-20">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1">

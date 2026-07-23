@@ -1,51 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
-    Plus, Search, Edit2, Trash2,
-    ExternalLink, Briefcase, Calendar, Users, Building2, MapPin, Filter, DollarSign, Clock,
-    Flame
+    Plus, Search, Edit2, Trash2, ExternalLink, Briefcase, Calendar,
+    Users, Building2, MapPin, Filter, DollarSign, Clock, Flame
 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
-import toast from 'react-hot-toast';
-import { Job } from '@/types';
+import { useJobList } from '@/features/job/useJob';
 
 export default function JobsListPage() {
-    const [jobs, setJobs] = useState<Job[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { jobs, isLoading, deleteJob } = useJobList();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterLevel, setFilterLevel] = useState('All');
     const [filterMode, setFilterMode] = useState('All');
     const [filterType, setFilterType] = useState('All');
-
-    const fetchJobs = async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiClient.get('/jobs');
-            setJobs(res.data);
-        } catch (error) {
-            toast.error("Không thể tải danh sách công việc");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchJobs();
-    }, []);
-
-    const handleDelete = async (id: string) => {
-        if (!confirm("Cảnh báo: Xóa chiến dịch này sẽ xóa TOÀN BỘ CV bên trong. Bạn chắc chứ?")) return;
-        try {
-            await apiClient.delete(`/jobs/${id}`);
-            toast.success("Đã xóa chiến dịch và CV liên quan");
-            setJobs(jobs.filter(job => job.id !== id));
-        } catch (error) {
-            toast.error("Lỗi khi xóa chiến dịch");
-        }
-    };
 
     const filteredJobs = jobs.filter(job => {
         const matchSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,7 +145,7 @@ export default function JobsListPage() {
                                             <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-amber-600 transition-colors shadow-sm" title="Chỉnh sửa">
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
-                                            <button onClick={() => handleDelete(job.id)} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Xóa chiến dịch">
+                                            <button onClick={() => deleteJob(job.id)} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Xóa chiến dịch">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>

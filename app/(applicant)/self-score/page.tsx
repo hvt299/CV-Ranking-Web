@@ -2,29 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Bot, FileText, Briefcase, Play, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
+import { applicationService } from '@/features/application/application.service';
+import { useExploreJobs } from '@/features/application/useApplication';
 
 export default function SelfScorePage() {
-    const [jobs, setJobs] = useState<any[]>([]);
-    const [cvs, setCvs] = useState<any[]>([]);
+    const { jobs, cvLibrary: cvs, isLoading: isLoadingData } = useExploreJobs();
+
     const [selectedJob, setSelectedJob] = useState('');
     const [selectedCv, setSelectedCv] = useState('');
-
-    const [isLoadingData, setIsLoadingData] = useState(true);
     const [isScoring, setIsScoring] = useState(false);
     const [result, setResult] = useState<any>(null);
-
-    useEffect(() => {
-        Promise.all([
-            apiClient.get('/apply/jobs'),
-            apiClient.get('/apply/library')
-        ]).then(([jobRes, cvRes]) => {
-            setJobs(jobRes.data);
-            setCvs(cvRes.data);
-        }).catch(() => toast.error('Lỗi tải dữ liệu'))
-            .finally(() => setIsLoadingData(false));
-    }, []);
 
     const handleScore = async () => {
         if (!selectedJob || !selectedCv) {
@@ -35,11 +23,9 @@ export default function SelfScorePage() {
         setIsScoring(true);
         setResult(null);
         try {
-            const res = await apiClient.post('/apply/self-score', {
-                job_id: selectedJob,
-                cv_document_id: selectedCv
-            });
-            setResult(res.data.ai_score);
+            const aiScore = await applicationService.selfScore(selectedJob, selectedCv);
+
+            setResult(aiScore);
             toast.success('Chấm điểm thử thành công!');
         } catch (error: any) {
             toast.error(error.response?.data?.detail || 'Lỗi khi chấm điểm');

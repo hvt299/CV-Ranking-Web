@@ -1,0 +1,57 @@
+import apiClient from '@/lib/api-client';
+import { Job } from '@/types';
+
+export const jobService = {
+    /**
+     * Lấy danh sách tất cả chiến dịch tuyển dụng
+     */
+    async getJobs(): Promise<Job[]> {
+        const response = await apiClient.get<Job[]>('/jobs');
+        return response.data;
+    },
+
+    /**
+     * Lấy chi tiết một chiến dịch tuyển dụng theo ID
+     */
+    async getJobById(jobId: string): Promise<Job> {
+        const response = await apiClient.get<Job>(`/jobs/${jobId}`);
+        return response.data;
+    },
+
+    /**
+     * Tạo mới một chiến dịch tuyển dụng
+     */
+    async createJob(payload: any): Promise<{ message: string; job_id: string }> {
+        const response = await apiClient.post('/jobs/', payload);
+        return response.data;
+    },
+
+    /**
+     * Cập nhật thông tin chiến dịch tuyển dụng
+     */
+    async updateJob(jobId: string, payload: any): Promise<{ status: string; message: string }> {
+        const response = await apiClient.put(`/jobs/${jobId}`, payload);
+        return response.data;
+    },
+
+    /**
+     * Xóa chiến dịch tuyển dụng
+     */
+    async deleteJob(jobId: string): Promise<{ status: string; message: string }> {
+        const response = await apiClient.delete(`/jobs/${jobId}`);
+        return response.data;
+    },
+
+    /**
+     * Lấy danh sách Bảng xếp hạng ứng viên (Ranking/Leaderboard) của Job
+     */
+    async getJobRanking(jobId: string): Promise<{
+        job_info: Job;
+        company_info: any;
+        total_candidates: number;
+        leaderboard: any[];
+    }> {
+        const response = await apiClient.get(`/jobs/${jobId}/ranking`);
+        return response.data;
+    }
+};

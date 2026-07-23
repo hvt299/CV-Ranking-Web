@@ -14,8 +14,9 @@ import { useAuth } from '@/context/AuthContext';
 import Select from 'react-select';
 import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
 import { parseCurrency, formatCurrency } from '@/utils/format';
+import { jobService } from '@/features/job/job.service';
 
-const RichTextEditor = dynamic(() => import('@/components/ui/RichTextEditor'), {
+const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
     ssr: false,
     loading: () => <div className="h-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700"></div>
 });
@@ -151,7 +152,7 @@ export default function CreateEnterpriseJobPage() {
         try {
             const payload = {
                 ...formData,
-                company_id: user?.company_id || "temp_id",
+                company_id: user?.company_id || "",
                 deadline: formData.deadline ? new Date(`${formData.deadline}T23:59:59Z`).toISOString() : null,
                 salary: isNegotiable ? null : formData.salary,
                 required_skills: validReqSkills,
@@ -161,7 +162,7 @@ export default function CreateEnterpriseJobPage() {
                     experience_weight: aiWeights.experience / 100, education_weight: aiWeights.education / 100
                 }
             };
-            await apiClient.post('/jobs/', payload);
+            await jobService.createJob(payload);
             toast.success('Xuất bản chiến dịch tuyển dụng thành công!');
             router.push('/jobs');
         } catch (error: any) {

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import NotificationToast from '@/components/ui/NotificationToast';
+import NotificationToast from '@/components/shared/NotificationToast';
 import { useAuth } from '@/context/AuthContext';
 import { Hexagon } from 'lucide-react';
 

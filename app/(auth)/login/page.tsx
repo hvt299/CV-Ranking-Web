@@ -3,23 +3,24 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Lock, Mail, ArrowRight, Search, Eye, EyeOff, User, Briefcase, Globe, MapPin, Users } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import apiClient from '@/lib/api-client'
 import { useGoogleLogin } from '@react-oauth/google';
 import { useLinkedInAuth } from '@/hooks/useLinkedInAuth'
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { authService } from '@/features/auth/auth.service';
+import { companyService } from '@/features/company/company.service';
+import { useAuthFlow } from '@/features/auth/useAuthFlow';
 
 export default function LoginPage() {
+    const { login: handleLogin, isLoading, socialLoginFlow } = useAuthFlow();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     const [error, setError] = useState('');
-    const { login } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
 
     const [showRoleModal, setShowRoleModal] = useState(false);
     const [tempSocialToken, setTempSocialToken] = useState('');
@@ -27,7 +28,6 @@ export default function LoginPage() {
 
     const [selectedSocialRole, setSelectedSocialRole] = useState<UserRole.HR_OWNER | UserRole.APPLICANT>(UserRole.APPLICANT);
 
-    // ĐÃ FIX: Gộp chung thành 1 object state đồng bộ với register
     const [socialHrInfo, setSocialHrInfo] = useState({
         companyName: '',
         taxCode: '',
@@ -51,7 +51,7 @@ export default function LoginPage() {
     const handleLookupTax = async (code: string) => {
         if (!code.trim()) return toast.error("Vui lòng nhập Mã số thuế");
         try {
-            const res = await apiClient.get(`/companies/lookup-tax/${code}`);
+            const res = await companyService.lookupTax(code);
             setSocialHrInfo(prev => ({
                 ...prev,
                 companyName: res.data.company_name,
@@ -66,54 +66,37 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        try {
-            setIsLoading(true);
-            const res = await apiClient.post('/auth/login', { email, password });
-            login(res.data.access_token);
-        } catch (err: any) {
-            const detail = err.response?.data?.detail;
-            if (typeof detail === 'string') setError(detail);
-            else if (Array.isArray(detail)) setError(detail[0].msg.replace('Value error, ', ''));
-            else setError('Lỗi đăng nhập. Vui lòng thử lại!');
-        } finally {
-            setIsLoading(false);
-        }
+
+        const success = await handleLogin({ email, password });
+        if (!success) { }
     };
 
-    // ĐÃ FIX: Payload đẩy lên Backend nhận đầy đủ thông tin HR
     const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
-        try {
-            setIsLoading(true);
-            const payload: any = { access_token: accessToken };
-            if (roleToSubmit) payload.role = roleToSubmit;
+        // Chuẩn hóa payload thống nhất cho cả 2 file
+        const payload: any = provider === 'google'
+            ? { access_token: accessToken }
+            : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
 
-            if (companyData) {
-                payload.company_name = companyData.companyName;
-                payload.tax_code = companyData.taxCode;
-                payload.industry = companyData.industry;
-                payload.size = companyData.size;
-                payload.address = companyData.address;
-                payload.website = companyData.website;
-            }
+        if (roleToSubmit) payload.role = roleToSubmit;
+        if (companyData) {
+            payload.company_name = companyData.companyName;
+            payload.tax_code = companyData.taxCode;
+            payload.industry = companyData.industry;
+            payload.size = companyData.size;
+            payload.address = companyData.address;
+            payload.website = companyData.website;
+        }
 
-            const endpoint = provider === 'google' ? '/auth/google' : '/auth/linkedin';
-            const res = await apiClient.post(endpoint, payload);
+        // Đẩy toàn bộ tác vụ gọi mạng, try-catch, loading cho Hook xử lý
+        const result = await socialLoginFlow(provider, payload);
 
-            if (res.status === 202 && res.data.action === 'require_role') {
-                setTempSocialToken(accessToken);
-                setSocialProvider(provider);
-                setShowRoleModal(true);
-                setIsLoading(false);
-                return;
-            }
-
-            login(res.data.access_token);
-            toast.success('Đăng nhập thành công!');
+        // Chỉ xử lý rẽ nhánh giao diện (UI) ở đây
+        if (result?.requireRole) {
+            setTempSocialToken(accessToken);
+            setSocialProvider(provider);
+            setShowRoleModal(true);
+        } else if (result?.success) {
             setShowRoleModal(false);
-        } catch (err: any) {
-            console.error(err);
-            toast.error(err.response?.data?.detail || `Lỗi đăng nhập ${provider}`);
-            setIsLoading(false);
         }
     };
 

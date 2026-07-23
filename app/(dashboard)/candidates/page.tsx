@@ -6,115 +6,41 @@ import {
     GitCommitHorizontal, UploadCloud, FolderOutput, Trash2,
     Users, Globe, Eye, Clock
 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
-import DocumentViewer from '@/components/ui/DocumentViewer';
+import DocumentViewer from '@/components/shared/DocumentViewer';
 import { CV, Job, JobStatus } from '@/types';
+import { useTalentPool } from '@/features/candidate/useCandidate';
 
 export default function TalentPoolPage() {
-    const [candidates, setCandidates] = useState<CV[]>([]);
-    const [jobs, setJobs] = useState<Job[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+    const {
+        candidates, jobs, isLoading, isUploading, uploadProgress,
+        uploadFiles, deleteCV, mapCvToJob
+    } = useTalentPool();
 
+    const [searchTerm, setSearchTerm] = useState('');
     const [filterEducation, setFilterEducation] = useState('All');
     const [filterExperience, setFilterExperience] = useState('All');
-
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
     const [mappingCvId, setMappingCvId] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string>('');
     const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<CV | null>(null);
     const [previewFile, setPreviewFile] = useState<{ url: string, name: string } | null>(null);
 
-    const fetchData = async () => {
-        try {
-            const [cvRes, jobRes] = await Promise.all([
-                apiClient.get('/cv/pool'),
-                apiClient.get('/jobs')
-            ]);
-            setCandidates(cvRes.data);
-            setJobs(jobRes.data.filter((j: Job) => j.status === JobStatus.OPEN));
-        } catch (error) {
-            toast.error("Lỗi khi tải dữ liệu hệ thống!");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        const MAX_FILE_SIZE = 5 * 1024 * 1024;
-        const validFiles = Array.from(files).filter(file => file.size <= MAX_FILE_SIZE);
-
-        if (validFiles.length < files.length) {
-            toast.error(`Đã bỏ qua ${files.length - validFiles.length} file vì vượt quá giới hạn 5MB.`);
-        }
-
-        if (validFiles.length === 0) {
-            e.target.value = '';
-            return;
-        }
-
-        setIsUploading(true);
-        setUploadProgress({ current: 0, total: validFiles.length });
-        let successCount = 0, failCount = 0;
-
-        for (let i = 0; i < validFiles.length; i++) {
-            const formData = new FormData();
-            formData.append('file', validFiles[i]);
-            setUploadProgress(prev => ({ ...prev, current: i + 1 }));
-
-            try {
-                const res = await apiClient.post('/cv/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                if (res.data.is_existing) {
-                    toast.error(`CV ${validFiles[i].name} đã có trong kho!`);
-                } else {
-                    successCount++;
-                }
-            } catch (error: any) {
-                failCount++;
-                toast.error(`Lỗi ${validFiles[i].name}: ${error.response?.data?.detail || 'Lỗi file'}`);
-            }
-        }
-
-        setIsUploading(false);
-        if (successCount > 0) toast.success(`Đã thêm ${successCount} CV mới vào Kho!`);
-        fetchData();
-        e.target.value = '';
+        // Toàn bộ logic check size, chia chunk, gọi API upload đã nằm trong uploadFiles()
+        await uploadFiles(e.target.files);
+        e.target.value = ''; // Reset lại input để lần sau chọn lại file đó không bị lỗi
     };
 
     const handleMapToJob = async () => {
         if (!mappingCvId || !selectedJobId) return toast.error("Vui lòng chọn một chiến dịch!");
 
-        try {
-            await apiClient.post(`/cv/${mappingCvId}/map`, { job_id: selectedJobId });
-            toast.success("Đã đưa ứng viên vào chiến dịch & bắt đầu chấm điểm AI!");
+        // Logic gọi API đã nằm trong mapCvToJob()
+        const success = await mapCvToJob(mappingCvId, selectedJobId);
+        if (success) {
             setMappingCvId(null);
             setSelectedJobId('');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || "Lỗi khi ghép CV");
-        }
-    };
-
-    const handleDeleteCV = async (cvId: string, filename: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${filename} khỏi hệ thống không? Dữ liệu ứng tuyển ở các chiến dịch cũng sẽ bị xóa!`)) return;
-        try {
-            await apiClient.delete(`/cv/${cvId}`);
-            toast.success("Đã xóa vĩnh viễn CV!");
-            setCandidates(prev => prev.filter(cv => cv.id !== cvId));
-        } catch (error) {
-            toast.error("Lỗi khi xóa CV");
         }
     };
 
@@ -321,7 +247,7 @@ export default function TalentPoolPage() {
                                         <button onClick={() => setSelectedCandidateForSkills(cv)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Xem chi tiết kỹ năng">
                                             <FileText className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => handleDeleteCV(cv.id, cv.filename)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Xóa vĩnh viễn">
+                                        <button onClick={() => deleteCV(cv.id, cv.filename)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Xóa vĩnh viễn">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>

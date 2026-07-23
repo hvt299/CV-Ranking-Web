@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
+import { applicationService } from '@/features/application/application.service';
 
 interface ToastNotification {
     id: string;
@@ -50,8 +50,7 @@ export default function NotificationToast() {
         if (!isAuthenticated || !isApplicant) return;
 
         try {
-            const response = await apiClient.get('/apply/notifications');
-            const notifications = response.data;
+            const notifications = await applicationService.getMyNotifications();
 
             const newNotifications = notifications.filter(
                 (n: any) =>

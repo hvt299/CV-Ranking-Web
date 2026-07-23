@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Briefcase, Layers } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
+import { useExploreJobs } from '@/features/application/useApplication';
 
 export default function ApplyPage() {
-    const [jobs, setJobs] = useState<any[]>([]);
-    const [cvLibrary, setCvLibrary] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { jobs, cvLibrary, isLoading, filterOptions } = useExploreJobs();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
@@ -18,12 +16,6 @@ export default function ApplyPage() {
         location: '', workMode: '', jobLevel: '', employmentType: '',
         salaryMin: '', salaryMax: '', skills: [] as string[], company: '',
         industry: '', education: ''
-    });
-
-    const [filterOptions, setFilterOptions] = useState({
-        locations: [] as string[], workModes: [] as string[], jobLevels: [] as string[],
-        employmentTypes: [] as string[], skills: [] as string[], companies: [] as string[],
-        industries: [] as string[], educations: [] as string[]
     });
 
     const filteredJobs = useMemo(() => {
@@ -97,30 +89,6 @@ export default function ApplyPage() {
 
         return result;
     }, [jobs, searchQuery, filters, sortBy]);
-
-    useEffect(() => {
-        Promise.all([
-            apiClient.get('/apply/jobs'),
-            apiClient.get('/apply/library')
-        ]).then(([jobRes, cvRes]) => {
-            setJobs(jobRes.data);
-            setCvLibrary(cvRes.data);
-
-            const data = jobRes.data;
-            const locations = [...new Set(data.map((job: any) => job.location?.city).filter(Boolean))] as string[];
-            const workModes = [...new Set(data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
-            const jobLevels = [...new Set(data.map((job: any) => job.job_level).filter(Boolean))] as string[];
-            const employmentTypes = [...new Set(data.map((job: any) => job.employment_type).filter(Boolean))] as string[];
-            const skills = [...new Set(data.flatMap((job: any) => job.required_skills || []))] as string[];
-            const companies = [...new Set(data.map((job: any) => job.company_name).filter(Boolean))] as string[];
-            const industries = [...new Set(data.map((job: any) => job.industry).filter(Boolean))] as string[];
-            const educations = [...new Set(data.map((job: any) => job.education?.min_level).filter(Boolean))] as string[];
-
-            setFilterOptions({ locations, workModes, jobLevels, employmentTypes, skills, companies, industries, educations });
-        }).catch(() => {
-            toast.error('Không thể tải dữ liệu');
-        }).finally(() => setIsLoading(false));
-    }, []);
 
     const clearFilters = () => {
         setFilters({ location: '', workMode: '', jobLevel: '', employmentType: '', salaryMin: '', salaryMax: '', skills: [], company: '', industry: '', education: '' });

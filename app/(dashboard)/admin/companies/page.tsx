@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Building2, Search, CheckCircle, XCircle, AlertCircle, ExternalLink, Save, Briefcase } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { UserRole, CompanyStatus } from '@/types';
+import { CompanyStatus } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { companyService } from '@/features/company/company.service';
+import { useAdminCompanies } from '@/features/company/useCompany';
 
 export default function AdminCompaniesPage() {
-    const { user } = useAuth();
-    const router = useRouter();
-    const [companies, setCompanies] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { companies, isLoading, verifyCompany, updateCompany } = useAdminCompanies();
+
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
@@ -37,10 +34,8 @@ export default function AdminCompaniesPage() {
         formData.append('file', file);
 
         try {
-            const res = await apiClient.post('/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            setEditingCompany({ ...editingCompany, license_file_url: res.data.file_url || res.data.url });
+            const res = await companyService.uploadFile(formData);
+            setEditingCompany({ ...editingCompany, license_file_url: res.file_url || res.url });
             toast.success('Tải giấy phép lên thành công!');
         } catch (error) {
             toast.error('Lỗi khi tải file lên');
@@ -80,40 +75,17 @@ export default function AdminCompaniesPage() {
         input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
     };
 
-    useEffect(() => {
-        if (user && user.role !== UserRole.ADMIN) {
-            toast.error('Bạn không có quyền truy cập trang này');
-            router.push('/dashboard');
-            return;
-        }
-        fetchCompanies();
-    }, [user, router]);
-
-    const fetchCompanies = () => {
-        apiClient.get('/admin/companies')
-            .then(res => setCompanies(res.data))
-            .catch(() => toast.error('Không thể tải danh sách công ty'))
-            .finally(() => setIsLoading(false));
-    };
-
     const handleVerify = async (companyId: string, approve: boolean) => {
         if (!approve && !rejectionReason.trim()) {
             toast.error('Vui lòng nhập lý do từ chối!');
             return;
         }
 
-        try {
-            await apiClient.patch(`/admin/companies/${companyId}/verify`, {
-                approve,
-                rejection_reason: approve ? null : rejectionReason
-            });
-            toast.success(approve ? 'Đã duyệt công ty thành công' : 'Đã từ chối công ty');
+        const success = await verifyCompany(companyId, approve, rejectionReason);
+        if (success) {
             setShowRejectModal(false);
             setRejectionReason('');
             setVerifyingId(null);
-            fetchCompanies();
-        } catch (err: any) {
-            toast.error(err.response?.data?.detail || 'Lỗi khi xử lý');
         }
     };
 
@@ -376,7 +348,7 @@ export default function AdminCompaniesPage() {
 
                                     {editingCompany.license_file_url && (
                                         <div className="mt-5 flex items-center gap-3">
-                                           <a
+                                            <a
                                                 href={editingCompany.license_file_url}
                                                 target="_blank"
                                                 rel="noreferrer"
@@ -391,19 +363,18 @@ export default function AdminCompaniesPage() {
                         </div>
                         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                             <button onClick={() => setEditingCompany(null)} className="px-5 py-2.5 font-bold text-slate-500 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">Hủy</button>
-                            <button disabled={isSaving} onClick={async () => {
-                                setIsSaving(true);
-                                try {
-                                    await apiClient.patch(`/admin/companies/${editingCompany.id}`, editingCompany);
-                                    toast.success("Cập nhật thông tin thành công!");
-                                    setEditingCompany(null);
-                                    fetchCompanies();
-                                } catch (e) {
-                                    toast.error("Lỗi cập nhật!");
-                                } finally {
+                            <button
+                                disabled={isSaving}
+                                onClick={async () => {
+                                    setIsSaving(true);
+                                    const success = await updateCompany(editingCompany.id, editingCompany);
+                                    if (success) {
+                                        setEditingCompany(null);
+                                    }
                                     setIsSaving(false);
-                                }
-                            }} className="px-6 py-2.5 font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition-all flex items-center gap-2">
+                                }}
+                                className="..."
+                            >
                                 <Save className="w-4 h-4" /> {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
                             </button>
                         </div>

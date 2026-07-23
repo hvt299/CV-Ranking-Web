@@ -24,3 +24,35 @@ export const getScoreTheme = (score: number) => {
         badge: 'bg-rose-100 text-rose-700', label: 'Chưa đạt'
     };
 };
+
+export const getPenaltyReasons = (cvInfo: any, breakdown: any) => {
+        const reasons = [];
+
+        const fraudReasons = breakdown?.fraud_analysis?.reasons || [];
+        if (fraudReasons.length > 0) {
+            const translated = fraudReasons.map((r: string) => {
+                if (r === 'Keyword stuffing') return 'Nhồi nhét từ khóa';
+                if (r === 'White text') return 'Chèn chữ tàng hình (màu trắng)';
+                if (r.includes('Tiny font') || r.includes('Very small font')) return 'Dùng font chữ siêu nhỏ';
+                if (r === 'Hidden flag') return 'Cố tình ẩn chữ (Hidden text)';
+                if (r === 'Outside page') return 'Chèn chữ ngoài lề trang';
+                return r;
+            });
+            reasons.push(...translated);
+        } else if (breakdown?.fraud_analysis?.detected) {
+            reasons.push('Có dấu hiệu gian lận CV');
+        }
+
+        const yoe = cvInfo?.years_of_experience || 0;
+        const hops = cvInfo?.job_hops || 1;
+        const gaps = cvInfo?.gap_months || 0;
+
+        if (yoe > 0 && (yoe / Math.max(hops, 1)) < 0.8) {
+            reasons.push("Nhảy việc quá nhiều");
+        }
+        if (gaps > 12) {
+            reasons.push(`Khoảng trống sự nghiệp dài (${gaps} tháng)`);
+        }
+
+        return reasons.length > 0 ? reasons.join(' + ') : 'Vi phạm tiêu chí hệ thống';
+    };

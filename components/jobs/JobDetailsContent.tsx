@@ -1,13 +1,10 @@
 import { DollarSign, Clock, GraduationCap, CheckCircle2, Star, FileText, Zap } from 'lucide-react';
 import { Job } from '@/types';
+import { formatCurrency } from '@/utils/format';
 
 interface JobDetailsContentProps {
     jobInfo: Job;
 }
-
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN').format(amount);
-};
 
 export default function JobDetailsContent({ jobInfo }: JobDetailsContentProps) {
     if (!jobInfo) return null;

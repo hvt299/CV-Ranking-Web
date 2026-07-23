@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, Search, Building2, Users, Save, CheckCircle, Mail, Briefcase, ExternalLink, Globe, MapPin } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -10,6 +9,7 @@ import { UserRole, CompanyStatus } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { ROLES } from '@/constants/user.constants';
+import { companyService } from '@/features/company/company.service';
 
 export default function SettingsPage() {
     const { user } = useAuth();
@@ -72,12 +72,12 @@ function CompanySettingsSection({ user }: { user: any }) {
     };
 
     useEffect(() => {
-        apiClient.get('/companies/settings').then(res => {
+        companyService.getSettings().then(res => {
             setCompany(res.data);
             setTaxCode(res.data.tax_code || '');
         }).catch(err => console.error(err));
 
-        apiClient.get('/companies/members').then(res => {
+        companyService.getMembers().then(res => {
             setMembers(res.data);
         }).catch(err => console.error(err));
     }, []);
@@ -85,7 +85,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleLookupTax = async () => {
         if (!taxCode.trim()) return toast.error("Vui lòng nhập mã số thuế");
         try {
-            const res = await apiClient.get(`/companies/lookup-tax/${taxCode}`);
+            const res = await companyService.lookupTax(taxCode)
             setCompany((prev: any) => ({
                 ...prev,
                 name: res.data.company_name,
@@ -100,7 +100,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleSaveCompany = async () => {
         setIsSaving(true);
         try {
-            await apiClient.patch('/companies/settings', {
+            await companyService.updateSettings({
                 tax_code: taxCode,
                 name: company.name,
                 industry: company.industry,
@@ -110,7 +110,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                 license_file_url: company.license_file_url
             });
             toast.success("Đã cập nhật thông tin công ty. Nếu đổi MST, vui lòng đợi Admin duyệt lại.");
-            const res = await apiClient.get('/companies/settings');
+            const res = await companyService.getSettings()
             setCompany(res.data);
         } catch (e: any) {
             toast.error(e.response?.data?.detail || "Lỗi khi lưu thông tin");
@@ -122,7 +122,7 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleInviteMember = async () => {
         if (!inviteEmail.trim()) return toast.error("Vui lòng nhập Email");
         try {
-            await apiClient.post('/companies/invite', { email: inviteEmail });
+            await companyService.inviteMember(inviteEmail)
             toast.success("Đã gửi thư mời gia nhập công ty thành công!");
             setInviteEmail('');
         } catch (e: any) {
@@ -369,7 +369,7 @@ function AdminSettingsSection({ user }: { user: any }) {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
 
     useEffect(() => {
-        apiClient.get('/admin/users')
+        companyService.getAdminUsers()
             .then(res => setUsers(res.data))
             .catch(() => toast.error('Không thể tải danh sách người dùng'))
             .finally(() => setIsLoading(false));
@@ -378,7 +378,7 @@ function AdminSettingsSection({ user }: { user: any }) {
     const handleRoleChange = async (userId: string, newRole: string) => {
         setUpdatingId(userId);
         try {
-            await apiClient.patch(`/admin/users/${userId}/role`, { role: newRole });
+            await companyService.updateUserRole(userId, newRole)
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
             toast.success('Đã cập nhật role thành công');
         } catch (err: any) {

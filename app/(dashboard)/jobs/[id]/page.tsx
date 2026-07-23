@@ -15,29 +15,18 @@ import toast from 'react-hot-toast';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 import JobDetailsContent from '@/components/jobs/JobDetailsContent';
 import CandidateKanban from '@/components/candidates/CandidateKanban';
-import DocumentViewer from '@/components/ui/DocumentViewer';
+import DocumentViewer from '@/components/shared/DocumentViewer';
 import InterviewEmailModal from '@/components/candidates/InterviewEmailModal';
 import { ApplicationStatus } from '@/types';
-
-const CV_STATUSES = [
-    { value: ApplicationStatus.NEW, label: 'Mới nộp', color: 'bg-blue-100 text-blue-700' },
-    { value: ApplicationStatus.REVIEWING, label: 'Đang xem xét', color: 'bg-amber-100 text-amber-700' },
-    { value: ApplicationStatus.INTERVIEW, label: 'Phỏng vấn', color: 'bg-purple-100 text-purple-700' },
-    { value: ApplicationStatus.OFFERED, label: 'Đề nghị (Offer)', color: 'bg-indigo-100 text-indigo-700' },
-    { value: ApplicationStatus.HIRED, label: 'Trúng tuyển', color: 'bg-emerald-100 text-emerald-700' },
-    { value: ApplicationStatus.REJECTED, label: 'Từ chối', color: 'bg-rose-100 text-rose-700' },
-    { value: ApplicationStatus.WITHDRAWN, label: 'Đã rút hồ sơ', color: 'bg-slate-100 text-slate-500' },
-];
+import { CV_STATUSES } from "@/constants/job.constants";
+import { useJobRanking } from "@/features/job/useJob";
 
 export default function JobLeaderboardPage() {
     const params = useParams();
     const router = useRouter();
     const jobId = params.id as string;
 
-    const [jobInfo, setJobInfo] = useState<any>(null);
-    const [companyInfo, setCompanyInfo] = useState<any>(null);
-    const [candidates, setCandidates] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { jobInfo, companyInfo, candidates, setCandidates, isLoading } = useJobRanking(jobId);
 
     const [showJobDetails, setShowJobDetails] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -57,24 +46,6 @@ export default function JobLeaderboardPage() {
 
     const [isGeneratingInterview, setIsGeneratingInterview] = useState<string | null>(null);
     const [interviewQuestions, setInterviewQuestions] = useState<{ appId: string, questions: any[] } | null>(null);
-
-    const fetchRanking = useCallback(async () => {
-        try {
-            const res = await apiClient.get(`/jobs/${jobId}/ranking`);
-            setJobInfo(res.data.job_info);
-            setCandidates(res.data.leaderboard);
-            if (res.data.company_info) setCompanyInfo(res.data.company_info);
-        } catch (error) {
-            toast.error("Không thể tải danh sách ứng viên!");
-            router.push('/jobs');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [jobId, router]);
-
-    useEffect(() => {
-        fetchRanking();
-    }, [fetchRanking]);
 
     const handleStatusChange = async (appId: string, newStatus: string, candidateInfo?: any) => {
         if (newStatus === ApplicationStatus.INTERVIEW) {
@@ -279,7 +250,7 @@ export default function JobLeaderboardPage() {
                     </div>
                 </div>
 
-                {showJobDetails && <JobDetailsContent jobInfo={jobInfo} />}
+                {showJobDetails && jobInfo && <JobDetailsContent jobInfo={jobInfo} />}
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">

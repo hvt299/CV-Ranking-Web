@@ -3,34 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import Select from 'react-select';
-
-const INDUSTRIES = [
-    { label: 'Kinh doanh/Bán hàng', value: 'sales' },
-    { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
-    { label: 'Chăm sóc khách hàng/Vận hành', value: 'customer_service' },
-    { label: 'Nhân sự/Hành chính/Pháp chế', value: 'hr_admin_legal' },
-    { label: 'Công nghệ Thông tin', value: 'it' },
-    { label: 'Lao động phổ thông', value: 'labor' },
-    { label: 'Tài chính/Ngân hàng/Bảo hiểm', value: 'finance' },
-    { label: 'Bất động sản', value: 'realestate' },
-    { label: 'Xây dựng', value: 'construction' },
-    { label: 'Kế toán/Kiểm toán/Thuế', value: 'accounting' },
-    { label: 'Sản xuất', value: 'manufacturing' },
-    { label: 'Giáo dục/Đào tạo', value: 'education' },
-    { label: 'Bán lẻ/Dịch vụ đời sống', value: 'retail_lifestyle' },
-    { label: 'Phim/Truyền hình/Báo chí/Xuất bản', value: 'media_publishing' },
-    { label: 'Điện/Điện tử/Viễn thông', value: 'electronics_telecom' },
-    { label: 'Logistics/Thu mua/Kho/Vận tải', value: 'logistics' },
-    { label: 'Tư vấn chuyên môn', value: 'consulting' },
-    { label: 'Dược/Y tế/Sức khoẻ/Công nghệ sinh học', value: 'healthcare' },
-    { label: 'Thiết kế', value: 'design' },
-    { label: 'Nhà hàng/Khách sạn/Du lịch', value: 'hospitality' },
-    { label: 'Năng lượng/Môi trường/Nông nghiệp', value: 'energy_agriculture' },
-    { label: 'Tài xế', value: 'driver' },
-    { label: 'Biên phiên dịch', value: 'translation' },
-    { label: 'Luật', value: 'law' },
-    { label: 'Nhóm nghề khác', value: 'other' }
-];
+import { INDUSTRIES } from '@/constants/job.constants';
 
 const getIndustryLabel = (value: string) => {
     return INDUSTRIES.find(

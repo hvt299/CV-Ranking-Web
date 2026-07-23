@@ -2,50 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, Briefcase, Bell, Eye, Trash2 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Application, Notification, NotificationReadStatus } from '@/types';
+import { useMyApplications } from '@/features/application/useApplication';
 
 export default function MyApplicationsPage() {
-    const [apps, setApps] = useState<Application[]>([]);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { apps, notifications, isLoading, markAsRead, removeNotification } = useMyApplications();
     const [showNotifications, setShowNotifications] = useState(false);
-
-    useEffect(() => {
-        Promise.all([
-            apiClient.get('/apply/my-applications'),
-            apiClient.get('/apply/notifications')
-        ])
-            .then(([appsRes, notifRes]) => {
-                setApps(appsRes.data);
-                setNotifications(notifRes.data);
-            })
-            .catch(() => toast.error('Không thể tải dữ liệu'))
-            .finally(() => setIsLoading(false));
-    }, []);
-
-    const markNotificationAsRead = async (notificationId: string) => {
-        try {
-            await apiClient.patch(`/apply/notifications/${notificationId}/read`);
-            setNotifications(prev =>
-                prev.map(n => n.id === notificationId ? { ...n, status: NotificationReadStatus.READ } : n)
-            );
-        } catch (error) {
-            toast.error('Không thể đánh dấu thông báo');
-        }
-    };
-
-    const deleteNotification = async (notificationId: string) => {
-        try {
-            await apiClient.delete(`/apply/notifications/${notificationId}`);
-            setNotifications(prev => prev.filter(n => n.id !== notificationId));
-            toast.success('Đã xóa thông báo');
-        } catch (error) {
-            toast.error('Không thể xóa thông báo');
-        }
-    };
 
     const unreadNotifications = notifications.filter(n => n.status === NotificationReadStatus.UNREAD);
 
@@ -98,14 +62,14 @@ export default function MyApplicationsPage() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <button
-                                            onClick={() => markNotificationAsRead(notification.id)}
+                                            onClick={() => markAsRead(notification.id)}
                                             className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10"
                                             title="Đánh dấu đã đọc"
                                         >
                                             <Eye className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => deleteNotification(notification.id)}
+                                            onClick={() => removeNotification(notification.id)}
                                             className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10"
                                             title="Xóa thông báo"
                                         >
