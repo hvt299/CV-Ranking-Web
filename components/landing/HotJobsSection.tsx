@@ -40,7 +40,9 @@ const cardVariants: Variants = {
 };
 
 export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionProps) {
-    if (!jobs || jobs.length === 0) return null;
+    const hotJobs = jobs.filter(job => job.is_hot);
+
+    if (!hotJobs || hotJobs.length === 0) return null;
 
     return (
         <section id="hot-jobs" className="py-32 px-6 relative">
@@ -73,7 +75,8 @@ export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionP
                     viewport={{ once: true, margin: '-50px' }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
-                    {jobs.map((job) => {
+                    {/* 3. DÙNG MẢNG hotJobs ĐỂ RENDER */}
+                    {hotJobs.map((job) => {
                         const isClosedManually = job.status === 'closed';
                         const isExpired =
                             job.deadline &&
@@ -210,8 +213,8 @@ export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionP
                                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 mt-auto relative z-20">
                                     <div
                                         className={`flex items-center gap-1.5 text-xs font-bold ${isExpired
-                                                ? 'text-amber-500'
-                                                : 'text-slate-500'
+                                            ? 'text-amber-500'
+                                            : 'text-slate-500'
                                             }`}
                                     >
                                         <Calendar className="w-3.5 h-3.5" />
