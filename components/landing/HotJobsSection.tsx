@@ -228,7 +228,7 @@ export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionP
                                     </div>
 
                                     <Link
-                                        href={`/jobs/${job.id}`}
+                                        href={`/careers/${job.id}`}
                                         className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors"
                                     >
                                         Chi tiết

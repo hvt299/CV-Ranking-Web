@@ -53,5 +53,21 @@ export const jobService = {
     }> {
         const response = await apiClient.get(`/jobs/${jobId}/ranking`);
         return response.data;
-    }
+    },
+
+    /**
+     * [PUBLIC] Lấy danh sách việc làm cho Khách vãng lai
+     */
+    async getPublicJobs(): Promise<Job[]> {
+        const response = await apiClient.get<Job[]>('/jobs/public/list');
+        return response.data;
+    },
+
+    /**
+     * [PUBLIC] Lấy chi tiết một việc làm cho Khách vãng lai
+     */
+    async getPublicJobById(jobId: string): Promise<Job> {
+        const response = await apiClient.get<Job>(`/jobs/public/${jobId}`);
+        return response.data;
+    },
 };

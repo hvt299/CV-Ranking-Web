@@ -29,7 +29,7 @@ const STATS = [
 const FEATURES = [
     { icon: BrainCircuit, title: "AI Scoring Matrix", desc: "Chấm điểm CV đa chiều bằng mô hình LLM tiên tiến, đối chiếu chính xác với JD không thiên vị." },
     { icon: FileSearch, title: "Anti-Stuffing System", desc: "Tự động phát hiện và trừ điểm các hồ sơ cố tình nhồi nhét từ khóa, font chữ trắng hoặc tàng hình." },
-    { icon: Zap, title: "Smart Parsing", desc: "Bóc tách chính xác Học vấn, Số năm kinh nghiệm và Kỹ năng chỉ trong 2 giây từ file PDF/DOCX." },
+    { icon: Zap, title: "Smart Parsing", desc: "Bóc tách chính xác Học vấn, Số năm kinh nghiệm và Kỹ năng chỉ trong 10 giây từ file PDF/DOCX." },
     { icon: ShieldCheck, title: "Bảo mật chuẩn Enterprise", desc: "Dữ liệu ứng viên và doanh nghiệp được mã hóa đầu cuối, tuân thủ các tiêu chuẩn bảo mật khắt khe nhất." }
 ];
 const FAQS = [

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -17,15 +18,26 @@ interface JobCardProps {
     job: PublicJob;
     cvLibrary?: any[];
     onApplySuccess?: () => void;
+    isPublic?: boolean;
 }
 
-export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps) {
+export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: JobCardProps) {
+    const router = useRouter();
     const [expandedJob, setExpandedJob] = useState(false);
     const [applyingJob, setApplyingJob] = useState(false);
     const [uploadingId, setUploadingId] = useState(false);
     const [selectedCvId, setSelectedCvId] = useState('');
     const [coverLetter, setCoverLetter] = useState('');
     const [agreeAI, setAgreeAI] = useState(false);
+
+    const handleInitApply = () => {
+        if (isPublic) {
+            toast.error("Vui lòng đăng nhập để ứng tuyển công việc này!");
+            router.push('/login');
+            return;
+        }
+        setApplyingJob(!applyingJob);
+    };
 
     const handleApply = async () => {
         if (!cvLibrary || cvLibrary.length === 0) {
@@ -105,7 +117,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess }: JobCardProps
 
                     <div className="flex flex-col gap-2 shrink-0">
                         <button
-                            onClick={() => setApplyingJob(!applyingJob)}
+                            onClick={handleInitApply}
                             className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
                         >
                             <UploadCloud className="w-4 h-4" /> Nộp hồ sơ
