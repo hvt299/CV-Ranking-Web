@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertOctagon, RefreshCcw, Home, Terminal } from 'lucide-react';
+import { AlertOctagon, RefreshCcw, Home, Terminal, Search } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GlobalError({
@@ -18,7 +18,7 @@ export default function GlobalError({
     }, [error]);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col items-center justify-center relative p-6">
+        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col items-center justify-center relative p-6 transition-colors">
             <div className="absolute inset-0 bg-rose-500/5 dark:bg-rose-500/10 pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-rose-500/10 blur-[120px] rounded-full pointer-events-none" />
 
@@ -26,9 +26,9 @@ export default function GlobalError({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
-                className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 md:p-10 rounded-4xl shadow-2xl backdrop-blur-xl flex flex-col items-center text-center"
+                className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 md:p-10 rounded-4xl shadow-2xl backdrop-blur-xl flex flex-col items-center text-center transition-colors"
             >
-                <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                     <AlertOctagon className="w-8 h-8 text-rose-500" />
                 </div>
 
@@ -39,28 +39,28 @@ export default function GlobalError({
                     Hệ thống không thể xử lý yêu cầu của bạn lúc này. Chúng tôi đã ghi nhận sự cố và sẽ khắc phục sớm nhất có thể.
                 </p>
 
-                {/* Khối hiển thị chi tiết lỗi (chỉ rành cho dev/debug) */}
+                {/* Khối hiển thị chi tiết lỗi (Hữu ích khi debug) */}
                 <div className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-8 text-left overflow-hidden">
-                    <div className="flex items-center gap-2 mb-2 text-xs font-bold text-slate-500 uppercase">
+                    <div className="flex items-center gap-2 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <Terminal className="w-4 h-4" /> Log chi tiết
                     </div>
                     <p className="text-xs font-mono text-rose-600 dark:text-rose-400 wrap-break-word line-clamp-3">
-                        {error.message || "Unknown Application Error"}
+                        {error.message || "Lỗi ứng dụng nội bộ (Internal Application Error)"}
                     </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row w-full gap-3">
-                    <button
-                        onClick={() => reset()}
-                        className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                        <RefreshCcw className="w-4 h-4" /> Thử lại ngay
-                    </button>
                     <Link
-                        href="/dashboard"
-                        className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                        href="/careers"
+                        className="flex-1 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                        <Home className="w-4 h-4" /> Về Dashboard
+                        <Search className="w-4 h-4" /> Khám phá việc làm
+                    </Link>
+                    <Link
+                        href="/"
+                        className="flex-1 px-6 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                    >
+                        <Home className="w-4 h-4" /> Về Trang chủ
                     </Link>
                 </div>
             </motion.div>

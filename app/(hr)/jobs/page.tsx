@@ -7,6 +7,7 @@ import {
     Users, Building2, MapPin, Filter, DollarSign, Clock, Flame
 } from 'lucide-react';
 import { useJobList } from '@/features/job/useJob';
+import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
 
 export default function JobsListPage() {
     const { jobs, isLoading, deleteJob } = useJobList();
@@ -64,12 +65,9 @@ export default function JobsListPage() {
                             onChange={(e) => setFilterLevel(e.target.value)}
                         >
                             <option value="All">Cấp bậc</option>
-                            <option value="Intern">Intern</option>
-                            <option value="Fresher">Fresher</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Middle">Middle</option>
-                            <option value="Senior">Senior</option>
-                            <option value="Manager">Manager</option>
+                            {JOB_LEVELS.map(level => (
+                                <option key={level.value} value={level.value}>{level.value}</option>
+                            ))}
                         </select>
                     </div>
                     <div className="relative min-w-35 flex-1">
@@ -80,9 +78,9 @@ export default function JobsListPage() {
                             onChange={(e) => setFilterType(e.target.value)}
                         >
                             <option value="All">Loại hình</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Freelance">Freelance</option>
+                            {EMPLOYMENT_TYPES.map(type => (
+                                <option key={type.value} value={type.value}>{type.value}</option>
+                            ))}
                         </select>
                     </div>
                     <div className="relative min-w-35 flex-1">
@@ -93,9 +91,9 @@ export default function JobsListPage() {
                             onChange={(e) => setFilterMode(e.target.value)}
                         >
                             <option value="All">Hình thức</option>
-                            <option value="Onsite">Onsite</option>
-                            <option value="Remote">Remote</option>
-                            <option value="Hybrid">Hybrid</option>
+                            {WORK_MODES.map(mode => (
+                                <option key={mode.value} value={mode.value}>{mode.value}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -163,7 +161,11 @@ export default function JobsListPage() {
                                         {/* Địa điểm & Lương */}
                                         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
-                                                <MapPin className="w-4 h-4 text-slate-400 shrink-0" /> {job.location?.city || 'Việt Nam'}
+                                                {/* FIX: Thay city bằng province_name hoặc country */}
+                                                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                                                {job.location?.country && job.location.country !== 'Việt Nam'
+                                                    ? job.location.country
+                                                    : (job.location?.province_name || 'Việt Nam')}
                                             </div>
                                             <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-black shrink-0 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
                                                 <DollarSign className="w-4 h-4" />

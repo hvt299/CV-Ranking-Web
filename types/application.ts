@@ -34,6 +34,15 @@ export interface AIScore {
     top_contributing_sentences: string[];
 }
 
+export interface ApplicationCreate {
+    job_id: string;
+    cv_document_id: string;
+    applicant_user_id?: string;
+    source: ApplicationSource;
+    company_id: string;
+    cover_letter?: string;
+}
+
 export interface InterviewSchedule {
     interview_time: string;
     location: string;
@@ -70,11 +79,32 @@ export interface Application {
     is_viewed?: boolean;
 }
 
+export interface StatusChangeEntry {
+    from_status: ApplicationStatus;
+    to_status: ApplicationStatus;
+    changed_by_user_id: string;
+    changed_at: string;
+}
+
+export interface OfferDetail {
+    offered_salary: number;
+    currency: string;
+    start_date: string;
+    offer_file_url?: string;
+}
+
+export interface InterviewQuestion {
+    category: string;
+    question: string;
+    suggested_answer_points: string[];
+}
+
 export interface ApplicationUpdatePayload {
     status?: ApplicationStatus;
     note_to_add?: string;
     send_email?: boolean;
     interview_schedule?: InterviewSchedule;
+    rejection_reason?: string;
 }
 
 export interface ApplyJobRequest {
@@ -90,13 +120,20 @@ export interface SelfScoreRequest {
 export interface Notification {
     id: string;
     recipient_user_id: string;
-    application_id: string;
+    application_id?: string;
+    
     title: string;
     message: string;
     type: NotificationType;
     status: NotificationReadStatus;
+    
     job_title_snapshot?: string;
     application_status_snapshot?: ApplicationStatus;
+    
+    related_entity_type?: string;
+    related_entity_id?: string;
+    action_url?: string;
+    
     created_at: string;
     read_at?: string;
 }

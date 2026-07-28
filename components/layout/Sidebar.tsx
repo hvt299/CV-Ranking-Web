@@ -50,7 +50,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
         { name: "Chiến dịch tuyển dụng", icon: Briefcase, href: "/jobs" },
         { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
         { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
-        { name: "Hộp thư", icon: Mail, href: "/messages" },
         ...(isHrOwner || isAdmin
             ? [
                 {

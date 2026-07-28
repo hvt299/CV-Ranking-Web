@@ -236,7 +236,8 @@ export default function JobLeaderboardPage() {
                         <h1 className="text-3xl font-black text-slate-800 dark:text-white mb-2">{jobInfo?.title}</h1>
                         <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
                             <span className="flex items-center gap-1"><Building2 className="w-4 h-4" /> {companyInfo?.name || jobInfo?.company_name || 'Công ty của tôi'}</span>
-                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {jobInfo?.location?.city || 'Việt Nam'}</span>
+                            {/* FIX: Thay city bằng province_name hoặc country */}
+                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {jobInfo?.location?.country && jobInfo?.location?.country !== 'Việt Nam' ? jobInfo.location.country : (jobInfo?.location?.province_name || 'Việt Nam')}</span>
                             <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
                                 {jobInfo?.work_mode} • {jobInfo?.job_level}
                             </span>

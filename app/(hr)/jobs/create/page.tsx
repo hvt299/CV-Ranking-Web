@@ -8,13 +8,13 @@ import {
     X, ArrowLeft, Save, GraduationCap, ChevronRight, ChevronLeft,
     FileText, CheckCircle2, Clock, Users, Languages, Trash2
 } from 'lucide-react';
-import apiClient from '@/lib/api-client'
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Select from 'react-select';
-import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES, EDUCATION_LEVELS, GENDER_OPTIONS } from '@/constants/job.constants';
 import { parseCurrency, formatCurrency } from '@/utils/format';
 import { jobService } from '@/features/job/job.service';
+import { LocationDetail } from '@/types';
 
 const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
     ssr: false,
@@ -32,7 +32,7 @@ export default function CreateEnterpriseJobPage() {
         deadline: '', probation_period: '2 tháng', gender_requirement: 'Không yêu cầu', languages: [] as string[],
         min_yoe: 0, education: { min_level: 'Không yêu cầu', preferred_majors: [] as string[] },
         salary: { min_salary: 10000000, max_salary: 30000000, currency: 'VND' },
-        working_hours: '08:00 - 17:30, Thứ 2 - Thứ 6', location: { city: '', address: '', country: 'Việt Nam' },
+        working_hours: '08:00 - 17:30, Thứ 2 - Thứ 6', location: { province_name: '', street_address: '', country: 'Việt Nam' } as LocationDetail, // Dùng as any hoặc import LocationDetail để ép kiểu, ở đây dùng as any cho gọn và thoát lỗi Type Mismatch
         description: '', requirements: '', benefits: '', other_info: ''
     });
 
@@ -45,7 +45,7 @@ export default function CreateEnterpriseJobPage() {
     const [aiWeights, setAiWeights] = useState({ skills: 40, nlp: 30, experience: 20, education: 10 });
 
     const [locCountry, setLocCountry] = useState('Việt Nam');
-    const [locCity, setLocCity] = useState('');
+    const [locCity, setLocCity] = useState(''); // Lưu ý: Biến này để lưu Tỉnh/Thành, nhưng khi truyền vào form sẽ dùng tên khác
     const [locDistrict, setLocDistrict] = useState('');
     const [locWard, setLocWard] = useState('');
     const [locStreet, setLocStreet] = useState('');
@@ -55,8 +55,8 @@ export default function CreateEnterpriseJobPage() {
             ...prev,
             location: {
                 country: locCountry,
-                city: locCountry === 'Việt Nam' ? locCity : 'Nước ngoài',
-                address: locCountry === 'Việt Nam'
+                province_name: locCountry === 'Việt Nam' ? locCity : undefined,
+                street_address: locCountry === 'Việt Nam'
                     ? [locStreet, locWard, locDistrict].filter(Boolean).join(', ')
                     : locStreet
             }
@@ -499,9 +499,9 @@ export default function CreateEnterpriseJobPage() {
                                     <div>
                                         <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Giới tính</label>
                                         <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.gender_requirement} onChange={e => setFormData({ ...formData, gender_requirement: e.target.value })}>
-                                            <option value="Không yêu cầu">Không yêu cầu</option>
-                                            <option value="Nam">Nam</option>
-                                            <option value="Nữ">Nữ</option>
+                                            {GENDER_OPTIONS.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -510,11 +510,9 @@ export default function CreateEnterpriseJobPage() {
                                     <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Học vấn & Chuyên ngành</label>
                                     <div className="space-y-3">
                                         <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.education.min_level} onChange={e => setFormData({ ...formData, education: { ...formData.education, min_level: e.target.value } })}>
-                                            <option value="Không yêu cầu">Không yêu cầu tối thiểu</option>
-                                            <option value="Trung cấp">Trung cấp trở lên</option>
-                                            <option value="Cao đẳng">Cao đẳng trở lên</option>
-                                            <option value="Cử nhân">Cử nhân / Đại học trở lên</option>
-                                            <option value="Thạc sĩ">Thạc sĩ trở lên</option>
+                                            {EDUCATION_LEVELS.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            ))}
                                         </select>
 
                                         <div className="min-h-12 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-wrap gap-2 items-center">

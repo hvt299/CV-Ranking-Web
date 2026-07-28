@@ -3,8 +3,22 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary: #2563eb;
-  --font-sans: "Inter", sans-serif;
+  /* Khai báo bảng màu Primary (Brand Color - Xanh dương) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+
+  /* Giữ lại biến gốc của project để không lỗi component cũ */
+  --color-primary: #2563eb; 
+
+  /* Khai báo màu nhấn (Accent/Hot) dùng cho Job nổi bật */
+  --color-hot-500: #f59e0b;
+  --color-hot-600: #d97706;
+
+  /* Gắn font mặc định của Tailwind vào Be Vietnam Pro */
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer utilities {

@@ -1,6 +1,32 @@
 import { JobStatus } from "./common";
 
+// Enums tương ứng từ Backend
+export enum JobLevel {
+    INTERN = "Intern",
+    FRESHER = "Fresher",
+    JUNIOR = "Junior",
+    MIDDLE = "Middle",
+    SENIOR = "Senior",
+    MANAGER = "Manager",
+    DIRECTOR = "Director"
+}
+
+export enum EmploymentType {
+    FULL_TIME = "Full-time",
+    PART_TIME = "Part-time",
+    CONTRACT = "Contract",
+    FREELANCE = "Freelance",
+    INTERNSHIP = "Internship"
+}
+
+export enum WorkMode {
+    OFFICE = "Office",
+    HYBRID = "Hybrid",
+    REMOTE = "Remote"
+}
+
 export interface SkillDetail {
+    skill_id?: string;
     name: string;
     weight?: number;
     min_years?: number;
@@ -18,9 +44,16 @@ export interface SalaryRange {
 }
 
 export interface LocationDetail {
-    city: string;
-    address?: string;
-    country: string;
+    country?: string; // Default: 'Việt Nam'
+    version?: 'old' | 'new'; // Đồng bộ tên trường và giá trị với Master Data
+    province_code?: string;
+    province_name?: string;
+    district_code?: string;
+    district_name?: string;
+    ward_code?: string;
+    ward_name?: string;
+    street_address?: string;
+    full_address_snapshot?: string;
 }
 
 export interface ScoreWeights {
@@ -32,17 +65,20 @@ export interface ScoreWeights {
 
 export interface Job {
     id: string;
+    slug?: string;
     title: string;
     company_id: string;
     company_name?: string;
     status: JobStatus;
 
     is_hot?: boolean;
+    is_hot_until?: string;
     industry?: string;
 
-    job_level: string;
-    employment_type: string;
-    work_mode: string;
+    job_level: JobLevel | string;
+    employment_type: EmploymentType | string;
+    work_mode: WorkMode | string;
+
     headcount?: number;
     deadline?: string;
     probation_period?: string;
@@ -64,6 +100,11 @@ export interface Job {
     requirements: string;
     benefits?: string;
     other_info?: string;
+
+    jd_file_url?: string;
+
+    view_count?: number;
+    num_applications?: number;
 
     created_by_user_id?: string;
     created_at: string;

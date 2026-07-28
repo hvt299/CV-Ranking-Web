@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame } from 'lucide-react';
+import { Briefcase, MapPin, Building2, Clock, DollarSign, UploadCloud, ChevronDown, ChevronUp, GraduationCap, Flame, Eye, Users } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Job } from '@/types';
+import { Job, SkillDetail } from '@/types';
 import { formatSalaryRange } from '@/utils/format';
 import { applicationService } from '@/features/application/application.service';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
-    required_skills?: any;
 }
 
 interface JobCardProps {
@@ -41,18 +40,13 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
 
     const handleApply = async () => {
         if (!cvLibrary || cvLibrary.length === 0) {
-            toast.error("Bạn chưa có CV trong thư viện!");
-            return;
+            toast.error("Bạn chưa có CV trong thư viện!"); return;
         }
-
         if (!selectedCvId) {
-            toast.error("Vui lòng chọn CV từ thư viện để ứng tuyển!");
-            return;
+            toast.error("Vui lòng chọn CV từ thư viện để ứng tuyển!"); return;
         }
-
         if (!agreeAI) {
-            toast.error("Vui lòng đồng ý với thỏa thuận AI và bảo mật dữ liệu!");
-            return;
+            toast.error("Vui lòng đồng ý với thỏa thuận AI và bảo mật dữ liệu!"); return;
         }
 
         setUploadingId(true);
@@ -74,25 +68,41 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
     return (
         <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-blue-400 dark:hover:border-slate-600 shadow-sm hover:shadow-md transition-all flex flex-col relative group overflow-hidden">
             {/* Decor Hover Glow */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 dark:bg-blue-500/10 blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
             <div className="relative z-20">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">{job.title}</h2>
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight hover:text-blue-600 transition-colors cursor-pointer" onClick={() => setExpandedJob(!expandedJob)}>
+                                {job.title}
+                            </h2>
                             {job.is_hot && (
-                                <span className="flex items-center gap-1 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow-sm">
+                                <span className="flex items-center gap-1 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow-sm shrink-0">
                                     <Flame className="w-3 h-3" /> Hot
                                 </span>
                             )}
                         </div>
 
+                        {/* Thông tin Meta: View & Apply */}
+                        <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
+                            <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                <Eye className="w-3.5 h-3.5" /> {(job.view_count || 0).toLocaleString()} lượt xem
+                            </span>
+                            <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-md">
+                                <Users className="w-3.5 h-3.5" /> {(job.num_applications || 0).toLocaleString()} lượt ứng tuyển
+                            </span>
+                        </div>
+
                         <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600 dark:text-slate-400 font-medium">
                             <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-slate-400" /> {job.company_name || 'Công ty Ẩn danh'}</span>
-                            {job.location?.city && (
-                                <span className="flex items-center gap-1.5" title={job.location.address}>
-                                    <MapPin className="w-4 h-4 text-rose-500" /> {job.location.city === 'Nước ngoài' ? 'Nước ngoài' : job.location.city}
+                            {/* FIX: Sử dụng province_name (cho trong nước) hoặc country (nếu là nước ngoài) */}
+                            {(job.location?.province_name || job.location?.country) && (
+                                <span className="flex items-center gap-1.5" title={job.location.full_address_snapshot || job.location.street_address}>
+                                    <MapPin className="w-4 h-4 text-rose-500" />
+                                    {job.location.country && job.location.country !== 'Việt Nam'
+                                        ? job.location.country
+                                        : job.location.province_name}
                                 </span>
                             )}
                             <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-blue-500" /> {job.work_mode} • {job.employment_type} • {job.job_level}</span>
@@ -106,24 +116,24 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
                             </p>
                         )}
                         <div className="flex flex-wrap gap-1.5 mt-3">
-                            {job.required_skills?.slice(0, 6).map((skill: any, i: number) => (
+                            {job.required_skills?.slice(0, 6).map((skill: SkillDetail, i: number) => (
                                 <span key={i} className="text-[11px] font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-500/20">
-                                    {typeof skill === 'string' ? skill : skill.name}
+                                    {skill.name}
                                 </span>
                             ))}
-                            {job.required_skills?.length > 6 && <span className="text-[11px] font-bold text-slate-500 px-2 py-0.5">+{job.required_skills.length - 6} khác</span>}
+                            {(job.required_skills?.length || 0) > 6 && <span className="text-[11px] font-bold text-slate-500 px-2 py-0.5">+{job.required_skills!.length - 6} khác</span>}
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 shrink-0">
+                    <div className="flex flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
                         <button
                             onClick={handleInitApply}
-                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                            className="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
                         >
-                            <UploadCloud className="w-4 h-4" /> Nộp hồ sơ
+                            <UploadCloud className="w-4 h-4" /> Ứng tuyển ngay
                         </button>
-                        <button onClick={() => setExpandedJob(!expandedJob)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-1 justify-center">
-                            {expandedJob ? <><ChevronUp className="w-4 h-4" /> Ẩn bớt</> : <><ChevronDown className="w-4 h-4" /> Xem JD</>}
+                        <button onClick={() => setExpandedJob(!expandedJob)} className="w-full md:w-auto px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-1 justify-center transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                            {expandedJob ? <><ChevronUp className="w-4 h-4" /> Ẩn JD</> : <><ChevronDown className="w-4 h-4" /> Xem JD</>}
                         </button>
                     </div>
                 </div>
@@ -135,20 +145,17 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
 
                         {cvLibrary && cvLibrary.length > 0 ? (
                             <>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <select
-                                        value={selectedCvId}
-                                        onChange={e => setSelectedCvId(e.target.value)}
-                                        className="flex-1 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-200"
-                                    >
-                                        <option value="">-- Click để chọn CV của bạn --</option>
-                                        {cvLibrary?.map(cv => (
-                                            <option key={cv.id} value={cv.id}>{cv.display_name} ({cv.filename})</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <select
+                                    value={selectedCvId}
+                                    onChange={e => setSelectedCvId(e.target.value)}
+                                    className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-200"
+                                >
+                                    <option value="">-- Click để chọn CV của bạn --</option>
+                                    {cvLibrary?.map(cv => (
+                                        <option key={cv.id} value={cv.id}>{cv.display_name} ({cv.filename})</option>
+                                    ))}
+                                </select>
 
-                                {/* Thêm Thư giới thiệu và Checkbox AI */}
                                 <div className="mt-3">
                                     <textarea
                                         placeholder="Thư giới thiệu (Cover Letter) - Tùy chọn, giúp bạn nổi bật hơn trước Nhà tuyển dụng..."
@@ -158,16 +165,17 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
                                         rows={3}
                                     />
                                 </div>
+
                                 <div className="mt-3 flex items-start gap-3 bg-blue-100/50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-200 dark:border-blue-800/50">
                                     <input
                                         type="checkbox"
                                         id={`agree-${job.id}`}
                                         checked={agreeAI}
                                         onChange={(e) => setAgreeAI(e.target.checked)}
-                                        className="mt-1 w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                                        className="mt-1 w-4 h-4 accent-blue-600 rounded cursor-pointer shrink-0"
                                     />
                                     <label htmlFor={`agree-${job.id}`} className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
-                                        Tôi đồng ý cho phép hệ thống sử dụng <span className="font-bold text-blue-600 dark:text-blue-400">Trí tuệ nhân tạo (AI)</span> để phân tích dữ liệu hồ sơ và đồng ý với <a href="#" className="underline font-bold">Thỏa thuận sử dụng dữ liệu cá nhân</a> của hệ thống ATS.
+                                        Tôi đồng ý cho phép hệ thống sử dụng <span className="font-bold text-blue-600 dark:text-blue-400">Trí tuệ nhân tạo (AI)</span> để phân tích dữ liệu hồ sơ và đồng ý với <a href="#" className="underline font-bold hover:text-blue-600">Thỏa thuận sử dụng dữ liệu cá nhân</a> của hệ thống ATS.
                                     </label>
                                 </div>
 
@@ -175,7 +183,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
                                     <button
                                         onClick={handleApply}
                                         disabled={uploadingId || !selectedCvId || !agreeAI}
-                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center min-w-32 shadow-lg shadow-blue-500/20"
+                                        className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center shadow-lg shadow-blue-500/20"
                                     >
                                         {uploadingId ? 'Đang chấm điểm...' : 'Xác nhận nộp'}
                                     </button>
@@ -191,7 +199,7 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
             </div>
 
             {expandedJob && (
-                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 space-y-6 relative z-20">
+                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 space-y-6 relative z-20 animate-in fade-in slide-in-from-top-2">
                     {job.description && (
                         <div>
                             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-blue-500 pl-2">Mô tả công việc</h3>
@@ -208,12 +216,6 @@ export default function JobCard({ job, cvLibrary, onApplySuccess, isPublic }: Jo
                         <div>
                             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-emerald-500 pl-2">Quyền lợi & Chế độ</h3>
                             <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.benefits }} />
-                        </div>
-                    )}
-                    {job.other_info && (
-                        <div>
-                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 border-l-4 border-amber-500 pl-2">Thông tin khác</h3>
-                            <div className="prose prose-sm max-w-none text-slate-600 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.other_info }} />
                         </div>
                     )}
                 </div>

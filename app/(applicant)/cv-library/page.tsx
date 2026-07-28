@@ -102,9 +102,9 @@ export default function CVLibraryPage() {
 
                                 {/* Skills */}
                                 <div className="flex flex-wrap gap-1.5 mt-3">
-                                    {skills.slice(0, 4).map((skill: string, idx: number) => (
+                                    {skills.slice(0, 4).map((skill, idx) => (
                                         <span key={idx} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-bold uppercase border border-slate-200 dark:border-slate-600">
-                                            {skill}
+                                            {skill.name}
                                         </span>
                                     ))}
                                     {skills.length > 4 && (

@@ -35,7 +35,14 @@ export default function ApplyPage() {
             );
         }
 
-        if (filters.location) result = result.filter(job => job.location?.city?.toLowerCase().includes(filters.location.toLowerCase()));
+        // FIX: Thay thế `city` bằng `province_name` và `country` để khớp với Schema LocationDetail mới
+        if (filters.location) {
+            const locQuery = filters.location.toLowerCase();
+            result = result.filter(job =>
+                job.location?.province_name?.toLowerCase().includes(locQuery) ||
+                job.location?.country?.toLowerCase().includes(locQuery)
+            );
+        }
         if (filters.workMode) result = result.filter(job => job.work_mode === filters.workMode);
         if (filters.jobLevel) result = result.filter(job => job.job_level === filters.jobLevel);
         if (filters.employmentType) result = result.filter(job => job.employment_type === filters.employmentType);

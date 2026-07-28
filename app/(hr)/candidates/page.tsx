@@ -51,7 +51,7 @@ export default function TalentPoolPage() {
         // 1. Lọc theo Text (Search)
         const matchSearch = cv.filename?.toLowerCase().includes(term) ||
             cInfo.email?.toLowerCase().includes(term) ||
-            (cv.extracted_skills || []).some((s: string) => s.toLowerCase().includes(term));
+            (cv.extracted_skills || []).some((s) => s.name?.toLowerCase().includes(term));
 
         // 2. Lọc theo Học vấn
         const matchEdu = filterEducation === 'All' || cInfo.education_level === filterEducation;
@@ -216,9 +216,9 @@ export default function TalentPoolPage() {
                                 <div className="xl:col-span-3 flex flex-col justify-center border-t xl:border-t-0 xl:border-l border-slate-100 dark:border-slate-700 pt-4 xl:pt-0 xl:pl-6 h-full">
                                     <p className="text-xs font-bold text-slate-500 mb-2">Kỹ năng phân tích được:</p>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {skills.slice(0, 5).map((skill: string, idx: number) => (
+                                        {skills.slice(0, 5).map((skill, idx) => (
                                             <span key={idx} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md text-[10px] font-bold uppercase border border-slate-200 dark:border-slate-600">
-                                                {skill}
+                                                {skill.name}
                                             </span>
                                         ))}
                                         {skills.length > 5 && (

@@ -11,9 +11,10 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Select from 'react-select';
-import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES, EDUCATION_LEVELS, GENDER_OPTIONS } from '@/constants/job.constants';
 import { parseCurrency, formatCurrency } from '@/utils/format';
 import { jobService } from '@/features/job/job.service';
+import { LocationDetail } from '@/types';
 
 const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
     ssr: false,
@@ -35,7 +36,7 @@ export default function EditEnterpriseJobPage() {
         deadline: '', probation_period: '2 tháng', gender_requirement: 'Không yêu cầu', languages: [] as string[],
         min_yoe: 0, education: { min_level: 'Không yêu cầu', preferred_majors: [] as string[] },
         salary: { min_salary: 10000000, max_salary: 30000000, currency: 'VND' },
-        working_hours: '08:00 - 17:30, Thứ 2 - Thứ 6', location: { city: '', address: '', country: 'Việt Nam' },
+        working_hours: '08:00 - 17:30, Thứ 2 - Thứ 6', location: { province_name: '', street_address: '', country: 'Việt Nam' } as LocationDetail, // Thoát lỗi Type Mismatch
         description: '', requirements: '', benefits: '', other_info: ''
     });
 
@@ -62,8 +63,8 @@ export default function EditEnterpriseJobPage() {
             ...prev,
             location: {
                 country: locCountry,
-                city: locCountry === 'Việt Nam' ? locCity : 'Nước ngoài',
-                address: locCountry === 'Việt Nam'
+                province_name: locCountry === 'Việt Nam' ? locCity : undefined,
+                street_address: locCountry === 'Việt Nam'
                     ? [locStreet, locWard, locDistrict].filter(Boolean).join(', ')
                     : locStreet
             }
@@ -110,8 +111,8 @@ export default function EditEnterpriseJobPage() {
                 },
                 working_hours: data.working_hours || '',
                 location: {
-                    city: data.location?.city || '',
-                    address: data.location?.address || '',
+                    province_name: data.location?.province_name || '',
+                    street_address: data.location?.street_address || data.location?.full_address_snapshot || '',
                     country: data.location?.country || 'Việt Nam'
                 },
                 description: data.description || '',
@@ -123,18 +124,21 @@ export default function EditEnterpriseJobPage() {
             if (data.location) {
                 setLocCountry(data.location.country || 'Việt Nam');
                 if (data.location.country === 'Việt Nam') {
-                    setLocCity(data.location.city || '');
+                    setLocCity(data.location.province_name || '');
 
-                    const addressParts = (data.location.address || '').split(',').map((s: string) => s.trim());
+                    const currentAddress = data.location.street_address || data.location.full_address_snapshot || '';
+                    const addressParts = currentAddress.split(',').map((s: string) => s.trim());
                     if (addressParts.length >= 3) {
                         setLocStreet(addressParts.slice(0, -2).join(', '));
                         setLocWard(addressParts[addressParts.length - 2]);
                         setLocDistrict(addressParts[addressParts.length - 1]);
                     } else {
-                        setLocStreet(data.location.address || '');
+                        // FIX: Đổi address thành street_address
+                        setLocStreet(data.location.street_address || data.location.full_address_snapshot || '');
                     }
                 } else {
-                    setLocStreet(data.location.address || '');
+                    // FIX: Đổi address thành street_address
+                    setLocStreet(data.location.street_address || data.location.full_address_snapshot || '');
                 }
             }
 
@@ -593,9 +597,9 @@ export default function EditEnterpriseJobPage() {
                                     <div>
                                         <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Giới tính</label>
                                         <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.gender_requirement} onChange={e => setFormData({ ...formData, gender_requirement: e.target.value })}>
-                                            <option value="Không yêu cầu">Không yêu cầu</option>
-                                            <option value="Nam">Nam</option>
-                                            <option value="Nữ">Nữ</option>
+                                            {GENDER_OPTIONS.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -604,11 +608,9 @@ export default function EditEnterpriseJobPage() {
                                     <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Học vấn & Chuyên ngành</label>
                                     <div className="space-y-3">
                                         <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white focus:border-blue-500" value={formData.education.min_level} onChange={e => setFormData({ ...formData, education: { ...formData.education, min_level: e.target.value } })}>
-                                            <option value="Không yêu cầu">Không yêu cầu tối thiểu</option>
-                                            <option value="Trung cấp">Trung cấp trở lên</option>
-                                            <option value="Cao đẳng">Cao đẳng trở lên</option>
-                                            <option value="Cử nhân">Cử nhân / Đại học trở lên</option>
-                                            <option value="Thạc sĩ">Thạc sĩ trở lên</option>
+                                            {EDUCATION_LEVELS.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            ))}
                                         </select>
 
                                         <div className="min-h-12 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-wrap gap-2 items-center">

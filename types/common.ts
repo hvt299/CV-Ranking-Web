@@ -1,3 +1,5 @@
+// Định nghĩa các Enum cốt lõi, ánh xạ 1:1 với app/schemas/common_schema.py từ Backend
+
 export enum UserRole {
     ADMIN = "admin",
     HR_OWNER = "hr_owner",
@@ -60,10 +62,46 @@ export enum AuditAction {
     USER_SUSPENDED = "user_suspended"
 }
 
+export enum SubscriptionTier {
+    FREE = "free",
+    PRO = "pro",
+    ENTERPRISE = "enterprise"
+}
+
+export enum AdminLevel {
+    PROVINCE = "province",
+    DISTRICT = "district",
+    WARD = "ward"
+}
+
+export enum RecommendationEnum {
+    HIRE = "hire",
+    NO_HIRE = "no_hire",
+    MAYBE = "maybe"
+}
+
+export enum AlertFrequency {
+    DAILY = "daily",
+    WEEKLY = "weekly"
+}
+
+// ============================================================================
+// CÁC INTERFACE DÙNG CHUNG (SHARED INTERFACES)
+// ============================================================================
+
 export interface ApiResponse<T> {
     status: string;
     message?: string;
     data: T;
+}
+
+// Cấu trúc Response chung cho API có phân trang (Pagination)
+export interface PaginatedResponse<T> {
+    data: T[];
+    total: number;
+    page: number;
+    size: number;
+    pages: number;
 }
 
 export interface DashboardAnalytics {

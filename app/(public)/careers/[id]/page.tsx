@@ -74,7 +74,10 @@ export default function PublicJobDetailPage() {
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <MapPin className="w-5 h-5 text-rose-500" />
-                                {job.location?.city}
+                                {/* FIX: Thay thế city bằng province_name hoặc country */}
+                                {job.location?.country && job.location.country !== 'Việt Nam'
+                                    ? job.location.country
+                                    : (job.location?.province_name || 'Toàn quốc')}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <Briefcase className="w-5 h-5 text-blue-500" />
