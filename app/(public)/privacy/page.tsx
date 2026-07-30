@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col transition-colors duration-300">
+        <div className="font-sans min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col transition-colors duration-300">
             <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
 
             {/* Khối Hero Banner */}
@@ -90,8 +90,8 @@ export default function PrivacyPolicyPage() {
                                         key={section.id}
                                         onClick={() => scrollToSection(section.id)}
                                         className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${isActive
-                                                ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -114,8 +114,10 @@ export default function PrivacyPolicyPage() {
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg"><Database className="w-5 h-5" /></div>
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">1. Thu thập dữ liệu</h2>
                         </div>
-                        <p className="mb-4">Hệ thống của chúng tôi chỉ thu thập các dữ liệu cần thiết phục vụ cho mục đích tuyển dụng và kết nối việc làm:</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div className="prose prose-slate font-sans dark:prose-invert max-w-none prose-p:leading-loose">
+                            <p className="mb-4">Hệ thống của chúng tôi chỉ thu thập các dữ liệu cần thiết phục vụ cho mục đích tuyển dụng và kết nối việc làm:</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 font-sans">
                             <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                                 <h4 className="font-bold text-slate-900 dark:text-white mb-2">Thông tin định danh</h4>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">Họ tên, email liên lạc, số điện thoại, địa chỉ (tuỳ chọn).</p>
@@ -134,17 +136,19 @@ export default function PrivacyPolicyPage() {
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg"><Cpu className="w-5 h-5" /></div>
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">2. Xử lý Dữ liệu bằng Trí tuệ Nhân tạo</h2>
                         </div>
-                        <p className="mb-4">Bằng việc tải CV lên nền tảng, bạn cấp quyền cho hệ thống AI của chúng tôi xử lý hồ sơ thông qua các thuật toán:</p>
-                        <ul className="list-none space-y-3 mt-4">
-                            <li className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                                <span><strong>Xử lý ngôn ngữ tự nhiên (NLP):</strong> Trích xuất tự động các kỹ năng chuyên môn, số năm kinh nghiệm từ các đoạn văn bản trong CV.</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                                <span><strong>Vectorization:</strong> Chuyển đổi dữ liệu hồ sơ thành các vector toán học (nhúng) để tối ưu hóa thuật toán tìm kiếm tương đồng (Semantic Search).</span>
-                            </li>
-                        </ul>
+                        <div className="prose prose-slate font-sans dark:prose-invert max-w-none prose-p:leading-loose">
+                            <p className="mb-4">Bằng việc tải CV lên nền tảng, bạn cấp quyền cho hệ thống AI của chúng tôi xử lý hồ sơ thông qua các thuật toán:</p>
+                            <ul className="list-none space-y-3 mt-4 pl-0">
+                                <li className="flex items-start gap-3 m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2.5 shrink-0" />
+                                    <span><strong>Xử lý ngôn ngữ tự nhiên (NLP):</strong> Trích xuất tự động các kỹ năng chuyên môn, số năm kinh nghiệm từ các đoạn văn bản trong CV.</span>
+                                </li>
+                                <li className="flex items-start gap-3 m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2.5 shrink-0" />
+                                    <span><strong>Vectorization:</strong> Chuyển đổi dữ liệu hồ sơ thành các vector toán học (nhúng) để tối ưu hóa thuật toán tìm kiếm tương đồng (Semantic Search).</span>
+                                </li>
+                            </ul>
+                        </div>
                     </section>
 
                     <hr className="border-slate-100 dark:border-slate-800" />
@@ -154,9 +158,11 @@ export default function PrivacyPolicyPage() {
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg"><Share2 className="w-5 h-5" /></div>
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">3. Chia sẻ thông tin</h2>
                         </div>
-                        <p className="mb-4">Chúng tôi cam kết <strong className="text-blue-600 dark:text-blue-400 uppercase">KHÔNG</strong> thương mại hóa dữ liệu cá nhân của bạn dưới bất kỳ hình thức nào. Dữ liệu chỉ được chia sẻ trong 2 kịch bản duy nhất:</p>
+                        <div className="prose prose-slate font-sans dark:prose-invert max-w-none prose-p:leading-loose">
+                            <p className="mb-4">Chúng tôi cam kết <strong className="text-blue-600 dark:text-blue-400 uppercase">KHÔNG</strong> thương mại hóa dữ liệu cá nhân của bạn dưới bất kỳ hình thức nào. Dữ liệu chỉ được chia sẻ trong 2 kịch bản duy nhất:</p>
+                        </div>
 
-                        <div className="space-y-4 mt-4">
+                        <div className="space-y-4 mt-4 font-sans">
                             <div className="p-5 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-500/10 rounded-r-xl">
                                 <p className="font-bold text-slate-900 dark:text-white mb-2">1. Với Doanh nghiệp tuyển dụng</p>
                                 <p className="text-sm">Khi và chỉ khi bạn bấm nút "Ứng tuyển", Hồ sơ của bạn mới được cấp quyền truy cập cho Bộ phận HR của doanh nghiệp đó.</p>
@@ -176,7 +182,9 @@ export default function PrivacyPolicyPage() {
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg"><Server className="w-5 h-5" /></div>
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">4. Lưu trữ & Bảo vệ</h2>
                         </div>
-                        <p>Dữ liệu của bạn được mã hóa 2 chiều (End-to-end Encryption) và lưu trữ an toàn trên các trung tâm dữ liệu đạt chứng chỉ bảo mật quốc tế. Các dữ liệu mang tính nhạy cảm như Mật khẩu luôn được băm (Hash) bằng các thuật toán mạnh nhất hiện nay, ngay cả quản trị viên hệ thống cũng không thể đọc được.</p>
+                        <div className="prose prose-slate font-sans dark:prose-invert max-w-none prose-p:leading-loose">
+                            <p>Dữ liệu của bạn được mã hóa 2 chiều (End-to-end Encryption) và lưu trữ an toàn trên các trung tâm dữ liệu đạt chứng chỉ bảo mật quốc tế. Các dữ liệu mang tính nhạy cảm như Mật khẩu luôn được băm (Hash) bằng các thuật toán mạnh nhất hiện nay, ngay cả quản trị viên hệ thống cũng không thể đọc được.</p>
+                        </div>
                     </section>
 
                     <hr className="border-slate-100 dark:border-slate-800" />
@@ -186,17 +194,19 @@ export default function PrivacyPolicyPage() {
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg"><UserCog className="w-5 h-5" /></div>
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">5. Quyền kiểm soát Dữ liệu</h2>
                         </div>
-                        <p className="mb-4">Bạn là người chủ duy nhất của dữ liệu do mình cung cấp. Bạn được quyền:</p>
-                        <ul className="list-none space-y-3 mt-4">
-                            <li className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0" />
-                                <span>Chủ động ẩn hoặc xóa tệp CV khỏi thư viện cá nhân bất kỳ lúc nào.</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0" />
-                                <span>Yêu cầu Hủy toàn bộ tài khoản và xóa vĩnh viễn dữ liệu (Right to be Forgotten) thông qua mục Cài đặt Tài khoản.</span>
-                            </li>
-                        </ul>
+                        <div className="prose prose-slate font-sans dark:prose-invert max-w-none prose-p:leading-loose">
+                            <p className="mb-4">Bạn là người chủ duy nhất của dữ liệu do mình cung cấp. Bạn được quyền:</p>
+                            <ul className="list-none space-y-3 mt-4 pl-0">
+                                <li className="flex items-start gap-3 m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2.5 shrink-0" />
+                                    <span>Chủ động ẩn hoặc xóa tệp CV khỏi thư viện cá nhân bất kỳ lúc nào.</span>
+                                </li>
+                                <li className="flex items-start gap-3 m-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2.5 shrink-0" />
+                                    <span>Yêu cầu Hủy toàn bộ tài khoản và xóa vĩnh viễn dữ liệu (Right to be Forgotten) thông qua mục Cài đặt Tài khoản.</span>
+                                </li>
+                            </ul>
+                        </div>
                     </section>
 
                 </div>
