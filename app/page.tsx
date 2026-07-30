@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Job } from '@/types';
-import apiClient from '@/lib/api-client';
+import { jobService } from '@/features/job/job.service';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -27,7 +27,7 @@ export default function LandingPage() {
 
     const [jobs, setJobs] = useState<Job[]>([]);
     const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-    const [uniqueCompanies, setUniqueCompanies] = useState<string[]>([]);
+    const [uniqueCompanies, setUniqueCompanies] = useState<any[]>([]); // Sửa thành any[] để lưu Object
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
 
@@ -56,12 +56,11 @@ export default function LandingPage() {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [jobsRes, locationsRes] = await Promise.all([
-                    apiClient.get('/apply/jobs'),
+                const [data, locationsRes] = await Promise.all([
+                    jobService.getPublicJobs(),
                     systemService.getLocations()
                 ]);
 
-                const data = jobsRes.data;
                 setJobs(data);
                 setFilteredJobs(data);
 
@@ -71,11 +70,19 @@ export default function LandingPage() {
                 const workModes = [...new Set(data.map((job: any) => job.work_mode).filter(Boolean))] as string[];
                 const jobLevels = [...new Set(data.map((job: any) => job.job_level).filter(Boolean))] as string[];
                 const employmentTypes = [...new Set(data.map((job: any) => job.employment_type).filter(Boolean))] as string[];
-                const companies = [...new Set(data.map((job: any) => job.company_name).filter(Boolean))] as string[];
+                const companyNames = [...new Set(data.map((job: any) => job.company_name).filter(Boolean))] as string[];
                 const industries = [...new Set(data.map((job: any) => job.industry).filter(Boolean))] as string[];
 
-                setFilterOptions({ locations, workModes, jobLevels, employmentTypes, skills: [], companies, industries, educations: [] });
-                setUniqueCompanies(companies);
+                // Trích xuất công ty dưới dạng Object {id, name} để dùng cho CompanyMarquee
+                const uniqueCompsMap = new Map();
+                data.forEach((job: any) => {
+                    if (job.company_name && job.company_id && !uniqueCompsMap.has(job.company_id)) {
+                        uniqueCompsMap.set(job.company_id, { id: job.company_id, name: job.company_name });
+                    }
+                });
+
+                setFilterOptions({ locations, workModes, jobLevels, employmentTypes, skills: [], companies: companyNames, industries, educations: [] });
+                setUniqueCompanies(Array.from(uniqueCompsMap.values()));
             } catch (error) {
                 toast.error('Không thể tải dữ liệu hệ thống');
             } finally {
@@ -164,7 +171,7 @@ export default function LandingPage() {
     const displayHotJobs = jobs.filter(j => j.is_hot).slice(0, 3).length > 0 ? jobs.filter(j => j.is_hot).slice(0, 3) : jobs.slice(0, 3);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-800 dark:text-slate-300 font-sans selection:bg-blue-500/30 selection:text-blue-600 dark:selection:text-blue-200 overflow-x-hidden transition-colors duration-300">
+        <div className="min-h-screen bg-background dark:bg-slate-950 text-text dark:text-slate-300 font-sans selection:bg-primary-500/30 selection:text-primary-600 dark:selection:text-primary-200 overflow-x-hidden transition-colors duration-300">
             <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
             <HeroSection searchQuery={searchQuery} setSearchQuery={setSearchQuery} filters={filters} setFilters={setFilters} scrollToJobs={scrollToJobs} filterOptions={filterOptions} />
             <CompanyMarquee companies={uniqueCompanies} onSelectCompany={handleSelectCompany} />
@@ -173,7 +180,7 @@ export default function LandingPage() {
             <HotJobsSection jobs={displayHotJobs} onScrollToJobs={scrollToJobs} />
 
             {/* Khối All Jobs: Nền chính (Slate-50 / #050505) */}
-            <section className="bg-slate-50 dark:bg-[#050505] transition-colors">
+            <section className="bg-background dark:bg-slate-950 transition-colors">
                 <div id="jobs" ref={jobsSectionRef} className="max-w-7xl mx-auto py-20 px-4 space-y-8 scroll-mt-24">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white">Tất cả <span className="text-blue-600">Việc làm</span></h2>

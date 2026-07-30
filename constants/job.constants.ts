@@ -45,6 +45,7 @@ export const EMPLOYMENT_TYPES = [
     { value: 'Part-time', label: 'Bán thời gian (Part-time)' },
     { value: 'Contract', label: 'Hợp đồng (Contract)' },
     { value: 'Freelance', label: 'Tự do (Freelance)' },
+    { value: 'Internship', label: 'Thực tập (Internship)' },
     { value: 'Temporary', label: 'Thời vụ (Temporary)' },
 ];
 

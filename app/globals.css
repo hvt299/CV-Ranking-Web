@@ -3,23 +3,170 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Khai báo bảng màu Primary (Brand Color - Xanh dương) */
+  /* =========================
+     Brand Color (Primary)
+     ========================= */
+
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
   --color-primary-500: #3b82f6;
   --color-primary-600: #2563eb;
   --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
-  /* Giữ lại biến gốc của project để không lỗi component cũ */
-  --color-primary: #2563eb; 
+  /* Backward compatibility */
+  --color-primary: #2563eb;
 
-  /* Khai báo màu nhấn (Accent/Hot) dùng cho Job nổi bật */
-  --color-hot-500: #f59e0b;
-  --color-hot-600: #d97706;
 
-  /* Gắn font mặc định của Tailwind vào Be Vietnam Pro */
+  /* =========================
+     Accent Color (Hot / Featured)
+     ========================= */
+
+  --color-hot-50: #fff1f2;
+  --color-hot-100: #ffe4e6;
+  --color-hot-200: #fecdd3;
+  --color-hot-300: #fda4af;
+  --color-hot-400: #fb7185;
+  --color-hot-500: #f43f5e;
+  --color-hot-600: #e11d48;
+  --color-hot-700: #be123c;
+
+
+  /* =========================
+     Semantic Colors
+     ========================= */
+
+  /* Success */
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  /* Warning */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  /* Error */
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+
+  /* Info */
+  --color-info-50: #f0f9ff;
+  --color-info-100: #e0f2fe;
+  --color-info-500: #0ea5e9;
+  --color-info-600: #0284c7;
+  --color-info-700: #0369a1;
+
+
+  /* =========================
+     Surface / Neutral Tokens
+     ========================= */
+
+  --color-surface: #ffffff;
+  --color-surface-hover: #f8fafc;
+
+  --color-background: #f8fafc;
+
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
+
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+
+
+  /* =========================
+     Component Tokens
+     ========================= */
+
+  /* Card */
+  --color-card-bg: #ffffff;
+  --color-card-border: #e2e8f0;
+  --color-card-hover: #cbd5e1;
+
+  /* Button Primary */
+  --color-button-primary-bg: #2563eb;
+  --color-button-primary-hover: #1d4ed8;
+  --color-button-primary-text: #ffffff;
+
+  /* Badge */
+  --color-badge-hot-bg: #f43f5e;
+  --color-badge-hot-text: #ffffff;
+
+  --color-badge-success-bg: #d1fae5;
+  --color-badge-success-text: #047857;
+
+  --color-badge-warning-bg: #fef3c7;
+  --color-badge-warning-text: #b45309;
+
+  --color-badge-error-bg: #fee2e2;
+  --color-badge-error-text: #b91c1c;
+
+
+  /* Input */
+  --color-input-bg: #ffffff;
+  --color-input-border: #cbd5e1;
+  --color-input-focus: #2563eb;
+
+
+  /* =========================
+     Shadow System
+     ========================= */
+
+  --shadow-card: 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-card-hover: 0 20px 40px -15px rgb(15 23 42 / 0.15);
+  --shadow-hot: 0 20px 40px -15px rgb(244 63 94 / 0.25);
+  --shadow-modal: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+  --shadow-dropdown: 0 10px 25px -5px rgb(15 23 42 / 0.15);
+
+
+  /* =========================
+     Radius System
+     ========================= */
+
+  --radius-button: 0.75rem;
+  --radius-card: 1.25rem;
+  --radius-modal: 1.5rem;
+  --radius-pill: 9999px;
+
+
+  /* =========================
+     Transition System
+     ========================= */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+
+
+  /* =========================
+     Z-index System
+     ========================= */
+
+  --z-header: 50;
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+
+
+  /* =========================
+     Typography
+     ========================= */
+
   --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 }
+
 
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
@@ -33,53 +180,62 @@
 
   .w-65 {
     width: 16rem;
-    /* 256px */
   }
 
   .ml-65 {
     margin-left: 16rem;
-    /* 256px */
   }
 }
 
+
 body {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
-/* CKEditor 5 Dark Mode Overrides */
+
+/* =========================
+   CKEditor 5 Dark Mode
+   ========================= */
+
 .dark .ck-editor__editable_inline {
   background-color: #0f172a !important;
-  /* slate-900 */
   color: #f8fafc !important;
-  /* slate-50 */
   border-color: #334155 !important;
-  /* slate-700 */
   min-height: 150px;
+
   border-bottom-left-radius: 0.75rem !important;
   border-bottom-right-radius: 0.75rem !important;
 }
+
 
 .ck-editor__editable_inline {
   min-height: 150px;
+
   border-bottom-left-radius: 0.75rem !important;
   border-bottom-right-radius: 0.75rem !important;
 }
 
+
 .dark .ck.ck-toolbar {
   background-color: #1e293b !important;
-  /* slate-800 */
   border-color: #334155 !important;
+
   border-top-left-radius: 0.75rem !important;
   border-top-right-radius: 0.75rem !important;
 }
+
 
 .dark .ck.ck-button {
   color: #cbd5e1 !important;
 }
 
+
 .dark .ck.ck-button:hover {
   background-color: #334155 !important;
 }
+
 
 .dark .ck.ck-button.ck-on {
   background-color: #475569 !important;

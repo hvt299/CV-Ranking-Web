@@ -18,9 +18,9 @@ export default function GlobalError({
     }, [error]);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col items-center justify-center relative p-6 transition-colors">
-            <div className="absolute inset-0 bg-rose-500/5 dark:bg-rose-500/10 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-rose-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center relative p-6 transition-colors">
+            <div className="absolute inset-0 bg-hot-500/5 dark:bg-hot-500/10 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-hot-500/10 blur-[120px] rounded-full pointer-events-none" />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -28,8 +28,8 @@ export default function GlobalError({
                 transition={{ duration: 0.4 }}
                 className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 md:p-10 rounded-4xl shadow-2xl backdrop-blur-xl flex flex-col items-center text-center transition-colors"
             >
-                <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-                    <AlertOctagon className="w-8 h-8 text-rose-500" />
+                <div className="w-16 h-16 bg-hot-50 dark:bg-hot-500/10 border border-hot-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                    <AlertOctagon className="w-8 h-8 text-hot-500" />
                 </div>
 
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">
@@ -44,7 +44,7 @@ export default function GlobalError({
                     <div className="flex items-center gap-2 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <Terminal className="w-4 h-4" /> Log chi tiết
                     </div>
-                    <p className="text-xs font-mono text-rose-600 dark:text-rose-400 wrap-break-word line-clamp-3">
+                    <p className="text-xs font-mono text-hot-600 dark:text-hot-500 wrap-break-word line-clamp-3">
                         {error.message || "Lỗi ứng dụng nội bộ (Internal Application Error)"}
                     </p>
                 </div>
@@ -58,7 +58,7 @@ export default function GlobalError({
                     </Link>
                     <Link
                         href="/"
-                        className="flex-1 px-6 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2"
                     >
                         <Home className="w-4 h-4" /> Về Trang chủ
                     </Link>

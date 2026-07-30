@@ -2,43 +2,29 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { Sparkles, Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 import Typewriter from '@/components/ui/Typewriter';
 import Select from 'react-select';
-import { INDUSTRIES } from '@/constants/job.constants';
+import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
 
 const HERO_WORDS = ["Kỹ sư phần mềm", "Chuyên viên Marketing", "Giám đốc tài chính", "Nhà thiết kế UI/UX"];
 
 const staggerContainer: Variants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const fadeUp: Variants = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
 
-const heroSelectStyles = {
+const heroSelectStyles = (isDark = false) => ({
     control: (base: any) => ({ ...base, border: 'none', boxShadow: 'none', backgroundColor: 'transparent', cursor: 'text', minHeight: '44px' }),
     valueContainer: (base: any) => ({ ...base, padding: '0 8px' }),
-    input: (base: any) => ({ ...base, color: 'inherit', margin: 0, padding: 0 }),
-
-    // FIX: Đồng bộ tuyệt đối màu và độ đậm của "Tất cả Ngành" với Placeholder bên cạnh
-    singleValue: (base: any, state: any) => ({
-        ...base,
-        color: (!state.data || state.data.value === '') ? '#94a3b8' : 'currentColor', // #94a3b8 chính là text-slate-400
-        fontSize: '14px',
-        fontWeight: 500
-    }),
+    input: (base: any) => ({ ...base, color: isDark ? '#f8fafc' : '#0f172a', margin: 0, padding: 0 }),
+    singleValue: (base: any, state: any) => ({ ...base, color: (!state.data || state.data.value === '') ? '#94a3b8' : isDark ? '#f8fafc' : '#334155', fontSize: '14px', fontWeight: 500 }),
     placeholder: (base: any) => ({ ...base, color: '#94a3b8', fontSize: '14px', fontWeight: 500 }),
-
     indicatorSeparator: () => ({ display: 'none' }),
-    menu: (base: any) => ({ ...base, zIndex: 9999, borderRadius: '1rem', overflow: 'hidden', padding: '8px', backgroundColor: 'var(--tw-bg-opacity, white)', border: '1px solid #e2e8f0' }),
-    option: (base: any, state: any) => ({
-        ...base,
-        backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? '#eff6ff' : 'transparent',
-        color: state.isSelected ? 'white' : '#334155',
-        fontSize: '14px',
-        fontWeight: 500, // Đồng bộ độ đậm font-medium
-        cursor: 'pointer',
-        borderRadius: '0.5rem',
-        margin: '2px 0'
-    }),
-};
+    dropdownIndicator: (base: any) => ({ ...base, color: '#94a3b8' }),
+    menu: (base: any) => ({ ...base, zIndex: 9999, borderRadius: '1rem', overflow: 'hidden', padding: '8px', backgroundColor: isDark ? '#0f172a' : '#ffffff', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}` }),
+    menuList: (base: any) => ({ ...base, padding: 0 }),
+    option: (base: any, state: any) => ({ ...base, backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? isDark ? '#1e293b' : '#eff6ff' : 'transparent', color: state.isSelected ? '#fff' : isDark ? '#e2e8f0' : '#334155', fontSize: '14px', fontWeight: 500, cursor: 'pointer', borderRadius: '0.5rem', margin: '2px 0' })
+});
 
 interface HeroSectionProps {
     searchQuery: string; setSearchQuery: (val: string) => void;
@@ -47,6 +33,8 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ searchQuery, setSearchQuery, filters, setFilters, scrollToJobs, filterOptions }: HeroSectionProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     const [showLocationPopover, setShowLocationPopover] = useState(false);
     const [mainTab, setMainTab] = useState<'domestic' | 'foreign'>('domestic');
@@ -104,7 +92,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                     Ứng dụng mô hình LLM và Vector Database để loại bỏ định kiến, tự động khớp nối CV và Yêu cầu công việc với độ chính xác lên đến 98%.
                 </motion.p>
 
-                <motion.div variants={fadeUp} className="w-full max-w-5xl bg-white dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-2 rounded-3xl md:rounded-full flex flex-col md:flex-row gap-2 shadow-2xl relative">
+                <motion.div variants={fadeUp} className="w-full max-w-5xl bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700/80 p-2 rounded-3xl md:rounded-full flex flex-col md:flex-row gap-2 shadow-2xl dark:shadow-black/40 relative">
 
                     {/* 1. TỪ KHÓA */}
                     <div className="flex items-center flex-[1.35] min-w-72 px-4 py-3">
@@ -126,18 +114,11 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                         <div className="w-full text-slate-800 dark:text-white text-left">
                             <Select
                                 instanceId="hero-industry-select"
-                                options={[{ value: '', label: 'Tất cả Ngành' }, ...INDUSTRIES]}
+                                options={[{ value: '', label: 'Tất cả Ngành' }, ...GROUPED_INDUSTRIES]}
                                 value={INDUSTRIES.find(i => i.value === filters.industry) || { value: '', label: 'Tất cả Ngành' }}
                                 onChange={(selected: any) => setFilters({ ...filters, industry: selected?.value || '', skills: [] })}
                                 placeholder="Tất cả Ngành..."
-                                styles={{
-                                    ...heroSelectStyles,
-                                    menu: (base: any) => ({
-                                        ...heroSelectStyles.menu(base),
-                                        width: '320px',
-                                        minWidth: '320px',
-                                    }),
-                                }}
+                                styles={{ ...heroSelectStyles(isDark), menu: (base: any) => ({ ...heroSelectStyles(isDark).menu(base), width: '320px', minWidth: '320px' }) }}
                                 isSearchable={true}
                                 className="dark:text-white"
                             />
@@ -159,7 +140,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                         </div>
 
                         {showLocationPopover && (
-                            <div className="absolute top-[120%] left-0 w-87.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl z-50 overflow-hidden text-left flex flex-col">
+                            <div className="absolute top-[120%] left-0 w-87.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl z-50 overflow-hidden text-left flex flex-col">
                                 <div className="flex border-b border-slate-200 dark:border-slate-700">
                                     <button className={`flex-1 py-3 text-sm font-bold transition-colors ${mainTab === 'domestic' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`} onClick={() => setMainTab('domestic')}>Trong nước</button>
                                     <button className={`flex-1 py-3 text-sm font-bold transition-colors ${mainTab === 'foreign' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`} onClick={() => setMainTab('foreign')}>Nước ngoài</button>
@@ -204,7 +185,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                         )}
                     </div>
 
-                    <button onClick={scrollToJobs} className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-2xl md:rounded-full hover:bg-blue-700 transition-colors w-full md:w-auto shrink-0 flex items-center justify-center gap-2 shadow-md">
+                    <button onClick={scrollToJobs} className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-2xl md:rounded-full hover:bg-blue-700 dark:hover:bg-blue-500 transition-colors w-full md:w-auto shrink-0 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20">
                         Tìm việc
                     </button>
                 </motion.div>
