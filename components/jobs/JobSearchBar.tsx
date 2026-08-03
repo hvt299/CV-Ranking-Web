@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { Search, SlidersHorizontal, X, Save, Bookmark, Flame, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Flame, ChevronDown } from 'lucide-react';
 import Select from 'react-select';
 import { INDUSTRIES, GROUPED_INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES, SALARY_RANGES, EXPERIENCE_RANGES } from '@/constants/job.constants';
 import AsyncSelect from 'react-select/async';
@@ -147,7 +147,6 @@ export default function JobSearchBar({
     const [showPresets, setShowPresets] = useState(false);
     const [presetName, setPresetName] = useState('');
 
-    // --- STATES CHO POPOVER ĐỊA ĐIỂM ĐỒNG BỘ TỪ HERO SECTION ---
     const [showLocationPopover, setShowLocationPopover] = useState(false);
     const [mainTab, setMainTab] = useState<'domestic' | 'foreign'>('domestic');
     const [domesticVersion, setDomesticVersion] = useState<'new' | 'old'>('new');
@@ -181,9 +180,7 @@ export default function JobSearchBar({
             setShowLocationPopover(false);
         }
     };
-    // -------------------------------------------------------------
 
-    // Tích hợp Cross-filtering: Tìm kỹ năng và ưu tiên lọc theo Ngành nghề đang chọn
     const loadSkillOptions = async (inputValue: string) => {
         if (!inputValue) return [];
         try {
@@ -211,43 +208,30 @@ export default function JobSearchBar({
                 />
             </div>
 
-            {/* Các Tùy chọn Phụ trợ */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-4">
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-colors border ${showFilters ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800' : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                    >
+            {/* Các Tùy chọn Phụ trợ (Xếp dọc cho Sidebar) */}
+            <div className="flex flex-col gap-3 mt-4">
+                <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`w-full flex items-center justify-between px-5 py-3 text-sm font-bold rounded-xl transition-colors border ${showFilters ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                    <span className="flex items-center gap-2">
                         <SlidersHorizontal className="w-4 h-4" />
                         Bộ lọc chuyên sâu
-                        {activeFiltersCount > 0 && (
-                            <span className="bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">
-                                {activeFiltersCount}
-                            </span>
-                        )}
-                    </button>
-
-                    {/* Nút Toggle: Chỉ hiện Việc HOT */}
-                    <button
-                        onClick={() => onFiltersChange({ ...filters, isHot: !filters.isHot })}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-colors border ${filters.isHot ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                    >
-                        <Flame className={`w-4 h-4 ${filters.isHot ? 'text-rose-500' : 'text-slate-400'}`} />
-                        Việc HOT
-                    </button>
-
-                    {onSavePreset && activeFiltersCount > 0 && (
-                        <button onClick={() => setShowPresets(!showPresets)} className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-primary-600 hover:text-primary-700 border-primary-200 dark:border-primary-500/30 border rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
-                            <Save className="w-4 h-4" /> Lưu bộ lọc
-                        </button>
+                    </span>
+                    {activeFiltersCount > 0 && (
+                        <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">
+                            {activeFiltersCount}
+                        </span>
                     )}
+                </button>
 
-                    {savedPresets.length > 0 && (
-                        <button onClick={() => setShowPresets(!showPresets)} className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-emerald-600 hover:text-emerald-700 border border-emerald-200 dark:border-emerald-500/30 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors">
-                            <Bookmark className="w-4 h-4" /> Đã lưu ({savedPresets.length})
-                        </button>
-                    )}
-                </div>
+                <button
+                    onClick={() => onFiltersChange({ ...filters, isHot: !filters.isHot })}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-colors border ${filters.isHot ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                    <Flame className={`w-4 h-4 ${filters.isHot ? 'text-rose-500' : 'text-slate-400'}`} />
+                    Việc HOT
+                </button>
 
                 {activeFiltersCount > 0 && (
                     <button onClick={onClearFilters} className="flex w-full md:w-auto items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 rounded-xl transition-colors">
@@ -316,12 +300,12 @@ export default function JobSearchBar({
                 </div>
             )}
 
-            {/* Ma trận Bộ Lọc Nâng Cao (Grid) */}
+            {/* Danh sách Bộ Lọc Nâng Cao (Dọc) */}
             {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-4">
+                <div className="flex flex-col gap-5 mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-4">
 
                     {/* BỔ SUNG: CÔNG TY */}
-                    <div className="lg:col-span-1">
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Công ty</label>
                         <Select
                             options={[{ value: '', label: 'Tất cả Công ty' }, ...(filterOptions?.companies?.map((c: string) => ({ value: c, label: c })) || [])]}
@@ -333,8 +317,8 @@ export default function JobSearchBar({
                         />
                     </div>
 
-                    {/* NGÀNH NGHỀ (Đã dùng Nhóm) */}
-                    <div className="lg:col-span-1">
+                    {/* NGÀNH NGHỀ */}
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Ngành nghề</label>
                         <Select
                             options={[{ value: '', label: 'Tất cả Ngành' }, ...GROUPED_INDUSTRIES]}
@@ -346,7 +330,7 @@ export default function JobSearchBar({
                     </div>
 
                     {/* ĐỊA ĐIỂM (CUSTOM POPOVER) */}
-                    <div className="lg:col-span-1 relative" ref={popoverRef}>
+                    <div className="w-full relative" ref={popoverRef}>
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Địa điểm</label>
                         <div
                             className="w-full min-h-12 text-slate-900 dark:text-white bg-transparent border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 cursor-pointer flex items-center justify-between hover:border-primary-500 transition-colors"
@@ -404,28 +388,28 @@ export default function JobSearchBar({
                         )}
                     </div>
 
-                    <div className="lg:col-span-1">
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mức lương</label>
                         <Select options={SALARY_RANGES} value={SALARY_RANGES.find(i => i.value === filters.salaryRange) || SALARY_RANGES[0]} onChange={(selected: any) => onFiltersChange({ ...filters, salaryRange: selected?.value || '' })} styles={customSelectStyles(isDark)} />
                     </div>
 
-                    <div className="lg:col-span-1">
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Kinh nghiệm</label>
                         <Select options={EXPERIENCE_RANGES} value={EXPERIENCE_RANGES.find(i => i.value === filters.experienceRange) || EXPERIENCE_RANGES[0]} onChange={(selected: any) => onFiltersChange({ ...filters, experienceRange: selected?.value || '' })} styles={customSelectStyles(isDark)} />
                     </div>
 
-                    <div className="lg:col-span-1">
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Cấp bậc công việc</label>
                         <Select options={[{ value: '', label: 'Tất cả' }, ...JOB_LEVELS]} value={JOB_LEVELS.find(i => i.value === filters.jobLevel) || { value: '', label: 'Tất cả' }} onChange={(selected: any) => onFiltersChange({ ...filters, jobLevel: selected?.value || '' })} styles={customSelectStyles(isDark)} />
                     </div>
 
-                    <div className="lg:col-span-1">
+                    <div className="w-full">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Hình thức làm việc</label>
                         <Select options={[{ value: '', label: 'Tất cả' }, ...WORK_MODES]} value={WORK_MODES.find(i => i.value === filters.workMode) || { value: '', label: 'Tất cả' }} onChange={(selected: any) => onFiltersChange({ ...filters, workMode: selected?.value || '' })} styles={customSelectStyles(isDark)} />
                     </div>
 
                     {/* Multi-select Kỹ năng với Auto-complete AI & Cross-filter */}
-                    <div className="lg:col-span-4 border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
+                    <div className="w-full border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
                         <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                             Kỹ năng chuyên môn ưu tiên
                             {filters.industry && <span className="ml-2 text-primary-500 normal-case italic font-normal">(Đang lọc theo: {INDUSTRIES.find(i => i.value === filters.industry)?.label})</span>}

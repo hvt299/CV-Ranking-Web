@@ -1,5 +1,3 @@
-import { ApplicationStatus } from "@/types";
-
 export const INDUSTRIES = [
     { label: 'Kinh doanh/Bán hàng', value: 'sales' },
     { label: 'Marketing/PR/Quảng cáo', value: 'marketing' },
@@ -55,16 +53,6 @@ export const WORK_MODES = [
     { value: 'Remote', label: 'Làm từ xa (Remote)' },
 ];
 
-export const CV_STATUSES = [
-    { value: ApplicationStatus.NEW, label: 'Mới nộp', color: 'bg-blue-100 text-blue-700' },
-    { value: ApplicationStatus.REVIEWING, label: 'Đang xem xét', color: 'bg-amber-100 text-amber-700' },
-    { value: ApplicationStatus.INTERVIEW, label: 'Phỏng vấn', color: 'bg-purple-100 text-purple-700' },
-    { value: ApplicationStatus.OFFERED, label: 'Đề nghị (Offer)', color: 'bg-indigo-100 text-indigo-700' },
-    { value: ApplicationStatus.HIRED, label: 'Trúng tuyển', color: 'bg-emerald-100 text-emerald-700' },
-    { value: ApplicationStatus.REJECTED, label: 'Từ chối', color: 'bg-rose-100 text-rose-700' },
-    { value: ApplicationStatus.WITHDRAWN, label: 'Đã rút hồ sơ', color: 'bg-slate-100 text-slate-500' },
-];
-
 export const SALARY_RANGES = [
     { value: '', label: 'Tất cả mức lương' },
     { value: 'negotiable', label: 'Thỏa thuận' },
@@ -105,7 +93,6 @@ export const GENDER_OPTIONS = [
     { value: 'Nữ', label: 'Nữ' }
 ];
 
-// Tự động gom nhóm dựa trên data gốc, an toàn 100% không làm hỏng các form Create/Edit Job
 export const GROUPED_INDUSTRIES = [
     {
         label: "Khối Kinh doanh & Vận hành",

@@ -21,13 +21,12 @@ export default function PublicCompaniesPage() {
     const [isScrolled, setIsScrolled] = useState(false);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [sortBy, setSortBy] = useState('rating'); // rating, views, newest
+    const [sortBy, setSortBy] = useState('rating');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ industry: '', location: '', size: '' });
     const [filterOptions, setFilterOptions] = useState({ industries: [] as string[], locations: [] as any[], sizes: [] as string[] });
 
-    // Detect Scroll for Header
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
@@ -37,7 +36,6 @@ export default function PublicCompaniesPage() {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // Fetch danh sách công ty và hệ thống Location (để popover địa điểm chạy được)
                 const [compRes, locRes] = await Promise.all([
                     apiClient.get('/companies/public/list'),
                     systemService.getLocations()
@@ -46,11 +44,9 @@ export default function PublicCompaniesPage() {
                 const data = compRes.data;
                 setCompanies(data);
 
-                // Tự động build options từ danh sách trả về
                 const industries = [...new Set(data.map((c: Company) => c.industry).filter(Boolean))] as string[];
                 const sizes = [...new Set(data.map((c: Company) => c.size).filter(Boolean))] as string[];
 
-                // Cung cấp locRes trực tiếp cho filterOptions để Popover Location hoạt động
                 setFilterOptions({ industries, locations: locRes, sizes });
             } catch (error) {
                 toast.error('Không thể tải danh sách công ty');
@@ -122,7 +118,7 @@ export default function PublicCompaniesPage() {
             </div>
 
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-12 space-y-10">
-                {/* Search Bar mới */}
+                {/* Search Bar */}
                 <div className="relative z-20">
                     <CompanySearchBar
                         searchQuery={searchQuery}

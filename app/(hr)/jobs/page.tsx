@@ -3,214 +3,197 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-    Plus, Search, Edit2, Trash2, ExternalLink, Briefcase, Calendar,
-    Users, Building2, MapPin, Filter, DollarSign, Clock, Flame
+    Plus, Search, Edit2, Trash2, Briefcase, Calendar,
+    MapPin, Filter, Clock, Users, ArrowUpRight, Flame
 } from 'lucide-react';
-import { useJobList } from '@/features/job/useJob';
+import { useJobList, useJobRanking } from '@/features/job/useJob';
 import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+
+function JobCardItem({ job, deleteJob }: { job: any, deleteJob: (id: string) => void }) {
+    const { candidates, isLoading: isRankingLoading } = useJobRanking(job.id);
+    const applicantCount = candidates.length;
+
+    const isClosed = job.status === 'closed';
+    const isExpired = job.deadline && new Date(job.deadline).getTime() < new Date().getTime();
+    const isActive = !isClosed && !isExpired;
+
+    return (
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-xl hover:shadow-primary-500/10 transition-all flex flex-col group relative overflow-hidden">
+
+            {/* Status Header & Hot Badge */}
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isClosed ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-emerald-600' : isClosed ? 'text-rose-600' : 'text-amber-600'}`}>
+                            {isActive ? 'Đang mở' : isClosed ? 'Đã đóng' : 'Hết hạn'}
+                        </span>
+                    </div>
+
+                    {/* BADGE: JOB HOT */}
+                    {job.is_hot && (
+                        <div className="flex items-center gap-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ml-1 shadow-sm">
+                            <Flame className="w-3 h-3" /> Hot
+                        </div>
+                    )}
+                </div>
+
+                {/* Action Menu */}
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link href={`/jobs/edit/${job.id}`} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="Chỉnh sửa">
+                        <Edit2 className="w-4 h-4" />
+                    </Link>
+                    <button onClick={() => deleteJob(job.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Xóa chiến dịch">
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Info */}
+            <Link href={`/jobs/${job.id}`} className="block flex-1 group/title mb-4">
+                <h3 className="font-bold text-lg text-slate-800 dark:text-white line-clamp-2 leading-snug group-hover/title:text-primary-600 transition-colors" title={job.title}>
+                    {job.title}
+                </h3>
+                <div className="flex items-center gap-3 mt-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.job_level}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {job.employment_type}</span>
+                </div>
+            </Link>
+
+            {/* Footer Stats */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
+                <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Ứng viên</span>
+                        <span className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-1">
+                            <Users className="w-3.5 h-3.5 text-primary-500" />
+                            {isRankingLoading ? (
+                                <span className="w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin ml-1"></span>
+                            ) : (
+                                applicantCount
+                            )}
+                        </span>
+                    </div>
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Hạn nộp</span>
+                        <span className={`text-sm font-black flex items-center gap-1 ${isExpired ? 'text-amber-500' : 'text-slate-800 dark:text-white'}`}>
+                            <Calendar className="w-3.5 h-3.5" />
+                            {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'N/A'}
+                        </span>
+                    </div>
+                </div>
+
+                <Link href={`/jobs/${job.id}`} className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 transition-colors">
+                    <ArrowUpRight className="w-4 h-4" />
+                </Link>
+            </div>
+        </div>
+    );
+}
 
 export default function JobsListPage() {
     const { jobs, isLoading, deleteJob } = useJobList();
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterLevel, setFilterLevel] = useState('All');
-    const [filterMode, setFilterMode] = useState('All');
-    const [filterType, setFilterType] = useState('All');
+    const [filterLevel, setFilterLevel] = useState('');
+    const [filterType, setFilterType] = useState('');
+    const [filterMode, setFilterMode] = useState('');
 
     const filteredJobs = jobs.filter(job => {
-        const matchSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (job.company_name && job.company_name.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchLevel = filterLevel === 'All' || job.job_level === filterLevel;
-        const matchMode = filterMode === 'All' || job.work_mode === filterMode;
-        const matchType = filterType === 'All' || job.employment_type === filterType;
-
-        return matchSearch && matchLevel && matchMode && matchType;
+        const matchSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchLevel = filterLevel === '' || job.job_level === filterLevel;
+        const matchType = filterType === '' || job.employment_type === filterType;
+        const matchMode = filterMode === '' || job.work_mode === filterMode;
+        return matchSearch && matchLevel && matchType && matchMode;
     });
 
     return (
-        <div className="space-y-6 max-w-350 mx-auto pb-20">
-            {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 pb-20">
+            {/* KHỐI 1: HEADER & ACTIONS */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Chiến dịch tuyển dụng</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Quản lý các Job Description và phễu ứng viên.</p>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Chiến dịch Tuyển dụng</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các Job Description và phễu ứng viên của doanh nghiệp.</p>
                 </div>
                 <Link
                     href="/jobs/create"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/30"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20"
                 >
-                    <Plus className="w-5 h-5" /> Tạo chiến dịch mới
+                    <Plus className="w-4 h-4" /> Tạo chiến dịch mới
                 </Link>
             </div>
 
-            {/* BỘ LỌC (FILTERS) */}
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-4">
+            {/* KHỐI 2: FILTER & SEARCH */}
+            <div className="flex flex-col lg:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                         type="text"
-                        placeholder="Tìm kiếm theo Tên vị trí hoặc Công ty..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-700 dark:text-white font-medium focus:border-blue-500 transition-colors"
+                        placeholder="Tìm kiếm theo tên chiến dịch..."
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-700 dark:text-white text-sm font-medium focus:border-primary-500 transition-colors shadow-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="flex flex-wrap md:flex-nowrap gap-3">
+                <div className="flex flex-wrap sm:flex-nowrap gap-3">
                     <div className="relative min-w-35 flex-1">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            className="w-full pl-9 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-primary-500 shadow-sm"
                             value={filterLevel}
                             onChange={(e) => setFilterLevel(e.target.value)}
                         >
-                            <option value="All">Cấp bậc</option>
-                            {JOB_LEVELS.map(level => (
-                                <option key={level.value} value={level.value}>{level.value}</option>
-                            ))}
+                            <option value="">Tất cả Cấp bậc</option>
+                            {JOB_LEVELS.map(level => <option key={level.value} value={level.value}>{level.label}</option>)}
                         </select>
                     </div>
                     <div className="relative min-w-35 flex-1">
                         <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            className="w-full pl-9 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-primary-500 shadow-sm"
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
                         >
-                            <option value="All">Loại hình</option>
-                            {EMPLOYMENT_TYPES.map(type => (
-                                <option key={type.value} value={type.value}>{type.value}</option>
-                            ))}
+                            <option value="">Tất cả Loại hình</option>
+                            {EMPLOYMENT_TYPES.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
                         </select>
                     </div>
                     <div className="relative min-w-35 flex-1">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-blue-500"
+                            className="w-full pl-9 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-primary-500 shadow-sm"
                             value={filterMode}
                             onChange={(e) => setFilterMode(e.target.value)}
                         >
-                            <option value="All">Hình thức</option>
-                            {WORK_MODES.map(mode => (
-                                <option key={mode.value} value={mode.value}>{mode.value}</option>
-                            ))}
+                            <option value="">Tất cả Hình thức</option>
+                            {WORK_MODES.map(mode => <option key={mode.value} value={mode.value}>{mode.label}</option>)}
                         </select>
                     </div>
                 </div>
             </div>
 
-            {/* DANH SÁCH JOB CARDS */}
+            {/* KHỐI 3: DANH SÁCH JOB CARDS */}
             {isLoading ? (
-                <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
+                <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
             ) : filteredJobs.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredJobs.map((job) => {
-                        const isClosedManually = job.status === 'closed';
-                        const isExpired = job.deadline && new Date(job.deadline).getTime() < new Date().getTime();
-
-                        let badgeColor = 'bg-emerald-50 text-emerald-600';
-                        let stripeColor = 'bg-emerald-500';
-                        let statusText = 'ĐANG MỞ';
-
-                        if (isClosedManually) {
-                            badgeColor = 'bg-rose-50 text-rose-600';
-                            stripeColor = 'bg-rose-500';
-                            statusText = 'ĐÃ ĐÓNG';
-                        } else if (isExpired) {
-                            badgeColor = 'bg-amber-50 text-amber-600';
-                            stripeColor = 'bg-amber-500';
-                            statusText = 'HẾT HẠN';
-                        }
-
-                        return (
-                            <div key={job.id} className="group bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all flex flex-col justify-between h-full relative overflow-hidden">
-                                {/* Dải màu trạng thái */}
-                                <div className={`absolute top-0 left-0 w-full h-1 ${stripeColor}`}></div>
-
-                                {/* HIỆU ỨNG RUY BĂNG HOT JOB */}
-                                {job.is_hot && (
-                                    <div className="absolute -right-12 top-6 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 w-40 text-center shadow-lg rotate-45 z-10 flex items-center justify-center gap-1 tracking-widest uppercase pointer-events-none opacity-90">
-                                        <Flame className="w-3 h-3" /> HOT
-                                    </div>
-                                )}
-
-                                <div className="relative z-20 flex flex-col flex-1">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg ${badgeColor}`}>
-                                            {statusText}
-                                        </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20">
-                                            <Link href={`/jobs/edit/${job.id}`} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-amber-600 transition-colors shadow-sm" title="Chỉnh sửa">
-                                                <Edit2 className="w-4 h-4" />
-                                            </Link>
-                                            <button onClick={() => deleteJob(job.id)} className="p-1.5 bg-white/80 backdrop-blur-md hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-md text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Xóa chiến dịch">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-3 line-clamp-2 leading-tight" title={job.title}>{job.title}</h3>
-
-                                    <div className="space-y-3 mb-6">
-                                        {/* Công ty */}
-                                        <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 font-bold">
-                                            <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                                            <span className="line-clamp-2 leading-tight">{job.company_name}</span>
-                                        </div>
-
-                                        {/* Địa điểm & Lương */}
-                                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 shrink-0">
-                                                {/* FIX: Thay city bằng province_name hoặc country */}
-                                                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                                                {job.location?.country && job.location.country !== 'Việt Nam'
-                                                    ? job.location.country
-                                                    : (job.location?.province_name || 'Việt Nam')}
-                                            </div>
-                                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-black shrink-0 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
-                                                <DollarSign className="w-4 h-4" />
-                                                {job.salary ? (
-                                                    job.salary.min_salary && job.salary.max_salary
-                                                        ? `${(job.salary.min_salary / 1000000)} - ${(job.salary.max_salary / 1000000)} Tr`
-                                                        : 'Thỏa thuận'
-                                                ) : 'Thỏa thuận'}
-                                            </div>
-                                        </div>
-
-                                        {/* Các thẻ Tags: Level, Hình thức, SL */}
-                                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                                            <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1">
-                                                <Briefcase className="w-3 h-3" /> {job.job_level}
-                                            </span>
-                                            <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-blue-100 dark:border-blue-800/50">
-                                                <Clock className="w-3 h-3" /> {job.employment_type} • {job.work_mode}
-                                            </span>
-                                            <span className="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-purple-100 dark:border-purple-800/50">
-                                                <Users className="w-3 h-3" /> SL: {job.headcount || 1}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3 mt-auto">
-                                    <div className={`flex items-center gap-1.5 text-xs font-bold ${isExpired ? 'text-amber-500' : 'text-slate-500'} shrink-0`}>
-                                        <Calendar className="w-3.5 h-3.5 shrink-0" />
-                                        <span>{job.deadline ? `Hạn nộp: ${new Date(job.deadline).toLocaleDateString('vi-VN')}` : 'Không thời hạn'}</span>
-                                    </div>
-
-                                    <Link href={`/jobs/${job.id}`} className="flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors shrink-0">
-                                        Mở Leaderboard <ExternalLink className="w-4 h-4" />
-                                    </Link>
-                                </div>
-                            </div>
-                        );
-                    })}
+                    {filteredJobs.map((job) => (
+                        <JobCardItem key={job.id} job={job} deleteJob={deleteJob} />
+                    ))}
                 </div>
             ) : (
-                <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
-                    <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-slate-600 dark:text-slate-300">Không tìm thấy chiến dịch nào</h3>
-                    <p className="text-sm text-slate-500 mt-1">Hãy thử thay đổi bộ lọc hoặc tạo chiến dịch mới nhé.</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
+                        <Briefcase className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-800 dark:text-white">Chưa có chiến dịch nào</h3>
+                    <p className="text-sm text-slate-500 mt-1 mb-6 text-center max-w-sm">Bắt đầu thu hút nhân tài bằng cách tạo chiến dịch tuyển dụng đầu tiên của bạn.</p>
+                    <Link href="/jobs/create" className="px-6 py-2.5 bg-primary-600 text-white font-bold text-sm rounded-xl hover:bg-primary-700 transition-colors">
+                        + Tạo Job Mới
+                    </Link>
                 </div>
             )}
         </div>

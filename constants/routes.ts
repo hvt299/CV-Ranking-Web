@@ -9,7 +9,7 @@ export const ROUTES = {
     JOB_EDIT: (id: string) => `/jobs/edit/${id}`,
     JOB_DETAIL: (id: string) => `/jobs/${id}`,
     CANDIDATES: '/candidates',
-    APPLY: '/apply',
+    OVERVIEW: '/overview',
     MY_APPLICATIONS: '/my-applications',
     ADMIN_COMPANIES: '/admin/companies',
     ADMIN_USERS: '/admin/users'

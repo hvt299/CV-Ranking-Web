@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { Sparkles, Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
@@ -29,10 +30,11 @@ const heroSelectStyles = (isDark = false) => ({
 interface HeroSectionProps {
     searchQuery: string; setSearchQuery: (val: string) => void;
     filters: any; setFilters: (val: any) => void;
-    scrollToJobs: () => void; filterOptions?: any;
+    filterOptions?: any;
 }
 
-export default function HeroSection({ searchQuery, setSearchQuery, filters, setFilters, scrollToJobs, filterOptions }: HeroSectionProps) {
+export default function HeroSection({ searchQuery, setSearchQuery, filters, setFilters, filterOptions }: HeroSectionProps) {
+    const router = useRouter();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -74,6 +76,15 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
         }
     };
 
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (searchQuery.trim()) params.append('keyword', searchQuery.trim());
+        if (filters.industry) params.append('industry', filters.industry);
+        if (filters.location) params.append('location', filters.location);
+
+        router.push(`/careers?${params.toString()}`);
+    };
+
     return (
         <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 flex flex-col items-center justify-center min-h-[90vh]">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-50 dark:opacity-20 pointer-events-none" />
@@ -103,7 +114,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                             className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-white px-3 placeholder:text-slate-400 text-sm font-medium"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && scrollToJobs()}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         />
                     </div>
                     <div className="hidden md:block w-px h-8 bg-slate-200 dark:bg-slate-700 self-center" />
@@ -185,7 +196,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                         )}
                     </div>
 
-                    <button onClick={scrollToJobs} className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-2xl md:rounded-full hover:bg-blue-700 dark:hover:bg-blue-500 transition-colors w-full md:w-auto shrink-0 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20">
+                    <button onClick={handleSearch} className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-2xl md:rounded-full hover:bg-blue-700 dark:hover:bg-blue-500 transition-colors w-full md:w-auto shrink-0 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20">
                         Tìm việc
                     </button>
                 </motion.div>

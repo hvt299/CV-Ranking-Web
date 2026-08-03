@@ -1,31 +1,65 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Search, Building2, Users, Save, CheckCircle, Mail, Briefcase, ExternalLink, Globe, MapPin } from 'lucide-react';
+import { Shield, Search, Building2, Save, CheckCircle, Mail, Briefcase, Globe, MapPin, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { UserRole, CompanyStatus } from '@/types';
 import Select from 'react-select';
-import { INDUSTRIES } from '@/constants/job.constants';
+import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
+import { COMPANY_SIZES } from '@/constants/company.constants';
 import { ROLES } from '@/constants/user.constants';
 import { companyService } from '@/features/company/company.service';
+import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function SettingsPage() {
     const { user } = useAuth();
     const router = useRouter();
+    const [mainTab, setMainTab] = useState<'personal' | 'business'>('personal');
 
     if (!user) return null;
 
+    // LUỒNG DÀNH CHO ADMIN
     if (user.role === UserRole.ADMIN) {
-        return <AdminSettingsSection user={user} />;
+        return (
+            <div className="max-w-5xl mx-auto pb-20 space-y-6 animate-in fade-in duration-500">
+                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
+                    <button onClick={() => setMainTab('personal')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'personal' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
+                        <UserIcon className="w-4 h-4" /> Hồ sơ cá nhân
+                    </button>
+                    <button onClick={() => setMainTab('business')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'business' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
+                        <Shield className="w-4 h-4" /> Quản trị Hệ thống
+                    </button>
+                </div>
+                {mainTab === 'personal' ? <ProfileForm /> : <AdminSettingsSection user={user} />}
+            </div>
+        );
     }
 
+    // LUỒNG DÀNH CHO HR
     if (user.role === UserRole.HR_OWNER || user.role === UserRole.HR_MEMBER) {
-        return <CompanySettingsSection user={user} />;
+        const isOwner = user.role === UserRole.HR_OWNER;
+        return (
+            <div className="max-w-5xl mx-auto pb-20 space-y-6 animate-in fade-in duration-500">
+                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
+                    <button onClick={() => setMainTab('personal')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'personal' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
+                        <UserIcon className="w-4 h-4" /> Hồ sơ cá nhân
+                    </button>
+
+                    {/* CHỈ HR_OWNER MỚI THẤY TAB NÀY */}
+                    {isOwner && (
+                        <button onClick={() => setMainTab('business')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'business' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
+                            <Building2 className="w-4 h-4" /> Hồ sơ Doanh nghiệp
+                        </button>
+                    )}
+                </div>
+                {mainTab === 'personal' ? <ProfileForm /> : (isOwner ? <CompanySettingsSection user={user} /> : null)}
+            </div>
+        );
     }
 
-    router.push('/apply');
+    router.push('/overview');
     return null;
 }
 
@@ -73,23 +107,25 @@ function CompanySettingsSection({ user }: { user: any }) {
 
     useEffect(() => {
         companyService.getSettings().then(res => {
-            setCompany(res.data);
-            setTaxCode(res.data.tax_code || '');
+            const compData = res.data || res;
+            setCompany(compData);
+            setTaxCode(compData?.tax_code || '');
         }).catch(err => console.error(err));
 
         companyService.getMembers().then(res => {
-            setMembers(res.data);
+            const memData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+            setMembers(memData);
         }).catch(err => console.error(err));
     }, []);
 
     const handleLookupTax = async () => {
         if (!taxCode.trim()) return toast.error("Vui lòng nhập mã số thuế");
         try {
-            const res = await companyService.lookupTax(taxCode)
+            const res = await companyService.lookupTax(taxCode);
             setCompany((prev: any) => ({
                 ...prev,
-                name: res.data.company_name,
-                address: res.data.address
+                name: res.company_name || prev.name,
+                address: res.address || prev.address
             }));
             toast.success("Đã tìm thấy thông tin công ty từ VietQR!");
         } catch (e) {
@@ -195,7 +231,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                             <div>
                                 <label className="block text-sm font-semibold mb-2">Ngành nghề</label>
                                 <Select
-                                    options={INDUSTRIES}
+                                    options={GROUPED_INDUSTRIES}
                                     styles={customSelectStyles}
                                     placeholder="Tìm ngành nghề..."
                                     noOptionsMessage={() => "Không tìm thấy"}
@@ -209,10 +245,9 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 <label className="block text-sm font-semibold mb-2">Quy mô nhân sự</label>
                                 <select value={company.size || ''} onChange={e => setCompany({ ...company, size: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 cursor-pointer">
                                     <option value="">Chọn quy mô</option>
-                                    <option value="1-50">1-50 nhân sự</option>
-                                    <option value="51-200">51-200 nhân sự</option>
-                                    <option value="201-1000">201-1000 nhân sự</option>
-                                    <option value="1000+">Hơn 1000 nhân sự</option>
+                                    {COMPANY_SIZES.map(s => (
+                                        <option key={s.value} value={s.value}>{s.label}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -296,14 +331,17 @@ function CompanySettingsSection({ user }: { user: any }) {
                                         PDF, JPG, PNG • Tối đa 10MB
                                     </p>
 
-                                    <a
-                                        href={company.license_file_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-sm text-blue-600 hover:underline"
-                                    >
-                                        Xem file
-                                    </a>
+                                    {company.license_file_url && (
+                                        <a
+                                            href={company.license_file_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-sm text-blue-600 hover:underline mt-2 inline-block relative z-10"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            Xem file
+                                        </a>
+                                    )}
                                 </label>
                             </div>
                         </div>
@@ -370,7 +408,10 @@ function AdminSettingsSection({ user }: { user: any }) {
 
     useEffect(() => {
         companyService.getAdminUsers()
-            .then(res => setUsers(res.data))
+            .then(res => {
+                const usersData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+                setUsers(usersData);
+            })
             .catch(() => toast.error('Không thể tải danh sách người dùng'))
             .finally(() => setIsLoading(false));
     }, []);
@@ -423,7 +464,7 @@ function AdminSettingsSection({ user }: { user: any }) {
                                 <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="p-4 pl-6">
                                         <div className="flex items-center gap-3">
-                                            {u.avatar ? <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover" /> : <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500 uppercase">{u.full_name?.charAt(0)}</div>}
+                                            {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" /> : <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500 uppercase">{u.full_name?.charAt(0)}</div>}
                                             <div><p className="font-semibold text-sm text-slate-800 dark:text-white">{u.full_name}</p><p className="text-xs text-slate-400">{u.email}</p></div>
                                         </div>
                                     </td>

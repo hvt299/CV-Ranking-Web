@@ -202,7 +202,7 @@ function ApplicantRow({ name, role, score, date, status, jobId }: any) {
 
 function PositionCard({ title, reqSkills, count, jobId }: any) {
   return (
-    <Link href={`/jobs/${jobId}`} className="block p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-white dark:bg-[#0f172a]">
+    <Link href={`/jobs/${jobId}`} className="block p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-white dark:bg-text">
       <div className="flex justify-between items-start mb-3">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 pr-2">{title}</h3>
         <span className="text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-100 dark:border-blue-500/20 shrink-0">

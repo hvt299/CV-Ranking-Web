@@ -13,7 +13,6 @@ interface PublicHeaderProps {
     isScrolled?: boolean;
 }
 
-// Cấu trúc Menu đa cấp
 const NAV_ITEMS = [
     { name: 'Việc làm', href: '/careers', icon: Search },
     { name: 'Công ty', href: '/companies', icon: Building2 },
@@ -46,12 +45,10 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
 
     useEffect(() => setMounted(true), []);
 
-    // Tự động đóng Mobile Menu khi đổi route
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
-    // Ngăn chặn cuộn trang khi mở Mobile Menu
     useEffect(() => {
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
@@ -61,9 +58,8 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileMenuOpen]);
 
-    const systemLink = user?.role === 'applicant' ? '/apply' : '/dashboard';
+    const systemLink = user?.role === 'applicant' ? '/overview' : '/dashboard';
 
-    // Xác định nền của Header (Solid khi cuộn hoặc khi mở Menu Mobile)
     const headerBg = isScrolled || isMobileMenuOpen
         ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 py-3 shadow-sm'
         : 'bg-transparent border-transparent py-5';

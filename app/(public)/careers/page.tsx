@@ -7,12 +7,105 @@ import { systemService } from '@/features/system/system.service';
 import { Job } from '@/types';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
-import { Briefcase, Loader2, LayoutGrid, List, Flame, XCircle } from 'lucide-react';
+import { Briefcase, Loader2, LayoutGrid, List, Flame, XCircle, ChevronLeft, ChevronRight, MapPin, Building2, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuth } from '@/context/AuthContext';
+import { formatSalaryRange } from '@/utils/format';
+import Link from 'next/link';
+
+const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
+    <Link
+        href={`/careers/${job.id}`}
+        className="group block relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-orange-100 dark:border-orange-500/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 overflow-hidden"
+    >
+        <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-2xl group-hover:bg-orange-500/20 transition-colors pointer-events-none" />
+
+        <div className="relative z-10 flex gap-4">
+            <div className="w-16 h-16 rounded-xl bg-white border border-slate-100 dark:border-slate-800 p-1 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                {job.company_logo ? (
+                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
+                ) : (
+                    <Building2 className="w-8 h-8 text-slate-300" />
+                )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1 gap-2">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                        {job.title}
+                    </h3>
+                    <span className="flex items-center gap-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                        <Flame className="w-3 h-3" /> Hot
+                    </span>
+                </div>
+
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate mb-3">
+                    {job.company_name || 'Công ty Ẩn danh'}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold mt-auto">
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
+                        <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
+                    </span>
+                    {(job.location?.province_name || job.location?.country) && (
+                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md truncate max-w-30">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                                {job.location.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location.province_name}
+                            </span>
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    </Link>
+);
+
+const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
+    <Link
+        href={`/careers/${job.id}`}
+        className="group flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-md hover:shadow-blue-500/5"
+    >
+        <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            {job.company_logo ? (
+                <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
+            ) : (
+                <Building2 className="w-6 h-6 text-slate-300" />
+            )}
+        </div>
+
+        <div className="flex-1 min-w-0 py-1">
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                {job.title}
+            </h3>
+
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mb-2">
+                {job.company_name || 'Công ty Ẩn danh'}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold mt-1">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
+                    <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
+                </span>
+                {(job.location?.province_name || job.location?.country) && (
+                    <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md truncate max-w-30">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">
+                            {job.location.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location.province_name}
+                        </span>
+                    </span>
+                )}
+            </div>
+        </div>
+
+        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+            <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        </div>
+    </Link>
+);
 
 export default function PublicJobsPage() {
     const router = useRouter();
@@ -36,7 +129,6 @@ export default function PublicJobsPage() {
         locations: [] as any[], workModes: [] as string[], jobLevels: [] as string[], employmentTypes: [] as string[], skills: [] as string[], companies: [] as string[], industries: [] as string[], educations: [] as string[]
     });
 
-    // Detect Scroll for Header
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
@@ -140,7 +232,6 @@ export default function PublicJobsPage() {
     };
 
     const handleCardClick = (e: React.MouseEvent, jobId: string) => {
-        // Chỉ trigger khi người dùng KHÔNG bấm vào Nút "Ứng tuyển" hoặc Nút "Mở JD"
         if ((e.target as Element).closest('button')) return;
         router.push(`/careers/${jobId}`);
     };
@@ -170,109 +261,185 @@ export default function PublicJobsPage() {
                 </div>
             </div>
 
-            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-12 space-y-10">
-                <div className="relative z-20">
-                    <JobSearchBar
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        filters={filters}
-                        onFiltersChange={(newFilters: any) => setFilters(newFilters)}
-                        filterOptions={filterOptions}
-                        onClearFilters={clearFilters}
-                        activeFiltersCount={activeFiltersCount}
-                    />
-                </div>
+            <main className="flex-1 max-w-350 mx-auto px-4 sm:px-6 w-full py-12 flex flex-col gap-20">
 
-                {/* Khu vực Điều hướng Lọc Phụ & Chế độ xem */}
-                <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-text p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                        Tìm thấy <span className="text-primary-600 dark:text-primary-400">{filteredJobs.length}</span> vị trí phù hợp
-                    </span>
+                {/* ================= PHẦN 1: BỘ LỌC & KẾT QUẢ TÌM KIẾM (Layout 25% - 75%) ================= */}
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
-                            <label className="font-bold hidden sm:block">Sắp xếp:</label>
-                            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer">
-                                <option value="newest">Mới nhất</option>
-                                <option value="oldest">Cũ nhất</option>
-                                <option value="salary_high">Lương cao nhất</option>
-                                <option value="salary_low">Lương thấp nhất</option>
-                            </select>
-                        </div>
-                        <div className="flex bg-slate-100 dark:bg-[#1e293b] p-1 rounded-xl">
-                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Lưới">
-                                <LayoutGrid className="w-5 h-5" />
-                            </button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Danh sách">
-                                <List className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    {/* CỘT TRÁI (25%): Bộ lọc dính (Sticky Sidebar) */}
+                    <aside className="w-full lg:w-1/4 shrink-0 lg:sticky lg:top-24">
+                        <JobSearchBar
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            filters={filters}
+                            onFiltersChange={(newFilters: any) => setFilters(newFilters)}
+                            filterOptions={filterOptions}
+                            onClearFilters={clearFilters}
+                            activeFiltersCount={activeFiltersCount}
+                        />
+                    </aside>
 
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-primary-500">
-                        <Loader2 className="w-10 h-10 animate-spin mb-4" />
-                        <p className="text-slate-500 font-medium">Đang tải việc làm...</p>
-                    </div>
-                ) : filteredJobs.length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-text rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
-                        <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
-                        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">Chưa tìm thấy việc làm phù hợp</h3>
-                        <p className="text-slate-500 font-medium mb-6">Thử giảm bớt các tiêu chí lọc hoặc dùng từ khóa chung chung hơn.</p>
-                        <button onClick={clearFilters} className="mt-4 px-6 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-bold hover:bg-blue-100 transition-colors">
-                            Xóa toàn bộ bộ lọc
-                        </button>
-                    </div>
-                ) : (
-                    <div className="space-y-12">
-                        {/* DANH SÁCH HOT JOBS */}
-                        {hotJobs.length > 0 && (
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                                    <Flame className="w-6 h-6 text-rose-500" />
-                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">Việc Làm HOT</h2>
+                    {/* CỘT PHẢI (75%): Kết quả lọc */}
+                    <div className="w-full lg:w-3/4 flex flex-col gap-6">
+
+                        {/* Header điều hướng (ViewMode, Sort) */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                                Tìm thấy <span className="text-blue-600 dark:text-blue-400">{filteredJobs.length}</span> vị trí phù hợp
+                            </span>
+
+                            <div className="flex items-center gap-4">
+                                {activeFiltersCount > 0 && (
+                                    <button onClick={clearFilters} className="text-rose-500 font-bold hover:underline hidden md:block">
+                                        Xóa ({activeFiltersCount}) bộ lọc
+                                    </button>
+                                )}
+                                <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
+                                    <label className="font-bold hidden sm:block">Sắp xếp:</label>
+                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer">
+                                        <option value="newest">Mới nhất</option>
+                                        <option value="oldest">Cũ nhất</option>
+                                        <option value="salary_high">Lương cao nhất</option>
+                                        <option value="salary_low">Lương thấp nhất</option>
+                                    </select>
                                 </div>
-                                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                                    {hotJobs.map(job => (
-                                        <div
-                                            key={job.id}
-                                            onClick={(e) => handleCardClick(e, job.id!)}
-                                            className="cursor-pointer group bg-white dark:bg-text rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-rose-400 dark:hover:border-slate-400 hover:-translate-y-1 transition-all shadow-sm overflow-hidden"
-                                        >
-                                            <div className="pointer-events-auto h-full">
-                                                <JobCard job={job} isPublic={true} />
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                    <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Lưới">
+                                        <LayoutGrid className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Danh sách">
+                                        <List className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* DANH SÁCH REGULAR JOBS */}
-                        {regularJobs.length > 0 && (
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                                    <Briefcase className="w-6 h-6 text-blue-500" />
-                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">Việc Làm Mới Nhất</h2>
-                                </div>
-                                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                                    {regularJobs.map(job => (
-                                        <div
-                                            key={job.id}
-                                            onClick={(e) => handleCardClick(e, job.id!)}
-                                            className="cursor-pointer group bg-white dark:bg-text rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:-translate-y-1 transition-all shadow-sm overflow-hidden"
-                                        >
-                                            <div className="pointer-events-auto h-full">
-                                                <JobCard job={job} isPublic={true} />
-                                            </div>
-                                        </div>
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-blue-500">
+                                <Loader2 className="w-10 h-10 animate-spin mb-4" />
+                                <p className="text-slate-500 font-medium">Đang tải việc làm...</p>
+                            </div>
+                        ) : filteredJobs.length === 0 ? (
+                            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
+                                <XCircle className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4" />
+                                <p className="text-slate-500 font-medium mb-4">Không tìm thấy việc làm phù hợp với tiêu chí lọc.</p>
+                                <button onClick={clearFilters} className="px-6 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-bold hover:bg-blue-100 transition-colors">
+                                    Xóa bộ lọc
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Grid kết quả lọc */}
+                                <div className={`grid gap-5 ${viewMode === 'grid' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+                                    {filteredJobs.map(job => (
+                                        <JobCard key={job.id} job={job} />
                                     ))}
                                 </div>
-                            </div>
+
+                                {/* Phân trang Kết quả lọc */}
+                                <div className="mt-6 flex items-center justify-center gap-4">
+                                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">1 / 5</span>
+                                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><ChevronRight className="w-5 h-5" /></button>
+                                </div>
+                            </>
                         )}
+                    </div>
+                </div>
+
+                {/* ================= PHẦN 2: VIỆC LÀM HOT (Full Width 100%) ================= */}
+                {jobs.filter(j => j.is_hot).length > 0 && (
+                    <div className="space-y-6 w-full border-t border-slate-200 dark:border-slate-800 pt-16">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                            <div>
+                                <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
+                                    Cơ hội{' '}
+                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-rose-500">
+                                        Việc Làm Hot
+                                    </span>
+                                </h2>
+                                <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
+                                    Những vị trí có mức đãi ngộ tốt nhất đang chờ đón bạn.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+                                    <span>Sắp xếp theo:</span>
+                                    <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-orange-500">
+                                        <option value="default">Mặc định</option>
+                                        <option value="salary_desc">Lương cao nhất</option>
+                                        <option value="latest">Mới cập nhật</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {jobs.filter(j => j.is_hot).slice(0, 9).map(job => (
+                                <HotJobItem key={job.id} job={job} />
+                            ))}
+                        </div>
+
+                        <div className="mt-10 flex items-center justify-center gap-4">
+                            <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                                <span className="text-orange-600 dark:text-orange-500">1</span> / 10 trang
+                            </div>
+                            <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 )}
+
+                {/* ================= PHẦN 3: VIỆC LÀM MỚI NHẤT (Full Width 100%) ================= */}
+                <div className="space-y-6 w-full border-t border-slate-200 dark:border-slate-800 pt-16">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                        <div>
+                            <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
+                                Khám phá{' '}
+                                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500">
+                                    Việc Làm Mới Nhất
+                                </span>
+                            </h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
+                                Cập nhật liên tục hàng ngàn cơ hội từ các doanh nghiệp hàng đầu.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+                                <span>Sắp xếp theo:</span>
+                                <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-blue-500">
+                                    <option value="latest">Mới nhất</option>
+                                    <option value="salary_desc">Lương cao nhất</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {[...jobs].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 9).map(job => (
+                            <LatestJobItem key={job.id} job={job} />
+                        ))}
+                    </div>
+
+                    <div className="mt-10 flex items-center justify-center gap-4">
+                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                            <span className="text-blue-600 dark:text-blue-400">1</span> / 50 trang
+                        </div>
+                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
             </main>
 
             <PublicFooter />

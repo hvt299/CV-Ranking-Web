@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setIsAuthenticated(true);
 
                 if (fetchedUser.role === UserRole.APPLICANT) {
-                    router.push('/apply');
+                    router.push('/overview');
                 } else if (
                     fetchedUser.role === UserRole.HR_OWNER ||
                     fetchedUser.role === UserRole.HR_MEMBER ||
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 ) {
                     router.push('/dashboard');
                 } else {
-                    router.push('/apply');
+                    router.push('/overview');
                 }
             })
             .catch(() => {

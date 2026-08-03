@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
 
     const isProtected = [
         '/dashboard', '/jobs', '/candidates', '/analytics', '/interviews',
-        '/messages', '/settings', '/apply', '/my-applications', '/profile',
+        '/messages', '/settings', '/overview', '/my-applications', '/profile',
         '/help', '/admin'
     ].some(r => pathname === r || pathname.startsWith(`${r}/`));
 
@@ -40,13 +40,13 @@ export function middleware(request: NextRequest) {
             if (role === UserRole.ADMIN || role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) {
                 return NextResponse.redirect(new URL('/dashboard', request.url));
             } else {
-                return NextResponse.redirect(new URL('/apply', request.url));
+                return NextResponse.redirect(new URL('/overview', request.url));
             }
         }
 
         if (pathname.startsWith('/admin')) {
             if (role !== UserRole.ADMIN) {
-                const fallbackUrl = (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) ? '/dashboard' : '/apply';
+                const fallbackUrl = (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) ? '/dashboard' : '/overview';
                 return NextResponse.redirect(new URL(fallbackUrl, request.url));
             }
             return NextResponse.next();
@@ -60,11 +60,11 @@ export function middleware(request: NextRequest) {
         const isTryingToAccessHrRoute = hrOnlyRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
 
         if (role === UserRole.APPLICANT && isTryingToAccessHrRoute) {
-            return NextResponse.redirect(new URL('/apply', request.url));
+            return NextResponse.redirect(new URL('/overview', request.url));
         }
 
         const isHrRole = role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER;
-        if (isHrRole && (pathname.startsWith('/apply') || pathname.startsWith('/my-applications'))) {
+        if (isHrRole && (pathname.startsWith('/overview') || pathname.startsWith('/my-applications'))) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 

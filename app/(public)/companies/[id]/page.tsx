@@ -7,11 +7,11 @@ import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import JobCard from '@/components/jobs/JobCard';
 import { useAuth } from '@/context/AuthContext';
 import apiClient from '@/lib/api-client';
 import { jobService } from '@/features/job/job.service';
 import { Company, Job } from '@/types';
+import { INDUSTRIES } from '@/constants/job.constants';
 
 export default function PublicCompanyDetailPage() {
     const params = useParams();
@@ -23,7 +23,6 @@ export default function PublicCompanyDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    // Detect Scroll for Header
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
@@ -34,15 +33,13 @@ export default function PublicCompanyDetailPage() {
         if (params.id) {
             const fetchData = async () => {
                 try {
-                    // Fetch song song Thông tin công ty & Danh sách việc làm Public
                     const [compRes, jobsRes] = await Promise.all([
                         apiClient.get(`/companies/public/${params.id}`),
-                        jobService.getPublicJobs() // Lấy tất cả việc làm public
+                        jobService.getPublicJobs()
                     ]);
 
                     setCompany(compRes.data);
 
-                    // Lọc ra các Job thuộc về công ty này
                     const jobsForThisCompany = jobsRes.filter((j: Job) => j.company_id === params.id);
                     setCompanyJobs(jobsForThisCompany);
 
@@ -60,7 +57,7 @@ export default function PublicCompanyDetailPage() {
         return (
             <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#050505] transition-colors">
                 <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
-                <div className="flex-1 flex flex-col items-center justify-center text-indigo-500">
+                <div className="flex-1 flex flex-col items-center justify-center text-blue-500">
                     <Loader2 className="w-12 h-12 animate-spin mb-4" />
                     <p className="text-slate-500 font-medium">Đang tải hồ sơ doanh nghiệp...</p>
                 </div>
@@ -118,7 +115,7 @@ export default function PublicCompanyDetailPage() {
                     <div className="px-6 md:px-10 pb-8 relative">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div className="flex flex-col md:flex-row items-center md:items-end gap-6 w-full flex-1 min-w-0">
-                                {/* Logo nổi - Chỉ kéo Logo lên để không ảnh hưởng Tên công ty */}
+                                {/* Logo nổi */}
                                 <div className="w-32 h-32 md:w-40 md:h-40 bg-white dark:bg-slate-900 border-4 border-white dark:border-slate-900 rounded-3xl shadow-lg flex items-center justify-center overflow-hidden shrink-0 z-10 relative -mt-16 md:-mt-20">
                                     {company.logo_url ? (
                                         <img src={company.logo_url} alt="Logo" className="w-full h-full object-contain p-2" />
@@ -220,7 +217,9 @@ export default function PublicCompanyDetailPage() {
                                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl shrink-0"><Briefcase className="w-4 h-4" /></div>
                                         <div>
                                             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-0.5">Ngành nghề</p>
-                                            <p className="font-bold text-slate-700 dark:text-slate-200">{company.industry}</p>
+                                            <p className="font-bold text-slate-700 dark:text-slate-200">
+                                                {INDUSTRIES.find(i => i.value === company?.industry)?.label || 'Đang cập nhật'}
+                                            </p>
                                         </div>
                                     </div>
                                 )}
@@ -277,7 +276,7 @@ export default function PublicCompanyDetailPage() {
                         {/* Box 2: Chiến dịch tuyển dụng (Mini Job List) */}
                         <div className="bg-white dark:bg-text p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
                             <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                <Zap className="w-4 h-4 text-amber-500" /> Đang tuyển dụng ({companyJobs.length})
+                                <Zap className="w-4 h-4 text-amber-500" /> Đang mở ({companyJobs.length})
                             </h3>
 
                             {companyJobs.length > 0 ? (

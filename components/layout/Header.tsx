@@ -34,16 +34,6 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
     }, []);
 
     const role = user?.role || UserRole.APPLICANT;
-    const isApplicant = role === UserRole.APPLICANT;
-
-    const getPageTitle = () => {
-        switch (pathname) {
-            case '/apply': return 'Tìm việc làm';
-            case '/my-applications': return 'Hồ sơ của tôi';
-            case '/profile': return 'Thông tin cá nhân';
-            default: return 'Ứng tuyển';
-        }
-    };
 
     const getRoleDisplayName = () => {
         if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) return 'Nhà tuyển dụng';
@@ -52,7 +42,7 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
     };
 
     return (
-        <header className="h-20 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300">
+        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 transition-colors duration-300">
 
             {/* ================= TRÁI: MOBILE MENU TONGGLE & TITLE/SEARCH ================= */}
             <div className="flex items-center gap-4">
@@ -63,20 +53,14 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                     <Menu className="w-6 h-6" />
                 </button>
 
-                {isApplicant ? (
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white hidden sm:block">
-                        {getPageTitle()}
-                    </h2>
-                ) : (
-                    <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all w-80">
-                        <Search className="w-5 h-5 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm..."
-                            className="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 w-full placeholder:text-slate-400"
-                        />
-                    </div>
-                )}
+                <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 dark:focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all w-80">
+                    <Search className="w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm..."
+                        className="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 w-full placeholder:text-slate-400"
+                    />
+                </div>
             </div>
 
             {/* ================= PHẢI: TOOLS & PROFILE ================= */}
@@ -86,7 +70,7 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                 {mounted && (
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="p-2.5 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
+                        className="p-2.5 text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-xl transition-colors"
                         title="Chuyển đổi giao diện"
                     >
                         {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -94,7 +78,7 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                 )}
 
                 {/* 2. Chuông Thông Báo */}
-                {isApplicant && <NotificationBell />}
+                <NotificationBell />
 
                 <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1"></div>
 
@@ -128,12 +112,12 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'email@example.com'}</p>
                             </div>
 
-                            <Link href="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <Link href="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                 <User className="w-4 h-4" /> Hồ sơ của bạn
                             </Link>
 
-                            <Link href={isApplicant ? "/apply" : "/dashboard"} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <Home className="w-4 h-4" /> {isApplicant ? 'Về trang tìm việc' : 'Về trang chủ'}
+                            <Link href="/" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <Home className="w-4 h-4" /> Về trang chủ
                             </Link>
 
                             <div className="h-px bg-slate-100 dark:bg-slate-700/50 my-2"></div>

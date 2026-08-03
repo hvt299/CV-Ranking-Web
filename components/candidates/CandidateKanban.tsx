@@ -23,7 +23,6 @@ interface CandidateKanbanProps {
     onPreviewCV: (url: string, filename: string) => void;
 }
 
-// Hàm đồng bộ nguyên nhân trừ điểm (giữ nguyên logic cũ)
 const getPenaltyReasons = (cvInfo: any, breakdown: any) => {
     const reasons = [];
     const fraudReasons = breakdown?.fraud_analysis?.reasons || [];
@@ -199,7 +198,7 @@ function KanbanColumn({
                 <span className="bg-white/50 px-2 py-0.5 rounded-lg text-xs">{candidates.length}</span>
             </div>
 
-            {/* Vùng thả — có thể overflow-y-auto thoải mái, dnd-kit không quan tâm nested scroll */}
+            {/* Vùng thả */}
             <div
                 ref={setNodeRef}
                 className={`flex-1 p-2 overflow-y-auto custom-scrollbar transition-colors rounded-b-2xl min-h-37.5 ${isOver ? 'bg-slate-100 dark:bg-slate-800' : ''
@@ -213,7 +212,6 @@ function KanbanColumn({
     );
 }
 
-/* ---------- Component chính ---------- */
 export default function CandidateKanban({ candidates, onStatusChange, onPreviewCV }: CandidateKanbanProps) {
     const [activeCv, setActiveCv] = useState<any | null>(null);
 
@@ -259,7 +257,7 @@ export default function CandidateKanban({ candidates, onStatusChange, onPreviewC
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
-                {/* Board cuộn ngang + mỗi cột cuộn dọc — thoải mái, không có warning nào cả */}
+                {/* Board cuộn ngang + mỗi cột cuộn dọc */}
                 <div className="flex gap-4 overflow-x-auto overflow-y-hidden items-start h-[calc(100vh-200px)] hide-scroll pb-2">
                     {KANBAN_COLUMNS.map(column => {
                         const columnCandidates = candidates.filter(c => (c.status || ApplicationStatus.NEW) === column.id);

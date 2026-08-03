@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCircle2, XCircle, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
+import { Bell, X, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
-import { Notification, NotificationReadStatus, ApplicationStatus, UserRole } from '@/types';
+import { Notification, NotificationReadStatus, ApplicationStatus, UserRole, NotificationType } from '@/types';
 import { applicationService } from '@/features/application/application.service';
-import { NOTIFICATION_COLORS, NOTIFICATION_ICONS, STATUS_CONFIG } from "@/constants/application.constants"
+import { NOTIFICATION_CONFIG, APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
 
 export default function NotificationBell() {
     const { user, isAuthenticated, loading } = useAuth();
@@ -71,12 +71,8 @@ export default function NotificationBell() {
         }
     };
 
-    const getNotificationIcon = (type: string) => {
-        return NOTIFICATION_ICONS[type as keyof typeof NOTIFICATION_ICONS] || Briefcase;
-    };
-
     const getStatusText = (status: string) => {
-        return STATUS_CONFIG[status as ApplicationStatus]?.label || status;
+        return APPLICATION_STATUS_CONFIG[status as ApplicationStatus]?.label || status;
     };
 
     return (
@@ -125,8 +121,9 @@ export default function NotificationBell() {
                         ) : (
                             <div className="divide-y divide-slate-200 dark:divide-slate-700">
                                 {notifications.map((notification) => {
-                                    const IconComponent = getNotificationIcon(notification.type);
-                                    const colorClass = NOTIFICATION_COLORS[notification.type as keyof typeof NOTIFICATION_COLORS] || NOTIFICATION_COLORS.info;
+                                    const notifConfig = NOTIFICATION_CONFIG[notification.type as NotificationType] || NOTIFICATION_CONFIG[NotificationType.INFO];
+                                    const IconComponent = notifConfig.icon;
+                                    const colorClass = notifConfig.color;
 
                                     return (
                                         <div
@@ -157,8 +154,8 @@ export default function NotificationBell() {
 
                                                             {notification.application_status_snapshot && (() => {
                                                                 const statusKey = notification.application_status_snapshot as ApplicationStatus;
-                                                                const statusInfo = STATUS_CONFIG[statusKey];
-                                                                const badgeColor = statusInfo?.colorClass || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+                                                                const statusInfo = APPLICATION_STATUS_CONFIG[statusKey];
+                                                                const badgeColor = statusInfo?.color || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
 
                                                                 return (
                                                                     <span className={`inline-flex items-center gap-1 mt-2 px-3 py-1 text-xs font-medium rounded-full ${badgeColor}`}>
