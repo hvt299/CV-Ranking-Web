@@ -188,7 +188,7 @@ export default function TabCandidates({ candidates, setCandidates, jobTitle }: T
                     Chưa có ứng viên nào đáp ứng bộ lọc.
                 </div>
             ) : viewMode === 'kanban' ? (
-                <div className="p-4 bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 h-full min-h-150">
+                <div className="p-4 bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 min-h-0">
                     <CandidateKanban
                         candidates={kanbanCandidates}
                         onStatusChange={(id, status) => handleStatusChange(id, status, candidates.find(c => c.id === id))}

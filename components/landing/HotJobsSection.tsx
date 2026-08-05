@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import { Flame, ChevronRight, ChevronLeft, MapPin, Building2, DollarSign } from 'lucide-react';
@@ -20,7 +21,7 @@ const itemVariants: Variants = {
     visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
 };
 
-const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
+export const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
     <Link
         href={`/careers/${job.id}`}
         className="group block relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-orange-100 dark:border-orange-500/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 overflow-hidden"
@@ -29,7 +30,7 @@ const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, comp
 
         <div className="relative z-10 flex gap-4">
             {/* Logo */}
-            <div className="w-16 h-16 rounded-xl bg-white border border-slate-100 dark:border-slate-800 p-1 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
                 {job.company_logo ? (
                     <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
                 ) : (
@@ -71,12 +72,16 @@ const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, comp
 );
 
 export default function HotJobsSection({ jobs }: HotJobsSectionProps) {
-    const hotJobs = jobs.filter(job => job.is_hot).slice(0, 6);
+    const allHotJobs = jobs.filter(job => job.is_hot);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+    const totalPages = Math.ceil(allHotJobs.length / itemsPerPage) || 1;
+    const currentJobs = allHotJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    if (!hotJobs || hotJobs.length === 0) return null;
+    if (!allHotJobs || allHotJobs.length === 0) return null;
 
     return (
-        <section className="py-16 md:py-24 bg-slate-50 dark:bg-[#050505] transition-colors font-sans border-b border-slate-200 dark:border-slate-800">
+        <section className="py-16 md:py-24 bg-background dark:bg-slate-950 transition-colors font-sans border-b border-slate-200 dark:border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                     <div>
@@ -113,7 +118,7 @@ export default function HotJobsSection({ jobs }: HotJobsSectionProps) {
                     viewport={{ once: true, margin: '-50px' }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
                 >
-                    {hotJobs.map((job) => (
+                    {currentJobs.map((job) => (
                         <motion.div key={job.id} variants={itemVariants}>
                             <HotJobItem job={job} />
                         </motion.div>
@@ -121,17 +126,27 @@ export default function HotJobsSection({ jobs }: HotJobsSectionProps) {
                 </motion.div>
 
                 {/* Slider Phân trang */}
-                <div className="mt-10 flex items-center justify-center gap-4">
-                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                        <span className="text-orange-600 dark:text-orange-500">1</span> / 10 trang
+                {totalPages > 1 && (
+                    <div className="mt-10 flex items-center justify-center gap-4">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                            <span className="text-orange-600 dark:text-orange-500">{currentPage}</span> / {totalPages} trang
+                        </div>
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
+                )}
             </div>
         </section>
     );

@@ -107,7 +107,13 @@ export default function JobDetailModals({
             <CandidateSkillsModal
                 isOpen={!!selectedCandidateForSkills}
                 onClose={() => setSelectedCandidateForSkills(null)}
-                candidate={{ ...selectedCandidateForSkills, extracted_skills: selectedCandidateForSkills?.cv_snapshot?.extracted_skills || selectedCandidateForSkills?.extracted_skills }}
+                showMissingSkills
+                candidate={{
+                    ...selectedCandidateForSkills,
+                    extracted_skills:
+                        selectedCandidateForSkills?.cv_snapshot?.extracted_skills ||
+                        selectedCandidateForSkills?.extracted_skills
+                }}
             />
 
             {/* 5. Modal Xem Tài Liệu (Document Viewer) */}

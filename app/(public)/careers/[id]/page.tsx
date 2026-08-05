@@ -20,7 +20,7 @@ import PublicFooter from '@/components/layout/PublicFooter';
 import JobCard from '@/components/jobs/JobCard';
 import { useAuth } from '@/context/AuthContext';
 import { useApplyModal } from '@/context/ApplyModalContext';
-import { formatSalaryRange } from '@/utils/format';
+import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
 
 export default function PublicJobDetailPage() {
@@ -78,6 +78,13 @@ export default function PublicJobDetailPage() {
         } else {
             toast.error('Dữ liệu công việc chưa sẵn sàng, vui lòng thử lại!');
         }
+    };
+
+    const handleShare = () => {
+        if (!job?.id) return;
+        const link = `${window.location.origin}/careers/${job.id}`;
+        navigator.clipboard.writeText(link);
+        toast.success('Đã sao chép link công việc!');
     };
 
     if (isLoading) {
@@ -157,9 +164,11 @@ export default function PublicJobDetailPage() {
                                     <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500"><Building2 className="w-4 h-4" /></div>
                                     {job.company_name || 'Công ty Ẩn danh'}
                                 </span>
-                                <span className="flex items-center gap-2" title={job.location?.full_address_snapshot || ''}>
+                                <span className="flex items-center gap-2" title={[job.location?.street_address, job.location?.ward_name, job.location?.district_name, job.location?.province_name].filter(Boolean).join(', ') || ''}>
                                     <div className="p-1.5 bg-rose-50 dark:bg-rose-500/10 rounded-md text-rose-500"><MapPin className="w-4 h-4" /></div>
-                                    {job.location?.country && job.location.country !== 'Việt Nam' ? job.location.country : (job.location?.province_name || 'Toàn quốc')}
+                                    {job.location?.country && job.location.country !== 'Việt Nam'
+                                        ? job.location.country
+                                        : [job.location?.district_name, job.location?.province_name].filter(Boolean).join(', ') || 'Toàn quốc'}
                                 </span>
                                 <span className="flex items-center gap-2">
                                     <div className="p-1.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-md text-emerald-500"><DollarSign className="w-4 h-4" /></div>
@@ -182,7 +191,7 @@ export default function PublicJobDetailPage() {
                                 <button className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-500 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors">
                                     <Heart className="w-4 h-4" /> Lưu
                                 </button>
-                                <button className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors">
+                                <button onClick={handleShare} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors hover:text-blue-500">
                                     <Share2 className="w-4 h-4" /> Chia sẻ
                                 </button>
                             </div>
@@ -246,7 +255,11 @@ export default function PublicJobDetailPage() {
                                 <div className="space-y-4">
                                     <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                                         <p className="font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2"><MapPin className="w-4 h-4 text-rose-500" /> Địa điểm làm việc:</p>
-                                        <p className="text-slate-600 dark:text-slate-400 text-sm ml-6">{job.location?.full_address_snapshot || 'Chưa cập nhật chi tiết'}</p>
+                                        <p className="text-slate-600 dark:text-slate-400 text-sm ml-6">
+                                            {job.location?.country && job.location.country !== 'Việt Nam'
+                                                ? [job.location.street_address, job.location.country].filter(Boolean).join(', ')
+                                                : [job.location?.street_address, job.location?.ward_name, job.location?.district_name, job.location?.province_name].filter(Boolean).join(', ') || 'Chưa cập nhật chi tiết'}
+                                        </p>
                                     </div>
                                     <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                                         <p className="font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2"><Clock className="w-4 h-4 text-amber-500" /> Thời gian làm việc:</p>
@@ -321,6 +334,12 @@ export default function PublicJobDetailPage() {
 
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center text-sm border-b border-slate-50 dark:border-slate-800/50 pb-2">
+                                    <span className="text-slate-500 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Ngành nghề</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right line-clamp-1 max-w-[60%]">
+                                        {INDUSTRIES.find(i => i.value === job.industry)?.label || job.industry || 'Đang cập nhật'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm border-b border-slate-50 dark:border-slate-800/50 pb-2">
                                     <span className="text-slate-500 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Cấp bậc</span>
                                     <span className="font-bold text-slate-800 dark:text-slate-200">{job.job_level}</span>
                                 </div>
@@ -350,9 +369,16 @@ export default function PublicJobDetailPage() {
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-500 flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Hạn nộp</span>
-                                    <span className={`font-bold ${isExpired ? 'text-rose-500' : 'text-slate-800 dark:text-slate-200'}`}>
-                                        {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'Không thời hạn'}
-                                    </span>
+                                    <div className="text-right">
+                                        <div className={`font-bold ${isExpired ? 'text-rose-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                            {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'Không thời hạn'}
+                                        </div>
+                                        {!isExpired && job.deadline && (
+                                            <div className="text-[11px] font-black text-rose-500 mt-0.5 bg-rose-50 dark:bg-rose-500/10 inline-block px-1.5 py-0.5 rounded uppercase">
+                                                {getDeadlineCountdown(job.deadline)}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

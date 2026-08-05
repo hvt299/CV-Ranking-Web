@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Sun, Moon, Menu, User, Home, LogOut, ChevronDown } from 'lucide-react';
+import { Search, Sun, Moon, Menu, User, Home, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
@@ -112,8 +112,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'email@example.com'}</p>
                             </div>
 
-                            <Link href="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <User className="w-4 h-4" /> Hồ sơ của bạn
+                            <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <Settings className="w-4 h-4" /> Thiết lập thông tin
                             </Link>
 
                             <Link href="/" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { User, Briefcase } from 'lucide-react';
 import { UserRole } from '@/types';
-import HrEnterpriseForm from './HrEnterpriseForm';
+import HrEnterpriseForm, { HrInfoState, DEFAULT_HR_INFO } from './HrEnterpriseForm';
 import toast from 'react-hot-toast';
 
 interface SocialRoleModalProps {
@@ -15,7 +15,7 @@ interface SocialRoleModalProps {
 
 export default function SocialRoleModal({ isOpen, isLoading, onSubmit }: SocialRoleModalProps) {
     const [selectedRole, setSelectedRole] = useState<UserRole.HR_OWNER | UserRole.APPLICANT>(UserRole.APPLICANT);
-    const [hrInfo, setHrInfo] = useState({ companyName: '', taxCode: '', industry: '', size: '', address: '', website: '' });
+    const [hrInfo, setHrInfo] = useState<HrInfoState>(DEFAULT_HR_INFO);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [agreeConsulting, setAgreeConsulting] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -32,8 +32,8 @@ export default function SocialRoleModal({ isOpen, isLoading, onSubmit }: SocialR
 
     const handleSubmit = () => {
         if (!agreeTerms) return toast.error('Vui lòng đồng ý với Điều khoản dịch vụ!');
-        if (selectedRole === UserRole.HR_OWNER && (!hrInfo.companyName.trim() || !hrInfo.taxCode.trim())) {
-            return toast.error('Vui lòng nhập Tên Công ty và Mã số thuế!');
+        if (selectedRole === UserRole.HR_OWNER && (!hrInfo.companyName.trim() || !hrInfo.taxCode.trim() || !hrInfo.industry || !hrInfo.size)) {
+            return toast.error('Vui lòng điền đầy đủ Tên công ty, MST, Ngành nghề và Quy mô!');
         }
         onSubmit(selectedRole, hrInfo);
     };
@@ -62,15 +62,18 @@ export default function SocialRoleModal({ isOpen, isLoading, onSubmit }: SocialR
                 )}
 
                 <div className="space-y-3">
-                    <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                    <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-300 dark:hover:border-slate-600 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
                         <input type="checkbox" id="agreeSocialTerms" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" />
-                        <label htmlFor="agreeSocialTerms" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer block leading-relaxed font-medium">
-                            Tôi đã đọc và đồng ý với <Link href="/terms" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Chính sách Quyền riêng tư</Link> của hệ thống.
-                        </label>
+                        <div>
+                            <label htmlFor="agreeSocialTerms" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer block leading-relaxed font-medium">
+                                Tôi đã đọc và đồng ý với <Link href="/terms" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Chính sách Quyền riêng tư</Link> của hệ thống.
+                            </label>
+                            <p className="text-xs text-rose-600 dark:text-rose-400 italic mt-1 font-medium">* Chúng tôi không thể cung cấp dịch vụ nếu không nhận được sự đồng ý ở mục này.</p>
+                        </div>
                     </div>
 
                     {selectedRole === UserRole.HR_OWNER && (
-                        <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                        <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-300 dark:hover:border-slate-600 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
                             <input type="checkbox" id="agreeConsulting" checked={agreeConsulting} onChange={e => setAgreeConsulting(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" />
                             <div>
                                 <label htmlFor="agreeConsulting" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer block leading-relaxed font-medium">

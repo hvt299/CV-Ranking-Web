@@ -19,7 +19,7 @@ export default function CompanyMarquee({ companies, onSelectCompany }: CompanyMa
                 <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-8">
                     Được tin dùng bởi các doanh nghiệp
                 </p>
-                <div className="flex gap-12 items-center justify-center flex-wrap opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                <div className="flex gap-12 items-center justify-center flex-wrap grayscale hover:grayscale-0 transition-all duration-500">
                     {companies.slice(0, 10).map((c, i) => {
                         const companyId = c.id || null;
                         const companyName = c.name || c;
@@ -34,7 +34,7 @@ export default function CompanyMarquee({ companies, onSelectCompany }: CompanyMa
                                         onSelectCompany(companyName);
                                     }
                                 }}
-                                className="text-xl md:text-2xl font-black tracking-tighter flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                className="text-xl md:text-2xl font-black tracking-tighter flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors opacity-60 hover:opacity-100"
                             >
                                 <Building2 className="w-6 h-6" /> {companyName}
                             </button>

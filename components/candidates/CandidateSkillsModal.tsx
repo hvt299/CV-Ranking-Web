@@ -1,21 +1,17 @@
-import {
-    X,
-    CheckCircle2,
-    AlertCircle,
-    User,
-    Briefcase
-} from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, User, Briefcase } from 'lucide-react';
 
 interface CandidateSkillsModalProps {
     isOpen: boolean;
     onClose: () => void;
     candidate: any;
+    showMissingSkills?: boolean;
 }
 
 export default function CandidateSkillsModal({
     isOpen,
     onClose,
-    candidate
+    candidate,
+    showMissingSkills = false
 }: CandidateSkillsModalProps) {
     if (!isOpen || !candidate) return null;
 
@@ -69,19 +65,21 @@ export default function CandidateSkillsModal({
                         </div>
                     </div>
 
-                    <div className="flex flex-1 items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                        <div className="p-3 bg-error-50 dark:bg-error-500/10 rounded-xl">
-                            <AlertCircle className="h-6 w-6 text-error-500" />
+                    {showMissingSkills && (
+                        <div className="flex flex-1 items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                            <div className="p-3 bg-error-50 dark:bg-error-500/10 rounded-xl">
+                                <AlertCircle className="h-6 w-6 text-error-500" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Còn thiếu (So với JD)
+                                </p>
+                                <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                                    {missingSkills.length} <span className="text-sm font-medium text-slate-400">kỹ năng</span>
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                Còn thiếu (So với JD)
-                            </p>
-                            <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                                {missingSkills.length} <span className="text-sm font-medium text-slate-400">kỹ năng</span>
-                            </p>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Content */}
@@ -125,7 +123,7 @@ export default function CandidateSkillsModal({
                     </div>
 
                     {/* Missing skills */}
-                    {missingSkills.length > 0 && (
+                    {showMissingSkills && missingSkills.length > 0 && (
                         <div>
                             <h3 className="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-wider text-error-600 dark:text-error-400">
                                 <AlertCircle className="h-5 w-5" />

@@ -89,13 +89,8 @@ export default function LandingPage() {
             <CompanyMarquee companies={uniqueCompanies} onSelectCompany={handleSelectCompany} />
             <FeaturesSection />
             <StatsSection />
-
-            {/* 1. Việc làm Nổi bật (Hot Jobs) */}
             <HotJobsSection jobs={jobs} />
-
-            {/* 2. Việc làm Mới nhất (Latest Jobs) */}
             <LatestJobsSection jobs={jobs} />
-
             <WorkflowSection />
             <FaqSection />
             <BottomCTA />

@@ -34,5 +34,13 @@ export const candidateService = {
     async mapCvToJob(cvId: string, jobId: string): Promise<{ message: string, application_id: string }> {
         const response = await apiClient.post(`/cv/${cvId}/map`, { job_id: jobId });
         return response.data;
+    },
+
+    /**
+     * Đưa nhiều CV vào một chiến dịch (Map Batch)
+     */
+    async mapMultipleCvsToJob(cvIds: string[], jobId: string): Promise<{ message: string, successful_maps: number, errors: string[] }> {
+        const response = await apiClient.post(`/cv/map-batch`, { cv_ids: cvIds, job_id: jobId });
+        return response.data;
     }
 };

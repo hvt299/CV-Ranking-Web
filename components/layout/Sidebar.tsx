@@ -85,7 +85,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
     const bottomItems: MenuItem[] = [
         { name: "Cài đặt", icon: Settings, href: "/settings" },
-        { name: "Trợ giúp", icon: HelpCircle, href: "/help" },
+        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
     ];
 
     return (

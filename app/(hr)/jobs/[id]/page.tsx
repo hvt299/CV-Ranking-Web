@@ -42,7 +42,7 @@ export default function JobLeaderboardPage() {
                 />
 
                 {/* KHU VỰC RENDER CONTENT THEO TAB */}
-                <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-900/50">
+                <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-900/50 min-h-0">
                     {activeTab === 'candidates' && (
                         <TabCandidates
                             candidates={candidates}

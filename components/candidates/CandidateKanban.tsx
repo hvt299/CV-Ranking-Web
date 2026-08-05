@@ -1,21 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import {
-    DndContext,
-    DragEndEvent,
-    DragOverlay,
-    DragStartEvent,
-    PointerSensor,
-    closestCenter,
-    useSensor,
-    useSensors,
-} from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Mail, Phone, Eye, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { ApplicationStatus } from '@/types';
 import { KANBAN_COLUMNS } from '@/constants/application.constants';
+import { getPenaltyReasons } from '@/utils/score';
 
 interface CandidateKanbanProps {
     candidates: any[];
@@ -23,40 +15,8 @@ interface CandidateKanbanProps {
     onPreviewCV: (url: string, filename: string) => void;
 }
 
-const getPenaltyReasons = (cvInfo: any, breakdown: any) => {
-    const reasons = [];
-    const fraudReasons = breakdown?.fraud_analysis?.reasons || [];
-
-    if (fraudReasons.length > 0) {
-        const translated = fraudReasons.map((r: string) => {
-            if (r === 'Keyword stuffing') return 'Nhồi nhét từ khóa';
-            if (r === 'White text') return 'Chữ màu trắng';
-            if (r.includes('Tiny font') || r.includes('Very small font')) return 'Font chữ siêu nhỏ';
-            if (r === 'Hidden flag') return 'Ẩn chữ (Hidden text)';
-            if (r === 'Outside page') return 'Chữ ngoài lề';
-            return r;
-        });
-        reasons.push(...translated);
-    } else if (breakdown?.fraud_analysis?.detected) {
-        reasons.push('Có dấu hiệu gian lận');
-    }
-
-    const yoe = cvInfo?.years_of_experience || 0;
-    const hops = cvInfo?.job_hops || 1;
-    const gaps = cvInfo?.gap_months || 0;
-
-    if (yoe > 0 && (yoe / Math.max(hops, 1)) < 0.8) reasons.push('Nhảy việc quá nhiều');
-    if (gaps > 12) reasons.push(`Khoảng trống (${gaps} tháng)`);
-
-    return reasons.length > 0 ? reasons.join(' + ') : 'Vi phạm tiêu chí';
-};
-
 /* ---------- Card kéo được ---------- */
-function CandidateCard({
-    cv,
-    column,
-    onPreviewCV,
-}: {
+function CandidateCard({ cv, column, onPreviewCV }: {
     cv: any;
     column: (typeof KANBAN_COLUMNS)[number];
     onPreviewCV: (url: string, filename: string) => void;
@@ -99,15 +59,7 @@ function CandidateCard({
 }
 
 /* ---------- Nội dung card (dùng chung cho card thật & DragOverlay) ---------- */
-function CandidateCardContent({
-    cv,
-    score,
-    isHigh,
-    isMed,
-    hasPenalty,
-    breakdown,
-    onPreviewCV,
-}: {
+function CandidateCardContent({ cv, score, isHigh, isMed, hasPenalty, breakdown, onPreviewCV }: {
     cv: any;
     score: number;
     isHigh: boolean;
@@ -191,9 +143,9 @@ function KanbanColumn({
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
     return (
-        <div className="shrink-0 w-80 flex flex-col bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 max-h-full">
+        <div className="shrink-0 w-80 h-full flex flex-col bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             {/* Header */}
-            <div className={`p-3 m-2 rounded-xl font-bold text-sm flex justify-between items-center ${column.headerBg}`}>
+            <div className={`shrink-0 p-3 m-2 rounded-xl font-bold text-sm flex justify-between items-center ${column.headerBg}`}>
                 <span>{column.label}</span>
                 <span className="bg-white/50 px-2 py-0.5 rounded-lg text-xs">{candidates.length}</span>
             </div>
@@ -201,7 +153,7 @@ function KanbanColumn({
             {/* Vùng thả */}
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-2 overflow-y-auto custom-scrollbar transition-colors rounded-b-2xl min-h-37.5 ${isOver ? 'bg-slate-100 dark:bg-slate-800' : ''
+                className={`flex-1 min-h-0 p-3 overflow-y-auto custom-scrollbar transition-colors rounded-b-2xl ${isOver ? 'bg-slate-100 dark:bg-slate-800' : ''
                     }`}
             >
                 {candidates.map(cv => (
@@ -258,7 +210,7 @@ export default function CandidateKanban({ candidates, onStatusChange, onPreviewC
                 onDragEnd={handleDragEnd}
             >
                 {/* Board cuộn ngang + mỗi cột cuộn dọc */}
-                <div className="flex gap-4 overflow-x-auto overflow-y-hidden items-start h-[calc(100vh-200px)] hide-scroll pb-2">
+                <div className="flex gap-4 overflow-x-auto overflow-y-hidden items-stretch h-[calc(100vh-420px)] hide-scroll pb-2">
                     {KANBAN_COLUMNS.map(column => {
                         const columnCandidates = candidates.filter(c => (c.status || ApplicationStatus.NEW) === column.id);
                         return (

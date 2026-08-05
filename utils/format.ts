@@ -19,13 +19,21 @@ export const formatCurrency = (val: number): string => {
  */
 export const formatSalaryRange = (salary?: SalaryRange): string => {
     if (!salary?.min_salary) return 'Thỏa thuận';
-    const minStr = formatCurrency(salary.min_salary);
-    const maxStr = salary.max_salary ? formatCurrency(salary.max_salary) : '';
+
+    // Rút gọn lương (VD: 15.000.000 -> 15Tr)
+    const formatShort = (val: number) => {
+        if (val >= 1000000) return `${val / 1000000}Tr`;
+        return formatCurrency(val);
+    };
+
+    const minStr = formatShort(salary.min_salary);
+    const maxStr = salary.max_salary ? formatShort(salary.max_salary) : '';
+    const curr = salary.currency === 'USD' ? '$' : '₫'; // Đổi VND thành ký hiệu ₫ cho ngắn
 
     if (maxStr) {
-        return `${minStr} - ${maxStr} ${salary.currency || 'VND'}`;
+        return `${minStr} - ${maxStr}${curr}`;
     }
-    return `Từ ${minStr} ${salary.currency || 'VND'}`;
+    return `Từ ${minStr}${curr}`;
 };
 
 /**
@@ -40,26 +48,6 @@ export const formatDate = (dateString: string | Date | undefined): string => {
     }
 };
 
-export const parseVietnameseAddress = (rawAddress: string | null) => {
-    if (!rawAddress) return { province_name: '', street_address: '', full_address_snapshot: '', country: 'Việt Nam' };
-
-    const parts = rawAddress.split(',').map(p => p.trim());
-    if (parts.length === 0) return { province_name: '', street_address: '', full_address_snapshot: rawAddress, country: 'Việt Nam' };
-
-    // Tỉnh/Thành luôn nằm ở cuối cùng
-    const province_name = parts[parts.length - 1];
-
-    // Tách phần còn lại làm số nhà/đường/quận
-    let streetParts = parts.length >= 3 ? parts.slice(0, parts.length - 2) : parts.slice(0, parts.length - 1);
-
-    return {
-        province_name,
-        street_address: streetParts.join(', '),
-        full_address_snapshot: rawAddress,
-        country: 'Việt Nam'
-    };
-};
-
 export const getPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) return { score, color: 'bg-slate-200 dark:bg-slate-700', label: '' };
@@ -72,4 +60,35 @@ export const getPasswordStrength = (pass: string) => {
     if (score === 2) return { score, color: 'bg-amber-500', label: 'Trung bình' };
     if (score >= 3) return { score, color: 'bg-emerald-500', label: 'Mạnh' };
     return { score, color: 'bg-slate-200 dark:bg-slate-700', label: '' };
+};
+
+/**
+ * Tính toán thời gian đếm ngược trả về Object (Dành cho UI Đồng hồ số)
+ */
+export const getCountdownParts = (deadline?: string | Date) => {
+    if (!deadline) return null;
+    const diff = new Date(deadline).getTime() - Date.now();
+
+    if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0, isExpired: true };
+
+    return {
+        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        s: Math.floor((diff % (1000 * 60)) / 1000),
+        isExpired: false
+    };
+};
+
+/**
+ * Tính toán thời gian đếm ngược đến hạn nộp hồ sơ
+ */
+export const getDeadlineCountdown = (deadline?: string | Date): string => {
+    if (!deadline) return 'Không thời hạn';
+    const diff = new Date(deadline).getTime() - Date.now();
+    if (diff < 0) return 'Đã hết hạn';
+
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return 'Hết hạn hôm nay';
+    return `Còn ${days} ngày`;
 };

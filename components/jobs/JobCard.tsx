@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Briefcase, Heart, Send } from 'lucide-react';
+import { MapPin, Briefcase, Heart, Send, Building2, DollarSign, Share2 } from 'lucide-react';
 import { Job } from '@/types';
-import { formatSalaryRange } from '@/utils/format';
+import { formatSalaryRange, getCountdownParts } from '@/utils/format';
+import toast from 'react-hot-toast';
 import { useApplyModal } from '@/context/ApplyModalContext';
 
 interface PublicJob extends Partial<Job> {
@@ -19,6 +21,34 @@ export default function JobCard({ job }: JobCardProps) {
     const { openApplyModal } = useApplyModal();
     const isExpired = Boolean(job.deadline && new Date(job.deadline).getTime() < Date.now());
 
+    const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number, isExpired: boolean } | null>(null);
+    const [showCountdownToggle, setShowCountdownToggle] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    useEffect(() => {
+        if (!job.deadline || isExpired) return;
+        const update = () => setTimeLeft(getCountdownParts(job.deadline!));
+        update();
+        const intv = setInterval(update, 1000);
+        return () => clearInterval(intv);
+    }, [job.deadline, isExpired]);
+
+    useEffect(() => {
+        if (!job.deadline || isExpired) return;
+        const toggleIntv = setInterval(() => {
+            setShowCountdownToggle(prev => !prev);
+        }, 10000);
+        return () => clearInterval(toggleIntv);
+    }, [job.deadline, isExpired]);
+
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const link = `${window.location.origin}/careers/${job.id}`;
+        navigator.clipboard.writeText(link);
+        toast.success('Đã sao chép link công việc!');
+    };
+
     return (
         <div className={`relative bg-white dark:bg-slate-900 border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group font-sans flex flex-col sm:flex-row p-4 gap-4 ${job.is_hot
             ? 'border-orange-200 dark:border-orange-500/30 hover:border-orange-400 dark:hover:border-orange-500'
@@ -30,13 +60,11 @@ export default function JobCard({ job }: JobCardProps) {
             )}
 
             {/* Khối 1: Logo Công ty (Bên trái) */}
-            <Link href={`/companies/${job.company_id}`} className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-white border border-slate-100 dark:border-slate-800 rounded-lg flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity">
+            <Link href={`/companies/${job.company_id}`} className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center overflow-hidden p-1 hover:opacity-80 transition-opacity">
                 {job.company_logo ? (
-                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain p-1" />
+                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
                 ) : (
-                    <div className="w-full h-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center font-black text-slate-400 text-xl">
-                        {job.company_name?.charAt(0) || 'C'}
-                    </div>
+                    <Building2 className="w-8 h-8 text-slate-300" />
                 )}
             </Link>
 
@@ -58,10 +86,10 @@ export default function JobCard({ job }: JobCardProps) {
                     </Link>
 
                     {/* Metadata (Lương, Địa điểm, Cấp bậc) */}
-                    <div className="flex flex-wrap gap-2 text-xs font-semibold mb-3">
+                    <div className="flex flex-wrap gap-2 text-xs font-bold mb-3">
                         {/* Lương */}
-                        <span className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-md">
-                            {formatSalaryRange(job.salary)}
+                        <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-md">
+                            <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
                         </span>
 
                         {/* Địa điểm */}
@@ -99,42 +127,120 @@ export default function JobCard({ job }: JobCardProps) {
             </div>
 
             {/* Khối 3: Hành động (Bên phải) */}
-            <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-3 shrink-0 sm:w-35 border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800 pt-3 sm:pt-0 sm:pl-4 mt-3 sm:mt-0">
+            <div
+                className="flex flex-col justify-center shrink-0 sm:w-44 sm:min-h-23 sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800 pt-4 sm:pt-0 sm:pl-4 mt-3 sm:mt-0"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                {job.deadline && !isExpired && showCountdownToggle && !isHovered ? (
 
-                {/* Nút Ứng tuyển */}
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        openApplyModal(job.id!, job.title);
-                    }}
-                    disabled={isExpired}
-                    className="flex-1 sm:w-full w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20"
-                >
-                    <Send className="w-4 h-4" /> {isExpired ? 'Hết hạn' : 'Ứng tuyển'}
-                </button>
+                    /* UI ĐỒNG HỒ SỐ */
+                    <div className="w-full h-full flex items-center justify-center animate-in fade-in duration-300">
+                        <div className="w-full mx-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl py-3 px-3 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300">
+                            <span className="block text-center text-[10px] font-bold text-slate-500 mb-2">
+                                Hạn: {new Date(job.deadline).toLocaleDateString('vi-VN')}
+                            </span>
 
-                <div className="flex items-center gap-2 w-full justify-end sm:justify-center">
-                    {/* Nút Lưu (Thả tim) */}
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // TODO: Toggle Trạng thái Lưu
-                        }}
-                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                        title="Lưu tin tuyển dụng"
-                    >
-                        <Heart className="w-4 h-4" />
-                    </button>
+                            {timeLeft && !timeLeft.isExpired && (
+                                <div
+                                    className="flex items-center justify-center gap-1 w-full"
+                                    suppressHydrationWarning
+                                >
+                                    {/* Ngày */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 w-7 h-8 flex items-center justify-center rounded-lg text-sm font-black shadow-sm">
+                                            {String(timeLeft.d).padStart(2, '0')}
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase">
+                                            Ngày
+                                        </span>
+                                    </div>
 
-                    {/* Cập nhật thời gian */}
-                    {job.deadline && (
-                        <span className="text-[10px] font-bold text-slate-400 sm:text-center w-full block truncate sm:block">
-                            Hạn: {new Date(job.deadline).toLocaleDateString('vi-VN')}
-                        </span>
-                    )}
-                </div>
+                                    <span className="text-blue-300 dark:text-blue-500/60 font-black text-sm">
+                                        :
+                                    </span>
+
+                                    {/* Giờ */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 w-7 h-8 flex items-center justify-center rounded-lg text-sm font-black shadow-sm">
+                                            {String(timeLeft.h).padStart(2, '0')}
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase">
+                                            Giờ
+                                        </span>
+                                    </div>
+
+                                    <span className="text-blue-300 dark:text-blue-500/60 font-black text-sm">
+                                        :
+                                    </span>
+
+                                    {/* Phút */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 w-7 h-8 flex items-center justify-center rounded-lg text-sm font-black shadow-sm">
+                                            {String(timeLeft.m).padStart(2, '0')}
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase">
+                                            Phút
+                                        </span>
+                                    </div>
+
+                                    <span className="text-blue-300 dark:text-blue-500/60 font-black text-sm">
+                                        :
+                                    </span>
+
+                                    {/* Giây */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="bg-blue-600 text-white w-7 h-8 flex items-center justify-center rounded-lg text-sm font-black shadow-md shadow-blue-500/30">
+                                            {String(timeLeft.s).padStart(2, '0')}
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase">
+                                            Giây
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                ) : (
+
+                    /* UI CỤM NÚT HÀNH ĐỘNG */
+                    <div className="flex flex-col gap-2 w-full h-full justify-center animate-in fade-in duration-300">
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openApplyModal(job.id!, job.title);
+                            }}
+                            disabled={isExpired}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-bold py-2.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20"
+                        >
+                            <Send className="w-4 h-4" />
+                            {isExpired ? 'Hết hạn' : 'Ứng tuyển'}
+                        </button>
+
+                        <div className="flex items-center gap-2 w-full">
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                className="flex-1 py-2 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                                title="Lưu tin tuyển dụng"
+                            >
+                                <Heart className="w-4 h-4" />
+                            </button>
+
+                            <button
+                                onClick={handleShare}
+                                className="flex-1 py-2 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                                title="Chia sẻ công việc"
+                            >
+                                <Share2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

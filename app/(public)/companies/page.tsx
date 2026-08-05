@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Building2, Loader2, XCircle, LayoutGrid, List } from 'lucide-react';
+import { Building2, Loader2, XCircle, LayoutGrid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -15,16 +16,25 @@ import { systemService } from '@/features/system/system.service';
 
 export default function PublicCompaniesPage() {
     const { isAuthenticated, user } = useAuth();
+    const searchParams = useSearchParams();
 
     const [companies, setCompanies] = useState<Company[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [sortBy, setSortBy] = useState('rating');
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState({ industry: '', location: '', size: '' });
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('keyword') || '');
+    const [filters, setFilters] = useState({
+        industry: searchParams.get('industry') || '',
+        provinceCodes: searchParams.get('provinces')?.split(',').filter(Boolean) || [] as string[],
+        districtCodes: searchParams.get('districts')?.split(',').filter(Boolean) || [] as string[],
+        wardCodes: searchParams.get('wards')?.split(',').filter(Boolean) || [] as string[],
+        foreignLocation: searchParams.get('foreign') || '',
+        size: ''
+    });
     const [filterOptions, setFilterOptions] = useState({ industries: [] as string[], locations: [] as any[], sizes: [] as string[] });
 
     useEffect(() => {
@@ -64,18 +74,24 @@ export default function PublicCompaniesPage() {
             const query = searchQuery.toLowerCase();
             result = result.filter(c =>
                 c.name.toLowerCase().includes(query) ||
-                (c.tax_code && c.tax_code.includes(query))
+                (c.tax_code && c.tax_code.includes(query)) ||
+                c.location?.street_address?.toLowerCase().includes(query)
             );
         }
 
         if (filters.industry) result = result.filter(c => c.industry === filters.industry);
         if (filters.size) result = result.filter(c => c.size === filters.size);
-        if (filters.location) {
-            const locQuery = filters.location.toLowerCase();
-            result = result.filter(c =>
-                c.location?.province_name?.toLowerCase().includes(locQuery) ||
-                c.location?.country?.toLowerCase().includes(locQuery)
-            );
+
+        const hasLocationFilter = filters.provinceCodes.length > 0 || filters.districtCodes.length > 0 || filters.wardCodes.length > 0 || filters.foreignLocation;
+        if (hasLocationFilter) {
+            result = result.filter(c => {
+                const matchProv = filters.provinceCodes.includes(c.location?.province_code || '');
+                const matchDist = filters.districtCodes.includes(c.location?.district_code || '');
+                const matchWard = filters.wardCodes.includes(c.location?.ward_code || '');
+                const matchForeign = filters.foreignLocation && c.location?.country !== 'Việt Nam' && c.location?.street_address?.toLowerCase().includes(filters.foreignLocation.toLowerCase());
+
+                return matchProv || matchDist || matchWard || matchForeign;
+            });
         }
 
         switch (sortBy) {
@@ -87,10 +103,14 @@ export default function PublicCompaniesPage() {
         return result;
     }, [companies, searchQuery, filters, sortBy]);
 
-    const activeFiltersCount = Object.values(filters).filter(value => value !== '').length + (searchQuery ? 1 : 0);
+    const activeFiltersCount = Object.values(filters).filter(value => Array.isArray(value) ? value.length > 0 : value !== '').length + (searchQuery ? 1 : 0);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters, searchQuery, sortBy]);
 
     const clearFilters = () => {
-        setFilters({ industry: '', location: '', size: '' });
+        setFilters({ industry: '', provinceCodes: [], districtCodes: [], wardCodes: [], foreignLocation: '', size: '' });
         setSearchQuery('');
         setSortBy('rating');
     };
@@ -117,68 +137,96 @@ export default function PublicCompaniesPage() {
                 </div>
             </div>
 
-            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-12 space-y-10">
-                {/* Search Bar */}
-                <div className="relative z-20">
-                    <CompanySearchBar
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        filterOptions={filterOptions}
-                        onClearFilters={clearFilters}
-                        activeFiltersCount={activeFiltersCount}
-                    />
-                </div>
+            <main className="flex-1 max-w-350 mx-auto px-4 sm:px-6 w-full py-12 flex flex-col gap-20">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-                {/* Khu vực Điều hướng Lọc Phụ & Chế độ xem */}
-                <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-text p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                        Tìm thấy <span className="text-blue-600 dark:text-blue-400">{filteredCompanies.length}</span> doanh nghiệp
-                    </span>
+                    {/* CỘT TRÁI (25%): Bộ lọc dính (Sticky Sidebar) */}
+                    <aside className="w-full lg:w-1/4 shrink-0 lg:sticky lg:top-24">
+                        <CompanySearchBar
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            filters={filters}
+                            onFiltersChange={setFilters}
+                            filterOptions={filterOptions}
+                            onClearFilters={clearFilters}
+                            activeFiltersCount={activeFiltersCount}
+                        />
+                    </aside>
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
-                            <label className="font-bold hidden sm:block">Sắp xếp:</label>
-                            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer">
-                                <option value="rating">Đánh giá cao</option>
-                                <option value="views">Nhiều lượt xem</option>
-                                <option value="newest">Mới gia nhập</option>
-                            </select>
+                    {/* CỘT PHẢI (75%): Kết quả lọc */}
+                    <div className="w-full lg:w-3/4 flex flex-col gap-6">
+
+                        {/* Khu vực Điều hướng Lọc Phụ & Chế độ xem */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-text p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                                Tìm thấy <span className="text-blue-600 dark:text-blue-400">{filteredCompanies.length}</span> doanh nghiệp
+                            </span>
+
+                            <div className="flex items-center gap-4">
+                                {activeFiltersCount > 0 && (
+                                    <button onClick={clearFilters} className="text-rose-500 font-bold hover:underline hidden md:block">
+                                        Xóa ({activeFiltersCount}) bộ lọc
+                                    </button>
+                                )}
+                                <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
+                                    <label className="font-bold hidden sm:block">Sắp xếp:</label>
+                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer">
+                                        <option value="rating">Đánh giá cao</option>
+                                        <option value="views">Nhiều lượt xem</option>
+                                        <option value="newest">Mới gia nhập</option>
+                                    </select>
+                                </div>
+                                <div className="flex bg-slate-100 dark:bg-[#1e293b] p-1 rounded-xl">
+                                    <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Lưới">
+                                        <LayoutGrid className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Danh sách">
+                                        <List className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex bg-slate-100 dark:bg-[#1e293b] p-1 rounded-xl">
-                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Lưới">
-                                <LayoutGrid className="w-5 h-5" />
-                            </button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`} title="Danh sách">
-                                <List className="w-5 h-5" />
-                            </button>
-                        </div>
+
+                        {/* Danh sách Công ty */}
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-blue-500">
+                                <Loader2 className="w-10 h-10 animate-spin mb-4" />
+                                <p className="text-slate-500 font-medium">Đang tải danh sách công ty...</p>
+                            </div>
+                        ) : filteredCompanies.length === 0 ? (
+                            <div className="text-center py-20 bg-white dark:bg-text rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
+                                <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
+                                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">Không tìm thấy công ty phù hợp</h3>
+                                <p className="text-slate-500 font-medium mb-6">Thử thay đổi từ khóa hoặc thiết lập lại bộ lọc.</p>
+                                <button onClick={clearFilters} className="px-6 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-bold hover:bg-blue-100 transition-colors">
+                                    Xóa toàn bộ bộ lọc
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className={`grid gap-5 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                                    {filteredCompanies.slice((currentPage - 1) * 12, currentPage * 12).map(company => (
+                                        <CompanyCard key={company.id} company={company} />
+                                    ))}
+                                </div>
+
+                                {Math.ceil(filteredCompanies.length / 12) > 1 && (
+                                    <div className="mt-8 flex items-center justify-center gap-4">
+                                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                            <span className="text-blue-600 dark:text-blue-400">{currentPage}</span> / {Math.ceil(filteredCompanies.length / 12)}
+                                        </span>
+                                        <button disabled={currentPage === Math.ceil(filteredCompanies.length / 12)} onClick={() => setCurrentPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
-
-                {/* Danh sách Công ty */}
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-blue-500">
-                        <Loader2 className="w-10 h-10 animate-spin mb-4" />
-                        <p className="text-slate-500 font-medium">Đang tải danh sách công ty...</p>
-                    </div>
-                ) : filteredCompanies.length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-text rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
-                        <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
-                        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">Không tìm thấy công ty phù hợp</h3>
-                        <p className="text-slate-500 font-medium mb-6">Thử thay đổi từ khóa hoặc thiết lập lại bộ lọc.</p>
-                        <button onClick={clearFilters} className="px-6 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-bold hover:bg-blue-100 transition-colors">
-                            Xóa toàn bộ bộ lọc
-                        </button>
-                    </div>
-                ) : (
-                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2'}`}>
-                        {filteredCompanies.map(company => (
-                            <CompanyCard key={company.id} company={company} />
-                        ))}
-                    </div>
-                )}
             </main>
 
             <PublicFooter />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Search, Building2, Save, CheckCircle, Mail, Briefcase, Globe, MapPin, User as UserIcon } from 'lucide-react';
+import { Shield, Search, Building2, Save, CheckCircle, Mail, Briefcase, Globe, MapPin, User as UserIcon, Ban, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
 import { ROLES } from '@/constants/user.constants';
 import { companyService } from '@/features/company/company.service';
+import { systemService, LocationUnit } from '@/features/system/system.service';
 import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function SettingsPage() {
@@ -20,47 +21,57 @@ export default function SettingsPage() {
 
     if (!user) return null;
 
-    // LUỒNG DÀNH CHO ADMIN
-    if (user.role === UserRole.ADMIN) {
-        return (
-            <div className="max-w-5xl mx-auto pb-20 space-y-6 animate-in fade-in duration-500">
-                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
-                    <button onClick={() => setMainTab('personal')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'personal' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
-                        <UserIcon className="w-4 h-4" /> Hồ sơ cá nhân
-                    </button>
-                    <button onClick={() => setMainTab('business')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'business' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
-                        <Shield className="w-4 h-4" /> Quản trị Hệ thống
-                    </button>
+    const isOwner = user.role === UserRole.HR_OWNER;
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 pb-32">
+
+            {/* HEADER CÀI ĐẶT */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Cài đặt Hệ thống</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý tài khoản cá nhân và cấu hình doanh nghiệp.</p>
                 </div>
-                {mainTab === 'personal' ? <ProfileForm /> : <AdminSettingsSection user={user} />}
-            </div>
-        );
-    }
 
-    // LUỒNG DÀNH CHO HR
-    if (user.role === UserRole.HR_OWNER || user.role === UserRole.HR_MEMBER) {
-        const isOwner = user.role === UserRole.HR_OWNER;
-        return (
-            <div className="max-w-5xl mx-auto pb-20 space-y-6 animate-in fade-in duration-500">
-                <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
-                    <button onClick={() => setMainTab('personal')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'personal' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
-                        <UserIcon className="w-4 h-4" /> Hồ sơ cá nhân
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0 self-start md:self-auto border border-slate-200 dark:border-slate-700">
+                    <button
+                        onClick={() => setMainTab('personal')}
+                        className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${mainTab === 'personal' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        <UserIcon className="w-4 h-4" /> Cá nhân
                     </button>
-
-                    {/* CHỈ HR_OWNER MỚI THẤY TAB NÀY */}
+                    {isAdmin && (
+                        <button
+                            onClick={() => setMainTab('business')}
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${mainTab === 'business' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <Shield className="w-4 h-4" /> Quản trị
+                        </button>
+                    )}
                     {isOwner && (
-                        <button onClick={() => setMainTab('business')} className={`px-5 py-3.5 font-bold text-sm border-b-2 transition-colors flex items-center gap-2 ${mainTab === 'business' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>
-                            <Building2 className="w-4 h-4" /> Hồ sơ Doanh nghiệp
+                        <button
+                            onClick={() => setMainTab('business')}
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${mainTab === 'business' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <Building2 className="w-4 h-4" /> Doanh nghiệp
                         </button>
                     )}
                 </div>
-                {mainTab === 'personal' ? <ProfileForm /> : (isOwner ? <CompanySettingsSection user={user} /> : null)}
             </div>
-        );
-    }
 
-    router.push('/overview');
-    return null;
+            {/* CONTENT RENDER */}
+            <div className="w-full">
+                {mainTab === 'personal' ? (
+                    <ProfileForm />
+                ) : isAdmin ? (
+                    <AdminSettingsSection user={user} />
+                ) : isOwner ? (
+                    <CompanySettingsSection user={user} />
+                ) : null}
+            </div>
+        </div>
+    );
 }
 
 function CompanySettingsSection({ user }: { user: any }) {
@@ -71,8 +82,13 @@ function CompanySettingsSection({ user }: { user: any }) {
     const [taxCode, setTaxCode] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-
     const [isDarkMode, setIsDarkMode] = useState(false);
+
+    const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
+    const domesticVersion = company?.location?.version || 'new';
+    const displayedProvinces = allProvinces.filter(p => p.version === domesticVersion);
+    const [districts, setDistricts] = useState<LocationUnit[]>([]);
+    const [wards, setWards] = useState<LocationUnit[]>([]);
 
     useEffect(() => {
         const checkDark = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -82,20 +98,102 @@ function CompanySettingsSection({ user }: { user: any }) {
         return () => observer.disconnect();
     }, []);
 
+    useEffect(() => {
+        systemService.getLocations().then(res => setAllProvinces(res)).catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        companyService.getSettings().then(res => {
+            const compData = res.data || res;
+
+            if (!compData.location) {
+                compData.location = { country: 'Việt Nam', version: 'new', province_code: '', district_code: '', ward_code: '', street_address: compData.address || '' };
+            }
+
+            setCompany(compData);
+            setTaxCode(compData?.tax_code || '');
+
+        }).catch(err => console.error(err));
+
+        companyService.getMembers().then(res => {
+            const memData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+            setMembers(memData);
+        }).catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        const loadInitialSubLocations = async () => {
+            if (company?.location?.country === 'Việt Nam' && company?.location?.province_code) {
+                if (domesticVersion === 'new') {
+                    const wds = await systemService.getSubLocations(company.location.province_code);
+                    setWards(wds.filter(item => item.version === 'new'));
+                } else {
+                    const dists = await systemService.getSubLocations(company.location.province_code);
+                    setDistricts(dists.filter(item => item.version === 'old'));
+
+                    if (company.location?.district_code) {
+                        const wds = await systemService.getSubLocations(company.location.district_code);
+                        setWards(wds.filter(item => item.version === 'old'));
+                    }
+                }
+            }
+        };
+        if (company) loadInitialSubLocations();
+    }, [company?.location?.province_code, domesticVersion]);
+
+    const handleVersionChange = (ver: 'new' | 'old') => {
+        setCompany({
+            ...company, location: { ...company.location, version: ver }
+        });
+    };
+
+    const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const prov = displayedProvinces.find(p => p.code === code);
+        setCompany({
+            ...company,
+            location: {
+                ...company.location,
+                province_code: code,
+                province_name: prov?.name || '',
+                version: domesticVersion,
+                district_code: '', district_name: '', ward_code: '', ward_name: '', full_address_snapshot: ''
+            }
+        });
+
+        if (domesticVersion === 'new') {
+            const wds = await systemService.getSubLocations(code);
+            setWards(wds.filter(item => item.version === 'new'));
+            setDistricts([]);
+        } else {
+            const dists = await systemService.getSubLocations(code);
+            setDistricts(dists.filter(item => item.version === 'old'));
+            setWards([]);
+        }
+    };
+
+    const handleDistrictChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const dist = districts.find(d => d.code === code);
+        setCompany({ ...company, location: { ...company.location, district_code: code, district_name: dist?.name || '', ward_code: '', ward_name: '', full_address_snapshot: '' } });
+        const wds = await systemService.getSubLocations(code);
+        setWards(wds.filter(item => item.version === 'old'));
+    };
+
+    const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const ward = wards.find(w => w.code === code);
+        setCompany({ ...company, location: { ...company.location, ward_code: code, ward_name: ward?.name || '' } });
+    };
+
     const customSelectStyles = {
         control: (base: any, state: any) => ({
-            ...base,
-            backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+            ...base, backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
             borderColor: state.isFocused ? '#3b82f6' : (isDarkMode ? '#334155' : '#e2e8f0'),
-            borderRadius: '0.75rem',
-            minHeight: '42px',
-            padding: '0 4px',
-            boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
-            fontSize: '0.875rem',
+            borderRadius: '0.75rem', minHeight: '42px', padding: '0 4px',
+            boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none', fontSize: '0.875rem',
         }),
-        menu: (base: any) => ({
-            ...base, zIndex: 9999, backgroundColor: isDarkMode ? '#1e293b' : '#ffffff', fontSize: '0.875rem'
-        }),
+        menu: (base: any) => ({ ...base, zIndex: 9999, backgroundColor: isDarkMode ? '#1e293b' : '#ffffff', fontSize: '0.875rem' }),
         option: (base: any, state: any) => ({
             ...base, cursor: 'pointer',
             backgroundColor: state.isFocused ? (isDarkMode ? '#334155' : '#eff6ff') : 'transparent',
@@ -105,29 +203,28 @@ function CompanySettingsSection({ user }: { user: any }) {
         input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
     };
 
-    useEffect(() => {
-        companyService.getSettings().then(res => {
-            const compData = res.data || res;
-            setCompany(compData);
-            setTaxCode(compData?.tax_code || '');
-        }).catch(err => console.error(err));
-
-        companyService.getMembers().then(res => {
-            const memData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-            setMembers(memData);
-        }).catch(err => console.error(err));
-    }, []);
-
     const handleLookupTax = async () => {
         if (!taxCode.trim()) return toast.error("Vui lòng nhập mã số thuế");
         try {
             const res = await companyService.lookupTax(taxCode);
+
+            let newLocation = { ...company.location, street_address: res.address || company.location.street_address };
+
+            if (res.structured_location) {
+                newLocation = {
+                    ...company.location,
+                    ...res.structured_location,
+                    country: 'Việt Nam'
+                };
+            }
+
             setCompany((prev: any) => ({
                 ...prev,
                 name: res.company_name || prev.name,
-                address: res.address || prev.address
+                location: newLocation
             }));
-            toast.success("Đã tìm thấy thông tin công ty từ VietQR!");
+
+            toast.success("Đã tìm thấy và tự động điền địa chỉ!");
         } catch (e) {
             toast.error("Không tìm thấy dữ liệu từ Mã số thuế này");
         }
@@ -136,18 +233,28 @@ function CompanySettingsSection({ user }: { user: any }) {
     const handleSaveCompany = async () => {
         setIsSaving(true);
         try {
-            await companyService.updateSettings({
+            const payload = {
                 tax_code: taxCode,
                 name: company.name,
                 industry: company.industry,
                 size: company.size,
                 website: company.website,
-                address: company.address,
+                location: company.location,
+                address: company.location.street_address,
                 license_file_url: company.license_file_url
-            });
-            toast.success("Đã cập nhật thông tin công ty. Nếu đổi MST, vui lòng đợi Admin duyệt lại.");
-            const res = await companyService.getSettings()
-            setCompany(res.data);
+            };
+
+            const res = await companyService.updateSettings(payload);
+
+            setCompany((prev: any) => ({
+                ...prev,
+                ...payload,
+                status: res.new_company_status || prev.status,
+                updated_at: new Date().toISOString()
+            }));
+
+            toast.success("Đã cập nhật thông tin công ty thành công!");
+
         } catch (e: any) {
             toast.error(e.response?.data?.detail || "Lỗi khi lưu thông tin");
         } finally {
@@ -167,30 +274,20 @@ function CompanySettingsSection({ user }: { user: any }) {
     };
 
     return (
-        <div className="max-w-5xl mx-auto pb-20 space-y-6">
-            <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-100 dark:bg-blue-500/10 rounded-xl text-blue-600">
-                    <Building2 className="w-6 h-6" />
-                </div>
-                <div>
-                    <h1 className="text-2xl font-black text-slate-800 dark:text-white">Hồ sơ Doanh nghiệp</h1>
-                    <p className="text-slate-500 text-sm">Quản lý KYC, Giấy phép và Đội ngũ Nhân sự</p>
-                </div>
-            </div>
-
+        <div className="space-y-6">
             {/* TABS */}
-            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                 <button onClick={() => setActiveTab('info')}
-                    className={`px-4 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'info'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    className={`px-4 py-2 font-bold text-sm rounded-xl transition-colors ${activeTab === 'info'
+                        ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                        : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                         }`}>
                     Xác minh KYC
                 </button>
                 <button onClick={() => setActiveTab('members')}
-                    className={`px-4 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'members'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    className={`px-4 py-2 font-bold text-sm rounded-xl transition-colors ${activeTab === 'members'
+                        ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                        : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                         }`}>
                     Đội ngũ Nhân sự
                 </button>
@@ -198,38 +295,51 @@ function CompanySettingsSection({ user }: { user: any }) {
 
             {
                 activeTab === 'info' && company && (
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 space-y-6">
-                        <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-between border border-slate-200 dark:border-slate-700">
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 space-y-8 animate-in fade-in">
+                        <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-between border border-slate-200 dark:border-slate-700 shadow-inner">
                             <div>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Trạng thái Xác minh Doanh nghiệp (KYC)</p>
-                                <p className="text-xs text-slate-500">Chỉ công ty Đã duyệt mới được phép xuất bản chiến dịch Job.</p>
+                                <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider mb-1">Trạng thái Doanh nghiệp</p>
+                                <p className="text-xs text-slate-500 font-medium">Chỉ công ty Đã duyệt mới được phép xuất bản chiến dịch Job.</p>
                             </div>
                             {company.status === CompanyStatus.VERIFIED ? (
-                                <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Đã xác minh</span>
+                                <span className="px-4 py-2 bg-success-100 text-success-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Đã xác minh
+                                </span>
                             ) : company.status === CompanyStatus.PENDING_VERIFICATION ? (
-                                <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-bold flex items-center gap-1">⏳ Đang chờ duyệt</span>
-                            ) : (
-                                <span className="px-3 py-1.5 bg-rose-100 text-rose-700 rounded-lg text-sm font-bold flex items-center gap-1">❌ Bị từ chối</span>
-                            )}
+                                <span className="px-4 py-2 bg-warning-100 text-warning-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
+                                    <Shield className="w-4 h-4" />
+                                    Đang chờ duyệt
+                                </span>
+                            ) : company.status === CompanyStatus.REJECTED ? (
+                                <span className="px-4 py-2 bg-error-100 text-error-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
+                                    <XCircle className="w-4 h-4" />
+                                    Bị từ chối
+                                </span>
+                            ) : company.status === CompanyStatus.SUSPENDED ? (
+                                <span className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
+                                    <Ban className="w-4 h-4" />
+                                    Tạm khóa
+                                </span>
+                            ) : null}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div>
-                                <label className="block text-sm font-semibold mb-2">Mã số thuế (MST) <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Mã số thuế (MST) <span className="text-red-500">*</span></label>
                                 <div className="flex gap-2">
-                                    <input type="text" value={taxCode} onChange={e => setTaxCode(e.target.value)} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="VD: 0312345678" />
-                                    <button onClick={handleLookupTax} className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold rounded-xl text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 whitespace-nowrap">Tra cứu</button>
+                                    <input type="text" value={taxCode} onChange={e => setTaxCode(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-primary-500 transition-colors" placeholder="VD: 0312345678" />
+                                    <button onClick={handleLookupTax} className="px-5 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-bold rounded-xl text-sm hover:bg-primary-200 dark:hover:bg-primary-900/50 whitespace-nowrap transition-colors">Tra cứu</button>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold mb-2">Tên Công ty</label>
-                                <input type="text" value={company.name || ''} onChange={e => setCompany({ ...company, name: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="Ví dụ: Công ty TNHH Công nghệ ABC" />
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Tên Công ty</label>
+                                <input type="text" value={company.name || ''} onChange={e => setCompany({ ...company, name: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-primary-500 transition-colors" placeholder="Ví dụ: Công ty TNHH Công nghệ ABC" />
                             </div>
 
-                            {/* SMART DROPDOWN NGÀNH NGHỀ */}
                             <div>
-                                <label className="block text-sm font-semibold mb-2">Ngành nghề</label>
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Ngành nghề</label>
                                 <Select
                                     options={GROUPED_INDUSTRIES}
                                     styles={customSelectStyles}
@@ -240,10 +350,9 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 />
                             </div>
 
-                            {/* DROPDOWN QUY MÔ ĐỒNG BỘ */}
                             <div>
-                                <label className="block text-sm font-semibold mb-2">Quy mô nhân sự</label>
-                                <select value={company.size || ''} onChange={e => setCompany({ ...company, size: e.target.value })} className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 cursor-pointer">
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Quy mô nhân sự</label>
+                                <select value={company.size || ''} onChange={e => setCompany({ ...company, size: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-primary-500 cursor-pointer transition-colors">
                                     <option value="">Chọn quy mô</option>
                                     {COMPANY_SIZES.map(s => (
                                         <option key={s.value} value={s.value}>{s.label}</option>
@@ -251,55 +360,100 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold mb-2">Website (Tùy chọn)</label>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Website (Tùy chọn)</label>
                                 <div className="relative">
-                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                    <input type="url" value={company.website || ''} onChange={e => setCompany({ ...company, website: e.target.value })} className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="https://www.company-website.com" />
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                    <input type="url" value={company.website || ''} onChange={e => setCompany({ ...company, website: e.target.value })} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-primary-500 transition-colors" placeholder="https://www.company-website.com" />
+                                </div>
+                            </div>
+
+                            {/* MODULE ĐỊA ĐIỂM CHUẨN */}
+                            <div className="md:col-span-2 bg-slate-50/50 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-primary-500" /> Trụ sở kinh doanh
+                                    </label>
+                                    {(company.location?.country || 'Việt Nam') === 'Việt Nam' && (
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Mới (Hiện tại)</button>
+                                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Cũ (Trước 1/7/2025)</button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <select
+                                        className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer"
+                                        value={company.location?.country || 'Việt Nam'}
+                                        onChange={e => setCompany({ ...company, location: { ...company.location, country: e.target.value, province_code: '', district_code: '', ward_code: '' } })}
+                                    >
+                                        <option value="Việt Nam">Việt Nam</option>
+                                        <option value="Nước ngoài">Nước ngoài</option>
+                                    </select>
+
+                                    {(company.location?.country || 'Việt Nam') === 'Việt Nam' ? (
+                                        <>
+                                            <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer" value={company.location?.province_code || ''} onChange={handleProvinceChange}>
+                                                <option value="" disabled>Tỉnh/Thành phố</option>
+                                                {displayedProvinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
+                                            </select>
+
+                                            {domesticVersion === 'old' && (
+                                                <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer disabled:opacity-50" value={company.location?.district_code || ''} onChange={handleDistrictChange} disabled={!company.location?.province_code}>
+                                                    <option value="" disabled>Quận/Huyện</option>
+                                                    {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+                                                </select>
+                                            )}
+
+                                            <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer disabled:opacity-50" value={company.location?.ward_code || ''} onChange={handleWardChange} disabled={domesticVersion === 'new' ? !company.location?.province_code : !company.location?.district_code}>
+                                                <option value="" disabled>Phường/Xã</option>
+                                                {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+                                            </select>
+
+                                            <div className="col-span-1 md:col-span-4 mt-1 relative">
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Số nhà, tên đường (Hoặc địa chỉ tự động điền từ Tra cứu MST)"
+                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 transition-colors"
+                                                    value={company.location?.street_address || ''}
+                                                    onChange={e => setCompany({ ...company, location: { ...company.location, street_address: e.target.value } })}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="col-span-1 md:col-span-3 mt-1 relative">
+                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                            <input
+                                                type="text"
+                                                placeholder="VD: 123 Orchard Road, Singapore"
+                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 transition-colors"
+                                                value={company.location?.street_address || ''}
+                                                onChange={e => setCompany({ ...company, location: { ...company.location, street_address: e.target.value } })}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold mb-2">Địa chỉ Đăng ký kinh doanh</label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                    <input type="text" value={company.address || ''} onChange={e => setCompany({ ...company, address: e.target.value })} className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500" placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" />
-                                </div>
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold mb-2">
-                                    Giấy phép kinh doanh
-                                </label>
-
-                                {/* Link */}
+                                <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Giấy phép kinh doanh</label>
                                 <input
                                     type="text"
                                     value={company.license_file_url || ""}
-                                    onChange={(e) =>
-                                        setCompany({
-                                            ...company,
-                                            license_file_url: e.target.value,
-                                        })
-                                    }
+                                    onChange={(e) => setCompany({ ...company, license_file_url: e.target.value })}
                                     placeholder="https://res.cloudinary.com/..."
-                                    className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:border-blue-500 dark:text-white"
+                                    className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-medium outline-none focus:border-primary-500 transition-colors"
                                 />
 
-                                {/* Upload */}
                                 <label
-                                    className="group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800"
+                                    className="group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 cursor-pointer transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={(e) => {
                                         e.preventDefault();
-
                                         const file = e.dataTransfer.files?.[0];
-                                        if (!file) return;
-
-                                        setCompany({
-                                            ...company,
-                                            license_file_url: file.name,
-                                        });
+                                        if (file) setCompany({ ...company, license_file_url: file.name });
                                     }}
                                 >
                                     <input
@@ -308,85 +462,64 @@ function CompanySettingsSection({ user }: { user: any }) {
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
-                                            if (!file) return;
-
-                                            setCompany({
-                                                ...company,
-                                                license_file_url: file.name,
-                                            });
+                                            if (file) setCompany({ ...company, license_file_url: file.name });
                                         }}
                                     />
 
-                                    <Briefcase className="w-11 h-11 text-blue-500 mb-4" />
-
-                                    <p className="font-semibold text-slate-700 dark:text-slate-200">
-                                        Kéo & thả file vào đây
-                                    </p>
-
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                        hoặc <span className="text-blue-600 font-semibold">bấm để chọn file</span>
-                                    </p>
-
-                                    <p className="mt-2 text-xs text-slate-400">
-                                        PDF, JPG, PNG • Tối đa 10MB
-                                    </p>
+                                    <Briefcase className="w-12 h-12 text-primary-500 mb-4 group-hover:scale-110 transition-transform" />
+                                    <p className="font-bold text-slate-700 dark:text-slate-200">Kéo & thả file vào đây</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">hoặc <span className="text-primary-600 font-bold">bấm để chọn file</span></p>
+                                    <p className="mt-2 text-xs text-slate-400 font-medium">PDF, JPG, PNG • Tối đa 10MB</p>
 
                                     {company.license_file_url && (
-                                        <a
-                                            href={company.license_file_url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-sm text-blue-600 hover:underline mt-2 inline-block relative z-10"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            Xem file
+                                        <a href={company.license_file_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline mt-4 inline-block relative z-10 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-lg shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                            Xem file hiện tại
                                         </a>
                                     )}
                                 </label>
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
-                            {user.role === UserRole.HR_OWNER && (
-                                <button onClick={handleSaveCompany} disabled={isSaving} className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 flex items-center gap-2">
-                                    <Save className="w-4 h-4" /> {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                                </button>
-                            )}
+                        <div className="flex justify-end pt-6 border-t border-slate-200 dark:border-slate-700">
+                            <button onClick={handleSaveCompany} disabled={isSaving} className="px-8 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 flex items-center gap-2 shadow-lg shadow-primary-500/30 transition-all disabled:opacity-70">
+                                <Save className="w-5 h-5" /> {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            </button>
                         </div>
                     </div>
                 )
             }
 
+            {/* TAB MEMBERS GIỮ NGUYÊN HOẶC ĐỒNG BỘ CSS NẾU MUỐN */}
             {
                 activeTab === 'members' && (
-                    <div className="space-y-6">
+                    <div className="space-y-6 animate-in fade-in">
                         {user.role === UserRole.HR_OWNER && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
-                                <h3 className="font-bold mb-4 flex items-center gap-2"><Mail className="w-5 h-5 text-indigo-500" /> Mời thành viên mới (HR Member)</h3>
+                            <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <h3 className="font-black mb-4 flex items-center gap-2 text-slate-800 dark:text-white"><Mail className="w-5 h-5 text-primary-500" /> Mời thành viên mới (HR Member)</h3>
                                 <div className="flex flex-col sm:flex-row gap-3">
-                                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="Nhập email nhân viên..." className="flex-1 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500" />
-                                    <button onClick={handleInviteMember} className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700">Gửi lời mời</button>
+                                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="Nhập email nhân viên..." className="flex-1 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-primary-500 transition-colors" />
+                                    <button onClick={handleInviteMember} className="px-8 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all">Gửi lời mời</button>
                                 </div>
                             </div>
                         )}
 
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700">
-                                    <tr><th className="p-4 pl-6">Thành viên</th><th className="p-4">Quyền hạn</th><th className="p-4">Trạng thái</th></tr>
+                                    <tr><th className="p-5 pl-6">Thành viên</th><th className="p-5">Quyền hạn</th><th className="p-5">Trạng thái</th></tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                                     {members.map(m => (
-                                        <tr key={m.id}>
-                                            <td className="p-4 pl-6">
-                                                <p className="font-bold text-sm text-slate-800 dark:text-white">{m.full_name}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{m.email}</p>
+                                        <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="p-5 pl-6">
+                                                <p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{m.full_name}</p>
+                                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{m.email}</p>
                                             </td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${m.role === UserRole.HR_OWNER ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700'}`}>{m.role.toUpperCase()}</span>
+                                            <td className="p-5">
+                                                <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-lg shadow-sm ${m.role === UserRole.HR_OWNER ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}`}>{m.role}</span>
                                             </td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${m.is_verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{m.is_verified ? 'Hoạt động' : 'Chưa kích hoạt'}</span>
+                                            <td className="p-5">
+                                                <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-lg shadow-sm ${m.is_verified ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'}`}>{m.is_verified ? 'Hoạt động' : 'Chờ xác thực'}</span>
                                             </td>
                                         </tr>
                                     ))}
@@ -396,7 +529,7 @@ function CompanySettingsSection({ user }: { user: any }) {
                     </div>
                 )
             }
-        </div >
+        </div>
     );
 }
 
@@ -431,47 +564,37 @@ function AdminSettingsSection({ user }: { user: any }) {
 
     const filtered = users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()));
 
-    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" /></div>;
+    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
 
     return (
-        <div className="max-w-5xl mx-auto pb-20 space-y-6">
-            <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-purple-100 dark:bg-purple-500/10 rounded-xl text-purple-600">
-                    <Shield className="w-6 h-6" />
-                </div>
-                <div>
-                    <h1 className="text-2xl font-black text-slate-800 dark:text-white">Phân quyền Hệ thống</h1>
-                    <p className="text-slate-500 text-sm">Quản lý người dùng cấp cao</p>
-                </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+        <div className="space-y-6 animate-in fade-in">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input type="text" placeholder="Tìm theo email hoặc tên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-purple-500" />
+                    <input type="text" placeholder="Tìm theo email hoặc tên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 transition-colors" />
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 dark:border-slate-700">
-                        <tr><th className="p-4 pl-6">Người dùng</th><th className="p-4">Trạng thái</th><th className="p-4">Ngày tạo</th><th className="p-4 pr-6 text-right">Role</th></tr>
+                        <tr><th className="p-5 pl-6">Người dùng</th><th className="p-5">Trạng thái</th><th className="p-5">Ngày tạo</th><th className="p-5 pr-6 text-right">Role</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                         {filtered.map(u => {
                             const roleConfig = ROLES.find(r => r.value === u.role) || ROLES[0];
                             return (
-                                <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td className="p-4 pl-6">
-                                        <div className="flex items-center gap-3">
-                                            {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" /> : <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500 uppercase">{u.full_name?.charAt(0)}</div>}
-                                            <div><p className="font-semibold text-sm text-slate-800 dark:text-white">{u.full_name}</p><p className="text-xs text-slate-400">{u.email}</p></div>
+                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="p-5 pl-6">
+                                        <div className="flex items-center gap-4">
+                                            {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700" /> : <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 uppercase shadow-sm">{u.full_name?.charAt(0)}</div>}
+                                            <div><p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{u.full_name}</p><p className="text-xs font-medium text-slate-400">{u.email}</p></div>
                                         </div>
                                     </td>
-                                    <td className="p-4"><span className={`text-xs font-bold px-2 py-1 rounded-lg ${u.is_verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{u.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
-                                    <td className="p-4 text-sm text-slate-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '—'}</td>
-                                    <td className="p-4 pr-6 text-right">
-                                        <select value={u.role || UserRole.APPLICANT} disabled={updatingId === u.id || u.email === user?.email} onChange={e => handleRoleChange(u.id, e.target.value)} className={`text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer border-none shadow-sm ${roleConfig.color} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                                    <td className="p-5"><span className={`text-[10px] uppercase tracking-wider font-black px-3 py-1.5 rounded-lg shadow-sm ${u.is_verified ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'}`}>{u.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
+                                    <td className="p-5 text-sm font-medium text-slate-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '—'}</td>
+                                    <td className="p-5 pr-6 text-right">
+                                        <select value={u.role || UserRole.APPLICANT} disabled={updatingId === u.id || u.email === user?.email} onChange={e => handleRoleChange(u.id, e.target.value)} className={`text-xs font-bold px-4 py-2 rounded-xl outline-none cursor-pointer border-none shadow-sm ${roleConfig.color} disabled:opacity-50 disabled:cursor-not-allowed transition-all`}>
                                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                                         </select>
                                     </td>

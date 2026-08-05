@@ -14,53 +14,29 @@ export default function FaqSection() {
     const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
     return (
-        <section className="py-32 px-6 bg-slate-50 dark:bg-[#050505] transition-colors">
+        <section className="py-32 px-6 bg-surface dark:bg-slate-800 transition-colors">
             <div className="max-w-3xl mx-auto">
                 <h2 className="text-3xl font-black text-slate-900 dark:text-white text-center mb-12">Câu hỏi thường gặp</h2>
                 <div className="space-y-4">
                     {FAQS.map((faq, i) => (
                         <div
                             key={i}
-                            className="
-                                border border-slate-200 dark:border-slate-700/80
-                                rounded-2xl overflow-hidden
-                                bg-white dark:bg-slate-900
-                                shadow-sm dark:shadow-black/20
-                                transition-colors
-                            "
+                            className=" border border-slate-200 dark:border-slate-700/80 rounded-2xl overflow-hidden bg-surface dark:bg-slate-800 shadow-sm dark:shadow-black/20 transition-colors"
                         >
                             <button
                                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                                className="
-                                    w-full px-6 py-4 
-                                    flex items-center justify-between
-                                    font-bold
-                                    text-slate-800 dark:text-slate-100
-                                    text-left
-                                    hover:bg-slate-50 dark:hover:bg-slate-800
-                                    transition-colors
-                                "
+                                className="w-full px-6 py-4 flex items-center justify-between font-bold text-slate-800 dark:text-slate-100 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                                 {faq.q}
                                 <ChevronDown
-                                    className={`
-                                        w-5 h-5
-                                        text-slate-400 dark:text-slate-400
-                                        transition-transform
-                                        ${activeFaq === i ? 'rotate-180 text-primary-500' : ''}
-                                    `}
+                                    className={`w-5 h-5 text-slate-400 dark:text-slate-400 transition-transform ${activeFaq === i ? 'rotate-180 text-primary-500' : ''}`}
                                 />
                             </button>
                             <AnimatePresence>
                                 {activeFaq === i && (
                                     <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                                         <p
-                                            className="
-                                                px-6 pb-4
-                                                text-slate-600 dark:text-slate-300
-                                                text-sm font-medium
-                                                leading-relaxed
-                                            "
+                                            className="px-6 pb-4 text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed"
                                         >{faq.a}</p>
                                     </motion.div>
                                 )}

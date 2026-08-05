@@ -1,17 +1,92 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Globe, Link, Save, Briefcase, Camera, Loader2, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useMyProfile } from '@/features/application/useApplication';
 import { UserRole } from '@/types';
 import apiClient from '@/lib/api-client';
+import { systemService, LocationUnit } from '@/features/system/system.service';
 
 export default function ProfileForm() {
     const { user, updateUser } = useAuth();
     const { profile, setProfile, isLoading, isSaving, updateProfile } = useMyProfile();
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+    const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
+    const domesticVersion = profile?.current_location?.version || 'new';
+    const displayedProvinces = allProvinces.filter(p => p.version === domesticVersion);
+    const [districts, setDistricts] = useState<LocationUnit[]>([]);
+    const [wards, setWards] = useState<LocationUnit[]>([]);
+
+    useEffect(() => {
+        systemService.getLocations().then(res => setAllProvinces(res)).catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        const loadInitialSubLocations = async () => {
+            const currentCountry = profile?.current_location?.country || 'Việt Nam';
+            if (currentCountry === 'Việt Nam' && profile?.current_location?.province_code) {
+                if (domesticVersion === 'new') {
+                    const wds = await systemService.getSubLocations(profile.current_location.province_code);
+                    setWards(wds.filter(item => item.version === 'new'));
+                    setDistricts([]);
+                } else {
+                    const dists = await systemService.getSubLocations(profile.current_location.province_code);
+                    setDistricts(dists.filter(item => item.version === 'old'));
+
+                    if (profile.current_location?.district_code) {
+                        const wds = await systemService.getSubLocations(profile.current_location.district_code);
+                        setWards(wds.filter(item => item.version === 'old'));
+                    } else {
+                        setWards([]);
+                    }
+                }
+            }
+        };
+        if (profile) loadInitialSubLocations();
+    }, [profile?.current_location?.province_code, domesticVersion, profile?.current_location?.country]);
+
+    const handleVersionChange = (ver: 'new' | 'old') => {
+        setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, version: ver } }));
+    };
+
+    const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const prov = displayedProvinces.find(p => p.code === code);
+        setProfile((prev: any) => ({
+            ...prev,
+            current_location: {
+                ...prev.current_location, province_code: code, province_name: prov?.name || '', version: domesticVersion,
+                district_code: '', district_name: '', ward_code: '', ward_name: '', full_address_snapshot: ''
+            }
+        }));
+
+        if (domesticVersion === 'new') {
+            const wds = await systemService.getSubLocations(code);
+            setWards(wds.filter(item => item.version === 'new'));
+            setDistricts([]);
+        } else {
+            const dists = await systemService.getSubLocations(code);
+            setDistricts(dists.filter(item => item.version === 'old'));
+            setWards([]);
+        }
+    };
+
+    const handleDistrictChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const dist = districts.find(d => d.code === code);
+        setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, district_code: code, district_name: dist?.name || '', ward_code: '', ward_name: '', full_address_snapshot: '' } }));
+        const wds = await systemService.getSubLocations(code);
+        setWards(wds.filter(item => item.version === 'old'));
+    };
+
+    const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const code = e.target.value;
+        const ward = wards.find(w => w.code === code);
+        setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, ward_code: code, ward_name: ward?.name || '' } }));
+    };
 
     if (isLoading || !user) {
         return (
@@ -76,7 +151,7 @@ export default function ProfileForm() {
                                     <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
                                 </div>
                             ) : (
-                                <img src={profile.avatar_url || user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             )}
                         </div>
                         <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-transform hover:scale-110">
@@ -186,32 +261,88 @@ export default function ProfileForm() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Khu vực sinh sống</label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            value={profile.current_location?.province_name || ''}
-                                            onChange={(e) => setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, province_name: e.target.value } }))}
-                                            className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                            placeholder="Hà Nội, TP.HCM..."
-                                        />
-                                    </div>
+                            {/* KHU VỰC ĐỊA ĐIỂM (UI ĐỒNG BỘ) */}
+                            <div className="md:col-span-2 space-y-4 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                        Khu vực sinh sống
+                                    </label>
+                                    {(profile.current_location?.country || 'Việt Nam') === 'Việt Nam' && (
+                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Mới (Hiện tại)</button>
+                                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Cũ (Trước 1/7/2025)</button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Lương mong muốn tối thiểu (VND)</label>
-                                    <div className="relative">
-                                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input
-                                            type="number"
-                                            value={profile.expected_salary_min || ''}
-                                            onChange={(e) => setProfile((prev: any) => ({ ...prev, expected_salary_min: Number(e.target.value) }))}
-                                            className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                            placeholder="15000000"
-                                        />
-                                    </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <select
+                                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer"
+                                        value={profile.current_location?.country || 'Việt Nam'}
+                                        onChange={e => setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, country: e.target.value, province_code: '', district_code: '', ward_code: '' } }))}
+                                    >
+                                        <option value="Việt Nam">Việt Nam</option>
+                                        <option value="Nước ngoài">Nước ngoài</option>
+                                    </select>
+
+                                    {(profile.current_location?.country || 'Việt Nam') === 'Việt Nam' ? (
+                                        <>
+                                            <select className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value={profile.current_location?.province_code || ''} onChange={handleProvinceChange}>
+                                                <option value="" disabled>Tỉnh/Thành phố</option>
+                                                {displayedProvinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
+                                            </select>
+
+                                            {domesticVersion === 'old' && (
+                                                <select className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer disabled:opacity-50" value={profile.current_location?.district_code || ''} onChange={handleDistrictChange} disabled={!profile.current_location?.province_code}>
+                                                    <option value="" disabled>Quận/Huyện</option>
+                                                    {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+                                                </select>
+                                            )}
+
+                                            <select className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer disabled:opacity-50" value={profile.current_location?.ward_code || ''} onChange={handleWardChange} disabled={domesticVersion === 'new' ? !profile.current_location?.province_code : !profile.current_location?.district_code}>
+                                                <option value="" disabled>Phường/Xã</option>
+                                                {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+                                            </select>
+
+                                            {/* Input địa chỉ */}
+                                            <div className="col-span-1 md:col-span-4 relative">
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Số nhà, tên đường, thôn, xóm..."
+                                                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                                    value={profile.current_location?.street_address || ''}
+                                                    onChange={e => setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, street_address: e.target.value } }))}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="col-span-1 md:col-span-2 relative">
+                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="VD: 123 Orchard Road, Singapore"
+                                                className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                                value={profile.current_location?.street_address || ''}
+                                                onChange={e => setProfile((prev: any) => ({ ...prev, current_location: { ...prev.current_location, street_address: e.target.value } }))}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Lương mong muốn */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Lương mong muốn tối thiểu (VND)</label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="number"
+                                        value={profile.expected_salary_min || ''}
+                                        onChange={(e) => setProfile((prev: any) => ({ ...prev, expected_salary_min: Number(e.target.value) }))}
+                                        className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                        placeholder="15000000"
+                                    />
                                 </div>
                             </div>
 
@@ -247,7 +378,7 @@ export default function ProfileForm() {
                         </>
                     )}
 
-                    {/* BIO (Giới thiệu bản thân - Dùng chung) */}
+                    {/* BIO */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Giới thiệu bản thân</label>
                         <textarea

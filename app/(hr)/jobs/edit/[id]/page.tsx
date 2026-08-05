@@ -77,9 +77,16 @@ export default function EditEnterpriseJobPage() {
                 },
                 working_hours: data.working_hours || '',
                 location: {
+                    country: data.location?.country || 'Việt Nam',
+                    version: data.location?.version || 'new',
+                    province_code: data.location?.province_code || '',
                     province_name: data.location?.province_name || '',
+                    district_code: data.location?.district_code || '',
+                    district_name: data.location?.district_name || '',
+                    ward_code: data.location?.ward_code || '',
+                    ward_name: data.location?.ward_name || '',
                     street_address: data.location?.street_address || data.location?.full_address_snapshot || '',
-                    country: data.location?.country || 'Việt Nam'
+                    full_address_snapshot: data.location?.full_address_snapshot || ''
                 },
                 description: data.description || '',
                 requirements: data.requirements || '',

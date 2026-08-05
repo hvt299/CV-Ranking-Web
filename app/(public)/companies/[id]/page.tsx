@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Building2, MapPin, Users, Star, Eye, Globe, FileText, CheckCircle2, Briefcase, ChevronLeft, Loader2, XCircle, Share2, ShieldCheck, Map, Zap, DollarSign, Calendar } from 'lucide-react';
+import { Building2, MapPin, Users, Star, Eye, Globe, FileText, CheckCircle2, Briefcase, ChevronLeft,
+    Loader2, XCircle, Share2, ShieldCheck, Map, Zap, DollarSign, Calendar, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -22,6 +23,13 @@ export default function PublicCompanyDetailPage() {
     const [companyJobs, setCompanyJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const handleShare = () => {
+        if (!company?.id) return;
+        const link = `${window.location.origin}/companies/${company.id}`;
+        navigator.clipboard.writeText(link);
+        toast.success('Đã sao chép link công ty!');
+    };
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -91,7 +99,7 @@ export default function PublicCompanyDetailPage() {
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full pt-28 pb-20 animate-in fade-in duration-500">
                 <button
                     onClick={() => router.push('/companies')}
-                    className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold mb-6 transition-colors w-fit"
+                    className="flex items-center gap-2 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold mb-6 transition-colors w-fit"
                 >
                     <ChevronLeft className="w-4 h-4" /> Danh sách công ty
                 </button>
@@ -99,17 +107,16 @@ export default function PublicCompanyDetailPage() {
                 {/* KHỐI HERO: Banner & Thông tin cơ bản */}
                 <div className="bg-white dark:bg-text border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm mb-8 relative">
                     {/* Banner */}
-                    <div className="h-48 md:h-64 w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+                    <div className="h-48 md:h-64 w-full relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                         {company.banner_url ? (
-                            <img src={company.banner_url} alt="Banner" className="w-full h-full object-cover relative" />
+                            <img src={company.banner_url} alt={`Banner ${company.name}`} className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full relative flex items-center justify-center">
-                                <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-blue-400 via-transparent to-transparent blur-2xl" />
-                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[16px_16px]" />
-                                <Building2 className="w-20 h-20 text-slate-300 dark:text-slate-600 relative z-10 opacity-50" />
+                            <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-blue-400 via-transparent to-transparent blur-xl" />
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[12px_12px]" />
+                                <Building2 className="w-16 h-16 text-slate-300 dark:text-slate-600 relative z-10" />
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
                     </div>
 
                     <div className="px-6 md:px-10 pb-8 relative">
@@ -125,10 +132,12 @@ export default function PublicCompanyDetailPage() {
                                 </div>
 
                                 <div className="text-center md:text-left mb-2 z-10 flex-1 min-w-0 pt-2 md:pt-0 w-full">
-                                    <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mb-2 flex items-center justify-center md:justify-start gap-2 flex-wrap md:flex-nowrap">
-                                        <span className="line-clamp-2 leading-tight">{company.name}</span>
-                                        <span title="Đã xác thực (Verified KYC)" className="flex items-center shrink-0">
-                                            <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                                    <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mb-3 leading-tight text-center md:text-left">
+                                        <span className="inline line-clamp-2">
+                                            {company.name}
+                                            <span title="Đã xác thực (Verified KYC)" className="inline-flex items-center justify-center align-middle ml-2 -mt-1 shrink-0">
+                                                <ShieldCheck className="w-6 h-6 md:w-8 md:h-8 text-emerald-500 drop-shadow-sm" />
+                                            </span>
                                         </span>
                                     </h1>
                                     <div className="flex items-center justify-center md:justify-start gap-4 text-sm font-bold text-slate-600 dark:text-slate-400">
@@ -143,9 +152,14 @@ export default function PublicCompanyDetailPage() {
                                 </div>
                             </div>
 
-                            <button className="w-full md:w-auto px-6 py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shrink-0">
-                                <Share2 className="w-4 h-4" /> Chia sẻ
-                            </button>
+                            <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+                                <button className="flex-1 md:flex-none px-6 py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shrink-0 hover:text-rose-500">
+                                    <Heart className="w-4 h-4" /> Lưu
+                                </button>
+                                <button onClick={handleShare} className="flex-1 md:flex-none px-6 py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shrink-0 hover:text-blue-500">
+                                    <Share2 className="w-4 h-4" /> Chia sẻ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -182,22 +196,12 @@ export default function PublicCompanyDetailPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Mã số thuế</p>
-                                    <p className="font-bold text-slate-800 dark:text-slate-200">{company.tax_code}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Người đại diện pháp luật</p>
-                                    <p className="font-bold text-slate-800 dark:text-slate-200">{company.legal_representative_name || 'Đang cập nhật'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Ngày xác thực</p>
-                                    <p className="font-bold text-slate-800 dark:text-slate-200">
-                                        {company.verified_at ? new Date(company.verified_at).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
-                                    </p>
+                                    <p className="font-bold text-slate-800 dark:text-slate-200">{company.tax_code || 'Đang cập nhật'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Trạng thái định danh</p>
                                     <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1">
-                                        <ShieldCheck className="w-4 h-4" /> Xác thực thành công (KYC)
+                                        <ShieldCheck className="w-4 h-4" /> Đã xác minh (KYC)
                                     </p>
                                 </div>
                             </div>
@@ -246,13 +250,15 @@ export default function PublicCompanyDetailPage() {
                                     </div>
                                 )}
 
-                                {(company.location?.full_address_snapshot || company.location?.province_name) && (
+                                {(company.location?.street_address || company.location?.province_name) && (
                                     <div className="flex items-start gap-3 text-sm pt-2">
                                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl shrink-0 mt-0.5"><MapPin className="w-4 h-4" /></div>
                                         <div>
                                             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-1">Trụ sở chính</p>
                                             <p className="font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
-                                                {company.location.full_address_snapshot || (company.location.country && company.location.country !== 'Việt Nam' ? company.location.country : company.location.province_name)}
+                                                {company.location.country && company.location.country !== 'Việt Nam'
+                                                    ? Array.from(new Set([company.location.street_address, company.location.country].filter(Boolean))).join(', ')
+                                                    : Array.from(new Set([company.location?.street_address, company.location?.ward_name, company.location?.district_name, company.location?.province_name].filter(Boolean))).join(', ') || 'Đang cập nhật'}
                                             </p>
                                             <button className="text-blue-600 dark:text-blue-400 font-bold text-xs mt-1.5 flex items-center gap-1 hover:underline">
                                                 <Map className="w-3 h-3" /> Xem bản đồ

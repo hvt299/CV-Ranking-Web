@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Building2, MapPin, Users, Star, Eye, BriefcaseIcon } from 'lucide-react';
+import { Building2, MapPin, Users, Star, Eye, BriefcaseIcon, Heart } from 'lucide-react';
 import { Company } from '@/types';
+import { INDUSTRIES } from '@/constants/job.constants';
 
 interface CompanyCardProps {
     company: Company;
@@ -16,6 +17,15 @@ export default function CompanyCard({ company }: CompanyCardProps) {
             onClick={() => router.push(`/companies/${company.id}`)}
             className="cursor-pointer group bg-white dark:bg-text rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:-translate-y-1 transition-all duration-300 shadow-sm overflow-hidden flex flex-col h-full relative"
         >
+            {/* Nút Lưu (Thả tim) nổi trên Card */}
+            <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                className="absolute top-3 right-3 p-2 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 text-slate-400 hover:text-rose-500 rounded-xl backdrop-blur-md transition-colors z-20 shadow-sm opacity-0 group-hover:opacity-100"
+                title="Lưu công ty"
+            >
+                <Heart className="w-4 h-4" />
+            </button>
+
             {/* Banner Công ty */}
             <div className="h-32 w-full relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                 {company.banner_url ? (
@@ -48,17 +58,19 @@ export default function CompanyCard({ company }: CompanyCardProps) {
                     {company.industry && (
                         <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
                             <BriefcaseIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                            <span className="line-clamp-1">{company.industry}</span>
+                            <span className="line-clamp-1">
+                                {INDUSTRIES.find(i => i.value === company.industry)?.label || 'Đang cập nhật'}
+                            </span>
                         </div>
                     )}
 
-                    {(company.location?.full_address_snapshot || company.location?.province_name || company.location?.country) && (
-                        <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium" title={company.location.full_address_snapshot}>
+                    {(company.location?.province_name || company.location?.country) && (
+                        <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium" title={Array.from(new Set([company.location?.street_address, company.location?.ward_name, company.location?.district_name, company.location?.province_name].filter(Boolean))).join(', ')}>
                             <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                             <span className="line-clamp-2 leading-relaxed">
-                                {company.location.full_address_snapshot || (company.location.country && company.location.country !== 'Việt Nam'
-                                    ? company.location.country
-                                    : company.location.province_name)}
+                                {company.location.country && company.location.country !== 'Việt Nam'
+                                    ? Array.from(new Set([company.location.street_address, company.location.country].filter(Boolean))).join(', ')
+                                    : Array.from(new Set([company.location?.street_address, company.location?.ward_name, company.location?.district_name, company.location?.province_name].filter(Boolean))).join(', ') || 'Đang cập nhật'}
                             </span>
                         </div>
                     )}

@@ -53,6 +53,10 @@ export function middleware(request: NextRequest) {
         }
 
         if (role === UserRole.ADMIN) {
+            if (pathname.startsWith('/profile')) {
+                return NextResponse.redirect(new URL('/dashboard', request.url));
+            }
+
             return NextResponse.next();
         }
 
@@ -63,8 +67,18 @@ export function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/overview', request.url));
         }
 
-        const isHrRole = role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER;
-        if (isHrRole && (pathname.startsWith('/overview') || pathname.startsWith('/my-applications'))) {
+        const isHrRole =
+            role === UserRole.HR_OWNER ||
+            role === UserRole.HR_MEMBER;
+
+        if (
+            isHrRole &&
+            (
+                pathname.startsWith('/overview') ||
+                pathname.startsWith('/my-applications') ||
+                pathname.startsWith('/profile')
+            )
+        ) {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 

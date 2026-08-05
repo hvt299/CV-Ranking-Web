@@ -9,10 +9,10 @@ import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import { useAuthFlow } from '@/features/auth/useAuthFlow';
 import AuthLogo from '@/components/ui/AuthLogo';
-import HrEnterpriseForm from '@/components/auth/HrEnterpriseForm';
+import HrEnterpriseForm, { HrInfoState, DEFAULT_HR_INFO } from '@/components/auth/HrEnterpriseForm';
 import AuthSocialButtons from '@/components/auth/AuthSocialButtons';
 import SocialRoleModal from '@/components/auth/SocialRoleModal';
-import { getPasswordStrength, parseVietnameseAddress } from '@/utils/format';
+import { getPasswordStrength } from '@/utils/format';
 
 export default function RegisterPage() {
     const { register: handleRegister, isLoading, socialLoginFlow } = useAuthFlow();
@@ -25,11 +25,10 @@ export default function RegisterPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [role, setRole] = useState<UserRole.HR_OWNER | UserRole.APPLICANT>(UserRole.APPLICANT);
-    const [hrInfo, setHrInfo] = useState({ companyName: '', taxCode: '', industry: '', size: '', address: '', website: '' });
+    const [hrInfo, setHrInfo] = useState<HrInfoState>(DEFAULT_HR_INFO);
 
     const [error, setError] = useState('');
 
-    // Modal social dùng chung với Login — không tự quản state riêng nữa
     const [showRoleModal, setShowRoleModal] = useState(false);
     const [tempSocialToken, setTempSocialToken] = useState('');
     const [socialProvider, setSocialProvider] = useState<'google' | 'linkedin'>('google');
@@ -67,8 +66,8 @@ export default function RegisterPage() {
         if (!agreeTerms) return setError('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư!');
         if (password !== confirmPassword) return setError('Mật khẩu xác nhận không khớp!');
         if (passStrength.score < 2) return setError('Mật khẩu quá yếu! Yêu cầu chữ hoa, số và ký tự đặc biệt.');
-        if (role === UserRole.HR_OWNER && (!hrInfo.companyName.trim() || !hrInfo.taxCode.trim())) {
-            return setError('Vui lòng nhập Tên công ty và Mã số thuế!');
+        if (role === UserRole.HR_OWNER && (!hrInfo.companyName.trim() || !hrInfo.taxCode.trim() || !hrInfo.industry || !hrInfo.size)) {
+            return setError('Vui lòng điền đầy đủ Tên công ty, MST, Ngành nghề và Quy mô!');
         }
 
         const payload = {
@@ -80,7 +79,7 @@ export default function RegisterPage() {
                 industry: hrInfo.industry,
                 size: hrInfo.size,
                 website: hrInfo.website,
-                location: parseVietnameseAddress(hrInfo.address) // Bóc tách tự động ra LocationDetail
+                location: hrInfo.location
             })
         };
 
@@ -99,7 +98,7 @@ export default function RegisterPage() {
             payload.industry = companyData.industry;
             payload.size = companyData.size;
             payload.website = companyData.website;
-            payload.location = parseVietnameseAddress(companyData.address); // Bóc tách tự động ra LocationDetail
+            payload.location = companyData.location;
         }
 
         const result = await socialLoginFlow(provider, payload);
@@ -201,7 +200,7 @@ export default function RegisterPage() {
                         </div>
                     </div>
 
-                    {/* Khu vực thông tin nhà tuyển dụng — dùng chung HrEnterpriseForm với Login/SocialRoleModal */}
+                    {/* Khu vực thông tin nhà tuyển dụng */}
                     {role === UserRole.HR_OWNER && !inviteToken && (
                         <div className="animate-in fade-in slide-in-from-top-2 p-5 bg-primary-50/50 dark:bg-slate-800/50 rounded-2xl border border-primary-100 dark:border-slate-700 space-y-4 mt-2">
                             <h3 className="text-sm font-bold text-primary-700 dark:text-primary-400 flex items-center gap-2"><Building className="w-4 h-4" /> Hồ sơ Doanh nghiệp</h3>
@@ -247,24 +246,24 @@ export default function RegisterPage() {
 
                     {/* KHỐI ĐIỀU KHOẢN */}
                     <div className="space-y-3 pt-2">
-                        <div className="flex items-start gap-2.5 bg-input-bg dark:bg-slate-800/50 p-3.5 rounded-button border border-border dark:border-slate-700">
+                        <div className="flex items-start gap-2.5 bg-input-bg dark:bg-slate-800/50 p-3.5 rounded-button border border-border dark:border-slate-700 transition-colors hover:border-primary-300 dark:hover:border-slate-600">
                             <input type="checkbox" id="agreeTerms" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-border-hover text-primary-600 focus:ring-primary-500 cursor-pointer shrink-0" />
                             <div>
                                 <label htmlFor="agreeTerms" className="text-sm text-text dark:text-slate-300 cursor-pointer block leading-relaxed font-medium">
                                     Tôi đã đọc và đồng ý với <Link href="/terms" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">Chính sách Quyền riêng tư</Link> của hệ thống.
                                 </label>
-                                <p className="text-xs text-error-700 italic mt-1 font-medium">* Chúng tôi không thể cung cấp dịch vụ nếu không nhận được sự đồng ý ở mục này.</p>
+                                <p className="text-xs text-error-600 dark:text-error-400 italic mt-1 font-medium">* Chúng tôi không thể cung cấp dịch vụ nếu không nhận được sự đồng ý ở mục này.</p>
                             </div>
                         </div>
 
                         {role === UserRole.HR_OWNER && !inviteToken && (
-                            <div className="flex items-start gap-2.5 bg-input-bg dark:bg-slate-800/50 p-3.5 rounded-button border border-border dark:border-slate-700">
+                            <div className="flex items-start gap-2.5 bg-input-bg dark:bg-slate-800/50 p-3.5 rounded-button border border-border dark:border-slate-700 transition-colors hover:border-primary-300 dark:hover:border-slate-600">
                                 <input type="checkbox" id="agreeConsulting" checked={agreeConsulting} onChange={e => setAgreeConsulting(e.target.checked)} className="mt-1 w-4 h-4 rounded border-border-hover text-primary-600 focus:ring-primary-500 cursor-pointer shrink-0" />
                                 <div>
                                     <label htmlFor="agreeConsulting" className="text-sm text-text dark:text-slate-300 cursor-pointer block leading-relaxed font-medium">
                                         Tôi đồng ý nhận thông tin tư vấn để được hỗ trợ đăng tin nhanh, cách tối ưu hiệu quả tin đăng và các giải pháp tuyển dụng phù hợp.
                                     </label>
-                                    <p className="text-xs text-text-muted dark:text-text-subtle mt-1 font-medium italic"><b className="text-text dark:text-slate-300">Khuyên dùng:</b> Nếu không có sự đồng ý, chuyên viên sẽ không thể liên hệ hỗ trợ xác thực tài khoản nhanh chóng.</p>
+                                    <p className="text-xs text-text-muted dark:text-slate-400 mt-1 font-medium italic"><b className="text-text dark:text-slate-300">Khuyên dùng:</b> Nếu không có sự đồng ý, chuyên viên sẽ không thể liên hệ hỗ trợ xác thực tài khoản nhanh chóng.</p>
                                 </div>
                             </div>
                         )}
@@ -299,7 +298,7 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            {/* Modal social dùng chung — hiển thị y hệt Login: đủ chọn vai trò + HrEnterpriseForm + checkbox điều khoản */}
+            {/* Modal social dùng chung */}
             <SocialRoleModal
                 isOpen={showRoleModal}
                 isLoading={isLoading}

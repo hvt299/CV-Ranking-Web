@@ -1,114 +1,24 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { jobService } from '@/features/job/job.service';
 import { systemService } from '@/features/system/system.service';
 import { Job } from '@/types';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
-import { Briefcase, Loader2, LayoutGrid, List, Flame, XCircle, ChevronLeft, ChevronRight, MapPin, Building2, DollarSign } from 'lucide-react';
+import { Briefcase, Loader2, LayoutGrid, List, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuth } from '@/context/AuthContext';
-import { formatSalaryRange } from '@/utils/format';
-import Link from 'next/link';
-
-const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
-    <Link
-        href={`/careers/${job.id}`}
-        className="group block relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-orange-100 dark:border-orange-500/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 overflow-hidden"
-    >
-        <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-2xl group-hover:bg-orange-500/20 transition-colors pointer-events-none" />
-
-        <div className="relative z-10 flex gap-4">
-            <div className="w-16 h-16 rounded-xl bg-white border border-slate-100 dark:border-slate-800 p-1 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                {job.company_logo ? (
-                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
-                ) : (
-                    <Building2 className="w-8 h-8 text-slate-300" />
-                )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-1 gap-2">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-base line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                        {job.title}
-                    </h3>
-                    <span className="flex items-center gap-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
-                        <Flame className="w-3 h-3" /> Hot
-                    </span>
-                </div>
-
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate mb-3">
-                    {job.company_name || 'Công ty Ẩn danh'}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs font-bold mt-auto">
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
-                        <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
-                    </span>
-                    {(job.location?.province_name || job.location?.country) && (
-                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md truncate max-w-30">
-                            <MapPin className="w-3.5 h-3.5 shrink-0" />
-                            <span className="truncate">
-                                {job.location.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location.province_name}
-                            </span>
-                        </span>
-                    )}
-                </div>
-            </div>
-        </div>
-    </Link>
-);
-
-const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
-    <Link
-        href={`/careers/${job.id}`}
-        className="group flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-md hover:shadow-blue-500/5"
-    >
-        <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            {job.company_logo ? (
-                <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
-            ) : (
-                <Building2 className="w-6 h-6 text-slate-300" />
-            )}
-        </div>
-
-        <div className="flex-1 min-w-0 py-1">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                {job.title}
-            </h3>
-
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mb-2">
-                {job.company_name || 'Công ty Ẩn danh'}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold mt-1">
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
-                    <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
-                </span>
-                {(job.location?.province_name || job.location?.country) && (
-                    <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md truncate max-w-30">
-                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">
-                            {job.location.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location.province_name}
-                        </span>
-                    </span>
-                )}
-            </div>
-        </div>
-
-        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-            <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-        </div>
-    </Link>
-);
+import { HotJobItem } from '@/components/landing/HotJobsSection';
+import { LatestJobItem } from '@/components/landing/LatestJobsSection';
 
 export default function PublicJobsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { isAuthenticated, user } = useAuth();
 
     const [jobs, setJobs] = useState<Job[]>([]);
@@ -118,11 +28,19 @@ export default function PublicJobsPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [sortBy, setSortBy] = useState('newest');
 
-    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hotPage, setHotPage] = useState(1);
+    const [latestPage, setLatestPage] = useState(1);
+
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('keyword') || '');
     const [filters, setFilters] = useState({
-        location: '', workMode: '', jobLevel: '', employmentType: '',
+        provinceCodes: searchParams.get('provinces')?.split(',').filter(Boolean) || [] as string[],
+        districtCodes: searchParams.get('districts')?.split(',').filter(Boolean) || [] as string[],
+        wardCodes: searchParams.get('wards')?.split(',').filter(Boolean) || [] as string[],
+        foreignLocation: searchParams.get('foreign') || '',
+        workMode: '', jobLevel: '', employmentType: '',
         salaryRange: '', experienceRange: '', isHot: false,
-        skills: [] as string[], company: '', industry: '', education: ''
+        skills: [] as string[], company: '', industry: searchParams.get('industry') || '', education: ''
     });
 
     const [filterOptions, setFilterOptions] = useState({
@@ -169,7 +87,8 @@ export default function PublicJobsPage() {
             result = result.filter(job =>
                 job.title?.toLowerCase().includes(query) ||
                 job.company_name?.toLowerCase().includes(query) ||
-                job.description?.toLowerCase().includes(query)
+                job.description?.toLowerCase().includes(query) ||
+                job.location?.street_address?.toLowerCase().includes(query)
             );
         }
 
@@ -177,12 +96,16 @@ export default function PublicJobsPage() {
         if (filters.industry) result = result.filter(job => job.industry === filters.industry);
         if (filters.company) result = result.filter(job => job.company_name === filters.company);
 
-        if (filters.location) {
-            const locQuery = filters.location.toLowerCase();
-            result = result.filter(job =>
-                job.location?.province_name?.toLowerCase().includes(locQuery) ||
-                job.location?.country?.toLowerCase().includes(locQuery)
-            );
+        const hasLocationFilter = filters.provinceCodes.length > 0 || filters.districtCodes.length > 0 || filters.wardCodes.length > 0 || filters.foreignLocation;
+        if (hasLocationFilter) {
+            result = result.filter(job => {
+                const matchProv = filters.provinceCodes.includes(job.location?.province_code || '');
+                const matchDist = filters.districtCodes.includes(job.location?.district_code || '');
+                const matchWard = filters.wardCodes.includes(job.location?.ward_code || '');
+                const matchForeign = filters.foreignLocation && job.location?.country !== 'Việt Nam' && job.location?.street_address?.toLowerCase().includes(filters.foreignLocation.toLowerCase());
+
+                return matchProv || matchDist || matchWard || matchForeign;
+            });
         }
 
         if (filters.workMode) result = result.filter(job => job.work_mode === filters.workMode);
@@ -225,8 +148,12 @@ export default function PublicJobsPage() {
 
     const activeFiltersCount = Object.values(filters).filter(value => Array.isArray(value) ? value.length > 0 : (value !== '' && value !== false)).length + (searchQuery ? 1 : 0);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters, searchQuery, sortBy]);
+
     const clearFilters = () => {
-        setFilters({ location: '', workMode: '', jobLevel: '', employmentType: '', salaryRange: '', experienceRange: '', isHot: false, skills: [], company: '', industry: '', education: '' });
+        setFilters({ provinceCodes: [], districtCodes: [], wardCodes: [], foreignLocation: '', workMode: '', jobLevel: '', employmentType: '', salaryRange: '', experienceRange: '', isHot: false, skills: [], company: '', industry: '', education: '' });
         setSearchQuery('');
         setSortBy('newest');
     };
@@ -331,17 +258,25 @@ export default function PublicJobsPage() {
                             <>
                                 {/* Grid kết quả lọc */}
                                 <div className={`grid gap-5 ${viewMode === 'grid' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
-                                    {filteredJobs.map(job => (
+                                    {filteredJobs.slice((currentPage - 1) * 10, currentPage * 10).map(job => (
                                         <JobCard key={job.id} job={job} />
                                     ))}
                                 </div>
 
                                 {/* Phân trang Kết quả lọc */}
-                                <div className="mt-6 flex items-center justify-center gap-4">
-                                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">1 / 5</span>
-                                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><ChevronRight className="w-5 h-5" /></button>
-                                </div>
+                                {Math.ceil(filteredJobs.length / 10) > 1 && (
+                                    <div className="mt-6 flex items-center justify-center gap-4">
+                                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                            <span className="text-blue-600 dark:text-blue-400">{currentPage}</span> / {Math.ceil(filteredJobs.length / 10)}
+                                        </span>
+                                        <button disabled={currentPage === Math.ceil(filteredJobs.length / 10)} onClick={() => setCurrentPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
@@ -376,22 +311,24 @@ export default function PublicJobsPage() {
                         </div>
 
                         <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                            {jobs.filter(j => j.is_hot).slice(0, 9).map(job => (
+                            {jobs.filter(j => j.is_hot).slice((hotPage - 1) * 9, hotPage * 9).map(job => (
                                 <HotJobItem key={job.id} job={job} />
                             ))}
                         </div>
 
-                        <div className="mt-10 flex items-center justify-center gap-4">
-                            <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                <span className="text-orange-600 dark:text-orange-500">1</span> / 10 trang
+                        {Math.ceil(jobs.filter(j => j.is_hot).length / 9) > 1 && (
+                            <div className="mt-10 flex items-center justify-center gap-4">
+                                <button disabled={hotPage === 1} onClick={() => setHotPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                                    <span className="text-orange-600 dark:text-orange-500">{hotPage}</span> / {Math.ceil(jobs.filter(j => j.is_hot).length / 9)} trang
+                                </div>
+                                <button disabled={hotPage === Math.ceil(jobs.filter(j => j.is_hot).length / 9)} onClick={() => setHotPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
                             </div>
-                            <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
+                        )}
                     </div>
                 )}
 
@@ -422,22 +359,24 @@ export default function PublicJobsPage() {
                     </div>
 
                     <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {[...jobs].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 9).map(job => (
+                        {[...jobs].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice((latestPage - 1) * 9, latestPage * 9).map(job => (
                             <LatestJobItem key={job.id} job={job} />
                         ))}
                     </div>
 
-                    <div className="mt-10 flex items-center justify-center gap-4">
-                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                            <span className="text-blue-600 dark:text-blue-400">1</span> / 50 trang
+                    {Math.ceil(jobs.length / 9) > 1 && (
+                        <div className="mt-10 flex items-center justify-center gap-4">
+                            <button disabled={latestPage === 1} onClick={() => setLatestPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                                <span className="text-blue-600 dark:text-blue-400">{latestPage}</span> / {Math.ceil(jobs.length / 9)} trang
+                            </div>
+                            <button disabled={latestPage === Math.ceil(jobs.length / 9)} onClick={() => setLatestPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </div>
+                    )}
                 </div>
 
             </main>

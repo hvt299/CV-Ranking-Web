@@ -20,44 +20,59 @@ export default function Step2LocationSalary({ formData, setFormData, isNegotiabl
 
     const displayedProvinces = allProvinces.filter(p => p.version === domesticVersion);
 
+    // 1. Fetch Provinces lần đầu
     useEffect(() => {
         systemService.getLocations().then(res => setAllProvinces(res)).catch(console.error);
     }, []);
 
+    // 2. [FIX EDIT JOB] Load Districts & Wards nếu formData đã có sẵn (Edit Mode)
     useEffect(() => {
-        if (formData.location?.country === 'Việt Nam') {
-            if (formData.location?.province_code) {
+        const loadInitialSubLocations = async () => {
+            if (formData.location?.country === 'Việt Nam' && formData.location?.province_code) {
                 if (domesticVersion === 'new') {
-                    systemService.getSubLocations(formData.location.province_code).then(w => {
-                        setWards(w.filter(item => item.version === 'new'));
-                    });
+                    const wds = await systemService.getSubLocations(formData.location.province_code);
+                    setWards(wds.filter(item => item.version === 'new'));
                 } else {
-                    systemService.getSubLocations(formData.location.province_code).then(d => {
-                        setDistricts(d.filter(item => item.version === 'old'));
-                    });
+                    const dists = await systemService.getSubLocations(formData.location.province_code);
+                    setDistricts(dists.filter(item => item.version === 'old'));
+
+                    if (formData.location?.district_code) {
+                        const wds = await systemService.getSubLocations(formData.location.district_code);
+                        setWards(wds.filter(item => item.version === 'old'));
+                    }
                 }
             }
-            if (formData.location?.district_code && domesticVersion === 'old') {
-                systemService.getSubLocations(formData.location.district_code).then(w => {
-                    setWards(w.filter(item => item.version === 'old'));
-                });
-            }
-        }
-    }, [formData.location?.country, formData.location?.province_code, formData.location?.district_code, domesticVersion]);
+        };
+
+        loadInitialSubLocations();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.location?.province_code, domesticVersion]); // Chỉ trigger khi Province thay đổi hoặc đổi Version
 
     const handleVersionChange = (ver: 'new' | 'old') => {
         setDomesticVersion(ver);
         setFormData({
-            ...formData, location: { ...formData.location, version: ver, province_code: '', province_name: '', district_code: '', district_name: '', ward_code: '', ward_name: '' }
+            ...formData, location: { ...formData.location, version: ver }
         });
-        setDistricts([]); setWards([]);
     };
 
     const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const code = e.target.value;
-        const prov = allProvinces.find(p => p.code === code);
+
+        // FIX: tìm trong displayedProvinces (đã lọc theo domesticVersion đang active),
+        // KHÔNG tìm trong allProvinces — vì mã tỉnh có thể trùng giữa bộ dữ liệu
+        // "old" và "new" (VD: Hà Nội/TP.HCM giữ nguyên code ở cả 2 hệ), khiến .find()
+        // trên mảng chưa lọc trả nhầm bản ghi khác phiên bản.
+        const prov = displayedProvinces.find(p => p.code === code);
+
         setFormData({
-            ...formData, location: { ...formData.location, province_code: code, province_name: prov?.name || '', version: prov?.version || 'old', district_code: '', district_name: '', ward_code: '', ward_name: '' }
+            ...formData,
+            location: {
+                ...formData.location,
+                province_code: code,
+                province_name: prov?.name || '',
+                version: domesticVersion, // Dùng thẳng tab đang active làm nguồn sự thật, KHÔNG suy ra từ prov.version
+                district_code: '', district_name: '', ward_code: '', ward_name: '', full_address_snapshot: ''
+            }
         });
 
         if (domesticVersion === 'new') {
@@ -74,7 +89,7 @@ export default function Step2LocationSalary({ formData, setFormData, isNegotiabl
     const handleDistrictChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const code = e.target.value;
         const dist = districts.find(d => d.code === code);
-        setFormData({ ...formData, location: { ...formData.location, district_code: code, district_name: dist?.name || '', ward_code: '', ward_name: '' } });
+        setFormData({ ...formData, location: { ...formData.location, district_code: code, district_name: dist?.name || '', ward_code: '', ward_name: '', full_address_snapshot: '' } });
         const wds = await systemService.getSubLocations(code);
         setWards(wds.filter(item => item.version === 'old'));
     };
@@ -105,17 +120,24 @@ export default function Step2LocationSalary({ formData, setFormData, isNegotiabl
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-right-4">
-
             {/* --- KHU VỰC ĐỊA ĐIỂM LÀM VIỆC --- */}
             <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
-                        <MapPin className="w-5 h-5" />
+                <div className="flex justify-between items-start mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
+                            <MapPin className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white">Khu vực làm việc</h2>
+                            <p className="text-xs text-slate-500 mt-1">Đồng bộ chính xác với cơ sở dữ liệu hành chính mới nhất.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Khu vực làm việc</h2>
-                        <p className="text-xs text-slate-500 mt-1">Đồng bộ chính xác với cơ sở dữ liệu hành chính mới nhất.</p>
-                    </div>
+                    {(formData.location?.country || 'Việt Nam') === 'Việt Nam' && (
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Mới (Hiện tại)</button>
+                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Cũ (Trước 1/7/2025)</button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -128,13 +150,8 @@ export default function Step2LocationSalary({ formData, setFormData, isNegotiabl
                         <option value="Nước ngoài">Nước ngoài</option>
                     </select>
 
-                    {formData.location?.country === 'Việt Nam' ? (
+                    {(formData.location?.country || 'Việt Nam') === 'Việt Nam' ? (
                         <>
-                            <div className="col-span-1 md:col-span-4 flex mb-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-                                <button type="button" className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`} onClick={() => handleVersionChange('new')}>Mới (Hiện tại)</button>
-                                <button type="button" className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`} onClick={() => handleVersionChange('old')}>Cũ (Trước 1/7/2025)</button>
-                            </div>
-
                             <select className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white shadow-sm focus:border-emerald-500 cursor-pointer" value={formData.location?.province_code || ''} onChange={handleProvinceChange}>
                                 <option value="" disabled>Tỉnh/Thành phố</option>
                                 {displayedProvinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
@@ -151,22 +168,28 @@ export default function Step2LocationSalary({ formData, setFormData, isNegotiabl
                                 <option value="" disabled>Phường/Xã</option>
                                 {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
                             </select>
+
+                            <div className="col-span-1 md:col-span-4 mt-1 relative">
+                                <input
+                                    type="text"
+                                    placeholder="Nhập số nhà, tên đường, tòa nhà..."
+                                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white shadow-sm focus:border-emerald-500 transition-colors"
+                                    value={formData.location?.street_address || ''}
+                                    onChange={e => setFormData({ ...formData, location: { ...formData.location, street_address: e.target.value } })}
+                                />
+                            </div>
                         </>
                     ) : (
-                        <div className="col-span-1 md:col-span-4 text-sm text-slate-500 py-2">
-                            Vui lòng nhập trực tiếp địa chỉ tại nước ngoài ở ô bên dưới.
+                        <div className="col-span-1 md:col-span-3 mt-1 relative">
+                            <input
+                                type="text"
+                                placeholder="VD: 123 Orchard Road, Singapore"
+                                className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white shadow-sm focus:border-emerald-500 transition-colors"
+                                value={formData.location?.street_address || ''}
+                                onChange={e => setFormData({ ...formData, location: { ...formData.location, street_address: e.target.value } })}
+                            />
                         </div>
                     )}
-
-                    <div className="col-span-1 md:col-span-4 mt-2">
-                        <input
-                            type="text"
-                            placeholder={formData.location?.country === 'Việt Nam' ? "Nhập số nhà, tên đường, tòa nhà..." : "VD: 123 Orchard Road, Singapore"}
-                            className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none dark:text-white shadow-sm focus:border-emerald-500 transition-colors"
-                            value={formData.location?.street_address || ''}
-                            onChange={e => setFormData({ ...formData, location: { ...formData.location, street_address: e.target.value } })}
-                        />
-                    </div>
                 </div>
             </div>
 

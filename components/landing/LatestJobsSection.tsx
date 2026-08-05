@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import { ChevronRight, ChevronLeft, MapPin, Building2, DollarSign } from 'lucide-react';
@@ -20,7 +21,7 @@ const itemVariants: Variants = {
     visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
 };
 
-const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
+export const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
     <Link
         href={`/careers/${job.id}`}
         className="group flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-md hover:shadow-blue-500/5"
@@ -68,12 +69,15 @@ const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, c
 );
 
 export default function LatestJobsSection({ jobs }: LatestJobsSectionProps) {
-    const latestJobs = jobs.slice(0, 9);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 9;
+    const totalPages = Math.ceil(jobs.length / itemsPerPage) || 1;
+    const currentJobs = jobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    if (!latestJobs || latestJobs.length === 0) return null;
+    if (!jobs || jobs.length === 0) return null;
 
     return (
-        <section className="py-16 md:py-24 bg-white dark:bg-[#0a0a0a] transition-colors font-sans">
+        <section className="py-16 md:py-24 bg-white dark:bg-slate-900 transition-colors font-sans">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                     <div>
@@ -109,7 +113,7 @@ export default function LatestJobsSection({ jobs }: LatestJobsSectionProps) {
                     viewport={{ once: true, margin: '-50px' }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                    {latestJobs.map((job) => (
+                    {currentJobs.map((job) => (
                         <motion.div key={job.id} variants={itemVariants}>
                             <LatestJobItem job={job} />
                         </motion.div>
@@ -117,17 +121,27 @@ export default function LatestJobsSection({ jobs }: LatestJobsSectionProps) {
                 </motion.div>
 
                 {/* Slider Phân trang */}
-                <div className="mt-10 flex items-center justify-center gap-4">
-                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                        <span className="text-blue-600 dark:text-blue-400">1</span> / 50 trang
+                {totalPages > 1 && (
+                    <div className="mt-10 flex items-center justify-center gap-4">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                            <span className="text-blue-600 dark:text-blue-400">{currentPage}</span> / {totalPages} trang
+                        </div>
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
+                )}
             </div>
         </section>
     );

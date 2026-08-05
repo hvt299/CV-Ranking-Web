@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { candidateService } from './candidate.service';
-import { jobService } from '@/features/job/job.service'; // Lấy job từ service đã tạo ở phần trước
+import { jobService } from '@/features/job/job.service';
 import { CV, Job, JobStatus } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -9,6 +9,7 @@ export function useTalentPool() {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
+    const [isMapping, setIsMapping] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
     const fetchData = useCallback(async () => {
@@ -67,7 +68,7 @@ export function useTalentPool() {
 
         setIsUploading(false);
         if (successCount > 0) toast.success(`Đã thêm ${successCount} CV mới vào Kho!`);
-        await fetchData(); // Cập nhật lại danh sách sau khi upload
+        await fetchData();
     };
 
     const deleteCV = async (cvId: string, filename: string) => {
@@ -93,15 +94,42 @@ export function useTalentPool() {
         }
     };
 
+    const mapMultipleCvsToJob = async (cvIds: string[], jobId: string) => {
+        if (!cvIds || cvIds.length === 0 || !jobId) return toast.error("Vui lòng chọn ứng viên và chiến dịch!");
+
+        setIsMapping(true);
+        try {
+            const res = await candidateService.mapMultipleCvsToJob(cvIds, jobId);
+
+            if (res.successful_maps > 0) {
+                toast.success(res.message);
+                if (res.errors && res.errors.length > 0) {
+                    toast.error(`Có ${res.errors.length} hồ sơ gặp lỗi khi ghép.`);
+                }
+                return true;
+            } else {
+                toast.error("Không có hồ sơ nào được ghép thành công.");
+                return false;
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi ghép CV hàng loạt");
+            return false;
+        } finally {
+            setIsMapping(false);
+        }
+    };
+
     return {
         candidates,
         jobs,
         isLoading,
         isUploading,
         uploadProgress,
+        isMapping,
         uploadFiles,
         deleteCV,
         mapCvToJob,
+        mapMultipleCvsToJob,
         refetch: fetchData
     };
 }

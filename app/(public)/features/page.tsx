@@ -92,7 +92,7 @@ export default function FeaturesPage() {
                 </div>
 
                 {/* Khối Kêu gọi Hành động (CTA) */}
-                <div className="bg-blue-600 dark:bg-blue-900/40 rounded-3xl p-10 md:p-16 text-center border border-blue-500 dark:border-blue-800 shadow-xl shadow-blue-500/10 relative overflow-hidden">
+                <div className="bg-linear-to-br from-blue-700 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 rounded-3xl p-10 md:p-16 text-center border border-blue-500/30 shadow-xl shadow-blue-900/20 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
 
                     <div className="relative z-10">

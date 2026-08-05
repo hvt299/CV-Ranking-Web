@@ -1,17 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Lock, Mail, ArrowRight, Search, Eye, EyeOff, User, Briefcase, Globe, MapPin, Users, Hexagon } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useLinkedInAuth } from '@/hooks/useLinkedInAuth';
 import toast from 'react-hot-toast';
-import { UserRole } from '@/types';
 import { useAuthFlow } from '@/features/auth/useAuthFlow';
 import AuthLogo from '@/components/ui/AuthLogo';
 import AuthSocialButtons from '@/components/auth/AuthSocialButtons';
 import SocialRoleModal from '@/components/auth/SocialRoleModal';
-import { parseVietnameseAddress } from '@/utils/format';
 
 export default function LoginPage() {
     const { login: handleLogin, isLoading, socialLoginFlow } = useAuthFlow();
@@ -44,7 +42,7 @@ export default function LoginPage() {
             payload.industry = companyData.industry;
             payload.size = companyData.size;
             payload.website = companyData.website;
-            payload.location = parseVietnameseAddress(companyData.address); // Áp dụng hàm tách địa chỉ
+            payload.location = companyData.location;
         }
 
         const result = await socialLoginFlow(provider, payload);

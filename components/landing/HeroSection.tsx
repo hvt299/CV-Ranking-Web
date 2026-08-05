@@ -41,13 +41,14 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
     const [showLocationPopover, setShowLocationPopover] = useState(false);
     const [mainTab, setMainTab] = useState<'domestic' | 'foreign'>('domestic');
     const [domesticVersion, setDomesticVersion] = useState<'new' | 'old'>('new');
-    const [foreignInput, setForeignInput] = useState('');
-
+    const [foreignInput, setForeignInput] = useState(filters.foreignLocation || '');
     const [locationSearchKeyword, setLocationSearchKeyword] = useState('');
     const popoverRef = useRef<HTMLDivElement>(null);
 
-    const locations = filterOptions?.locations || [];
+    const [expandedProvince, setExpandedProvince] = useState<string | null>(null);
+    const [subLocations, setSubLocations] = useState<any[]>([]);
 
+    const locations = filterOptions?.locations || [];
     const activeProvinces = locations.filter((l: any) => l.version === domesticVersion);
     const displayedProvinces = activeProvinces.filter((l: any) =>
         l.name.toLowerCase().includes(locationSearchKeyword.toLowerCase())
@@ -63,24 +64,39 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleSelectLocation = (locName: string) => {
-        setFilters({ ...filters, location: locName });
-        setShowLocationPopover(false);
-        setLocationSearchKeyword('');
+    const handleExpandProvince = async (provCode: string) => {
+        if (expandedProvince === provCode) {
+            setExpandedProvince(null);
+            setSubLocations([]);
+        } else {
+            setExpandedProvince(provCode);
+            // HeroSection nằm trong Client Component nên gọi được API
+            const { systemService } = await import('@/features/system/system.service');
+            const subs = await systemService.getSubLocations(provCode);
+            setSubLocations(subs.filter((s: any) => s.version === domesticVersion));
+        }
     };
 
     const handleForeignSubmit = () => {
         if (foreignInput.trim()) {
-            setFilters({ ...filters, location: foreignInput.trim() });
+            setFilters({ ...filters, foreignLocation: foreignInput.trim() });
             setShowLocationPopover(false);
+        } else {
+            setFilters({ ...filters, foreignLocation: '' });
         }
     };
+
+    const selectedLocCount = (filters.provinceCodes?.length || 0) + (filters.districtCodes?.length || 0) + (filters.wardCodes?.length || 0) + (filters.foreignLocation ? 1 : 0);
 
     const handleSearch = () => {
         const params = new URLSearchParams();
         if (searchQuery.trim()) params.append('keyword', searchQuery.trim());
         if (filters.industry) params.append('industry', filters.industry);
-        if (filters.location) params.append('location', filters.location);
+
+        if (filters.provinceCodes?.length > 0) params.append('provinces', filters.provinceCodes.join(','));
+        if (filters.districtCodes?.length > 0) params.append('districts', filters.districtCodes.join(','));
+        if (filters.wardCodes?.length > 0) params.append('wards', filters.wardCodes.join(','));
+        if (filters.foreignLocation) params.append('foreign', filters.foreignLocation);
 
         router.push(`/careers?${params.toString()}`);
     };
@@ -95,7 +111,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                 <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-bold mb-8 backdrop-blur-md text-slate-600 dark:text-slate-300 shadow-sm">
                     <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" /> Nền tảng Tuyển dụng AI thế hệ mới
                 </motion.div>
-                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-6">
+                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.2] pb-3 mb-6">
                     Khám phá cơ hội cho <br className="hidden md:block" />
                     <Typewriter words={HERO_WORDS} />
                 </motion.h1>
@@ -137,15 +153,15 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                     </div>
                     <div className="hidden md:block w-px h-8 bg-slate-200 dark:bg-slate-700 self-center" />
 
-                    {/* 3. ĐỊA ĐIỂM */}
+                    {/* 3. ĐỊA ĐIỂM (MULTI-SELECT POPOVER) */}
                     <div className="flex items-center flex-1 px-4 py-2 min-w-50 border-t md:border-t-0 border-slate-100 dark:border-slate-700 relative" ref={popoverRef}>
                         <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
                         <div
                             className="w-full text-slate-800 dark:text-white text-left px-3 py-2 cursor-pointer flex items-center justify-between"
                             onClick={() => setShowLocationPopover(!showLocationPopover)}
                         >
-                            <span className={`text-sm font-medium ${filters.location ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
-                                {filters.location || 'Tỉnh/Thành phố'}
+                            <span className={`text-sm font-medium ${selectedLocCount > 0 ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
+                                {selectedLocCount > 0 ? `Đã chọn ${selectedLocCount} khu vực` : 'Địa điểm'}
                             </span>
                             <ChevronDown className="w-4 h-4 text-slate-400" />
                         </div>
@@ -158,27 +174,70 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                                 </div>
 
                                 {mainTab === 'domestic' && (
-                                    <div className="p-3 flex flex-col h-80">
-                                        <div className="flex mb-3 bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
-                                            <button className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500'}`} onClick={() => setDomesticVersion('new')}>Mới (Hiện tại)</button>
-                                            <button className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500'}`} onClick={() => setDomesticVersion('old')}>Cũ (Trước 1/7/2025)</button>
+                                    <div className="p-3 flex flex-col h-95">
+                                        <div className="flex mb-3 bg-slate-100 dark:bg-slate-700 p-1 rounded-xl shrink-0">
+                                            <button className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500'}`} onClick={() => { setDomesticVersion('new'); setExpandedProvince(null); }}>Mới (Tỉnh → Xã)</button>
+                                            <button className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500'}`} onClick={() => { setDomesticVersion('old'); setExpandedProvince(null); }}>Cũ (Tỉnh → Huyện)</button>
                                         </div>
 
                                         <input
-                                            type="text" placeholder="Tìm kiếm nhanh tỉnh/thành..."
-                                            value={locationSearchKeyword} onChange={(e) => setLocationSearchKeyword(e.target.value)}
-                                            className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm mb-3 outline-none focus:border-blue-500 dark:text-white placeholder:text-slate-400 font-medium"
+                                            type="text" placeholder="Tìm nhanh Tỉnh/Thành phố..."
+                                            value={locationSearchKeyword}
+                                            onChange={(e) => setLocationSearchKeyword(e.target.value)}
+                                            className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm mb-3 outline-none focus:border-blue-500 dark:text-white placeholder:text-slate-400 font-medium shrink-0"
                                         />
 
-                                        <button onClick={() => handleSelectLocation('')} className="text-left px-3 py-2 text-sm text-rose-500 font-medium hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg mb-1 transition-colors">
-                                            Lọc Toàn Quốc
-                                        </button>
-
-                                        <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 space-y-1">
+                                        <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 space-y-2">
                                             {displayedProvinces.map((prov: any) => (
-                                                <button key={prov.id} onClick={() => handleSelectLocation(prov.name)} className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors font-medium">
-                                                    {prov.name}
-                                                </button>
+                                                <div key={prov.code} className="border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                                                    <div className="flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                        <label className="flex items-center gap-3 cursor-pointer flex-1">
+                                                            <input type="checkbox"
+                                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                                checked={filters.provinceCodes?.includes(prov.code)}
+                                                                onChange={() => {
+                                                                    const isChecked = filters.provinceCodes?.includes(prov.code);
+                                                                    const newCodes = isChecked ? filters.provinceCodes.filter((c: string) => c !== prov.code) : [...(filters.provinceCodes || []), prov.code];
+                                                                    setFilters({ ...filters, provinceCodes: newCodes });
+                                                                }}
+                                                            />
+                                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{prov.name}</span>
+                                                        </label>
+                                                        <button onClick={() => handleExpandProvince(prov.code)} className="p-1.5 text-slate-400 hover:text-blue-500 bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors">
+                                                            <ChevronDown className={`w-4 h-4 transition-transform ${expandedProvince === prov.code ? 'rotate-180' : ''}`} />
+                                                        </button>
+                                                    </div>
+
+                                                    {expandedProvince === prov.code && (
+                                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800 max-h-48 overflow-y-auto custom-scrollbar">
+                                                            {subLocations.length > 0 ? subLocations.map(sub => {
+                                                                const isOld = domesticVersion === 'old';
+                                                                const isChecked = isOld ? filters.districtCodes?.includes(sub.code) : filters.wardCodes?.includes(sub.code);
+                                                                return (
+                                                                    <label key={sub.code} className="flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors pl-8">
+                                                                        <input type="checkbox"
+                                                                            className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                                            checked={isChecked}
+                                                                            onChange={() => {
+                                                                                const newProvCodes = filters.provinceCodes?.filter((c: string) => c !== prov.code) || [];
+                                                                                if (isOld) {
+                                                                                    const newCodes = isChecked ? filters.districtCodes.filter((c: string) => c !== sub.code) : [...(filters.districtCodes || []), sub.code];
+                                                                                    setFilters({ ...filters, districtCodes: newCodes, provinceCodes: newProvCodes });
+                                                                                } else {
+                                                                                    const newCodes = isChecked ? filters.wardCodes.filter((c: string) => c !== sub.code) : [...(filters.wardCodes || []), sub.code];
+                                                                                    setFilters({ ...filters, wardCodes: newCodes, provinceCodes: newProvCodes });
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{sub.name}</span>
+                                                                    </label>
+                                                                )
+                                                            }) : (
+                                                                <div className="text-center text-xs text-slate-400 py-3 font-medium">Đang tải...</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                             {displayedProvinces.length === 0 && <div className="text-center text-slate-400 text-xs py-4 font-medium">Không tìm thấy địa điểm</div>}
                                         </div>

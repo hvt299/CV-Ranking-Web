@@ -2,7 +2,7 @@
 
 import { DollarSign, Clock, Users, MapPin, Briefcase, FileText, CheckCircle2, Star, Info } from 'lucide-react';
 import { Job } from '@/types';
-import { formatCurrency } from '@/utils/format';
+import { formatSalaryRange } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
 
 interface TabJobInfoProps {
@@ -76,7 +76,7 @@ export default function TabJobInfo({ jobInfo }: TabJobInfoProps) {
                         <div>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Mức lương</p>
                             <p className="text-sm font-black text-slate-800 dark:text-white">
-                                {jobInfo.salary?.min_salary ? `${formatCurrency(jobInfo.salary.min_salary)} - ${formatCurrency(jobInfo.salary.max_salary!)} ${jobInfo.salary.currency}` : 'Thỏa thuận trực tiếp'}
+                                {formatSalaryRange(jobInfo.salary)}
                             </p>
                         </div>
                     </div>
@@ -93,11 +93,11 @@ export default function TabJobInfo({ jobInfo }: TabJobInfoProps) {
                             <p className="text-sm font-bold text-slate-800 dark:text-white mb-1">
                                 {jobInfo.location?.country && jobInfo.location.country !== 'Việt Nam' ? jobInfo.location.country : (jobInfo.location?.province_name || 'Việt Nam')}
                             </p>
-                            {jobInfo.location?.street_address && (
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
-                                    {jobInfo.location.street_address}
-                                </p>
-                            )}
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug mt-1">
+                                {jobInfo.location?.country && jobInfo.location.country !== 'Việt Nam'
+                                    ? jobInfo.location.street_address
+                                    : [jobInfo.location?.street_address, jobInfo.location?.ward_name, jobInfo.location?.district_name].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ chi tiết'}
+                            </p>
                         </div>
                     </div>
 
