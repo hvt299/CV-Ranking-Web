@@ -1,8 +1,24 @@
-import { UserRole } from "@/types";
+import { UserRole } from '@/types';
 
 export const ROLES = [
-    { value: UserRole.APPLICANT, label: 'Ứng viên', color: 'bg-slate-100 text-slate-700' },
-    { value: UserRole.HR_OWNER, label: 'HR Owner', color: 'bg-blue-100 text-blue-700' },
-    { value: UserRole.HR_MEMBER, label: 'HR Member', color: 'bg-indigo-100 text-indigo-700' },
-    { value: UserRole.ADMIN, label: 'Admin', color: 'bg-purple-100 text-purple-700' },
+    {
+        value: UserRole.APPLICANT,
+        label: 'Ứng viên',
+        color: 'bg-slate-100 text-slate-700',
+    },
+    {
+        value: UserRole.HR_OWNER,
+        label: 'HR Owner',
+        color: 'bg-primary-100 text-primary-700',
+    },
+    {
+        value: UserRole.HR_MEMBER,
+        label: 'HR Member',
+        color: 'bg-primary-50 text-primary-600',
+    },
+    {
+        value: UserRole.ADMIN,
+        label: 'Admin',
+        color: 'bg-hot-100 text-hot-700',
+    },
 ];

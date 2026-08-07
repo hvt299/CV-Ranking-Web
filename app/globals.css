@@ -167,6 +167,61 @@
   --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 }
 
+.floating-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .12);
+  transition: .25s ease;
+  animation: floating-bounce 3s ease-in-out infinite;
+}
+
+.floating-btn:hover {
+  transform: translateY(-4px) scale(1.08);
+}
+
+.floating-btn svg {
+  width: 20px;
+  height: 20px;
+  z-index: 2;
+}
+
+.ping-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, .4);
+  animation: pulse-ring 1.8s infinite;
+}
+
+@keyframes floating-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pulse-ring {
+  from {
+    transform: scale(1);
+    opacity: .6;
+  }
+
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
 
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {

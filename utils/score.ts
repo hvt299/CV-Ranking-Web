@@ -1,58 +1,94 @@
 /**
- * Trả về class màu sắc cho các điểm thành phần (skills_score, nlp_score...)
+ * Trả về class màu cho điểm thành phần
  */
-export const getSubScoreClass = (val: number): string => {
-    if (val >= 80) return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
-    if (val >= 50) return 'bg-amber-50 text-amber-600 border border-amber-100';
-    return 'bg-rose-50 text-rose-600 border border-rose-100';
+export const getSubScoreClass = (score: number): string => {
+    if (score >= 80)
+        return 'bg-success-50 text-success-700 border border-success-100';
+
+    if (score >= 50)
+        return 'bg-warning-50 text-warning-700 border border-warning-100';
+
+    return 'bg-error-50 text-error-700 border border-error-100';
 };
 
 /**
- * Trả về bộ cấu hình màu sắc và nhãn cho điểm AI tổng (dùng cho vòng tròn điểm)
+ * Trả về theme cho điểm AI tổng
  */
 export const getScoreTheme = (score: number) => {
-    if (score >= 80) return {
-        ring: 'text-emerald-500', bg: 'text-emerald-100', border: 'border-emerald-500',
-        badge: 'bg-emerald-100 text-emerald-700', label: 'Phù hợp'
-    };
-    if (score >= 50) return {
-        ring: 'text-amber-500', bg: 'text-amber-100', border: 'border-amber-500',
-        badge: 'bg-amber-100 text-amber-700', label: 'Tạm ổn'
-    };
+    if (score >= 80) {
+        return {
+            ring: 'text-success-500',
+            bg: 'text-success-100',
+            border: 'border-success-500',
+            badge: 'bg-success-100 text-success-700',
+            label: 'Phù hợp',
+        };
+    }
+
+    if (score >= 50) {
+        return {
+            ring: 'text-warning-500',
+            bg: 'text-warning-100',
+            border: 'border-warning-500',
+            badge: 'bg-warning-100 text-warning-700',
+            label: 'Tạm ổn',
+        };
+    }
+
     return {
-        ring: 'text-rose-500', bg: 'text-rose-100', border: 'border-rose-500',
-        badge: 'bg-rose-100 text-rose-700', label: 'Chưa đạt'
+        ring: 'text-error-500',
+        bg: 'text-error-100',
+        border: 'border-error-500',
+        badge: 'bg-error-100 text-error-700',
+        label: 'Chưa đạt',
     };
 };
 
-export const getPenaltyReasons = (cvInfo: any, breakdown: any) => {
-    const reasons = [];
+/**
+ * Danh sách lý do bị trừ điểm AI
+ */
+export const getPenaltyReasons = (cvInfo: any, breakdown: any): string => {
+    const reasons: string[] = [];
 
-    const fraudReasons = breakdown?.fraud_analysis?.reasons || [];
-    if (fraudReasons.length > 0) {
-        const translated = fraudReasons.map((r: string) => {
-            if (r === 'Keyword stuffing') return 'Nhồi nhét từ khóa';
-            if (r === 'White text') return 'Chèn chữ tàng hình (màu trắng)';
-            if (r.includes('Tiny font') || r.includes('Very small font')) return 'Dùng font chữ siêu nhỏ';
-            if (r === 'Hidden flag') return 'Cố tình ẩn chữ (Hidden text)';
-            if (r === 'Outside page') return 'Chèn chữ ngoài lề trang';
-            return r;
-        });
-        reasons.push(...translated);
+    const fraudReasons = breakdown?.fraud_analysis?.reasons ?? [];
+
+    const fraudMap: Record<string, string> = {
+        'Keyword stuffing': 'Nhồi nhét từ khóa',
+        'White text': 'Chèn chữ tàng hình (màu trắng)',
+        'Hidden flag': 'Cố tình ẩn chữ (Hidden text)',
+        'Outside page': 'Chèn chữ ngoài lề trang',
+    };
+
+    if (fraudReasons.length) {
+        reasons.push(
+            ...fraudReasons.map((reason: string) => {
+                if (
+                    reason.includes('Tiny font') ||
+                    reason.includes('Very small font')
+                ) {
+                    return 'Dùng font chữ siêu nhỏ';
+                }
+
+                return fraudMap[reason] ?? reason;
+            })
+        );
     } else if (breakdown?.fraud_analysis?.detected) {
         reasons.push('Có dấu hiệu gian lận CV');
     }
 
-    const yoe = cvInfo?.years_of_experience || 0;
-    const hops = cvInfo?.job_hops || 1;
-    const gaps = cvInfo?.gap_months || 0;
+    const years = cvInfo?.years_of_experience ?? 0;
+    const hops = Math.max(cvInfo?.job_hops ?? 1, 1);
+    const gaps = cvInfo?.gap_months ?? 0;
 
-    if (yoe > 0 && (yoe / Math.max(hops, 1)) < 0.8) {
-        reasons.push("Nhảy việc quá nhiều");
+    if (years > 0 && years / hops < 0.8) {
+        reasons.push('Nhảy việc quá nhiều');
     }
+
     if (gaps > 12) {
         reasons.push(`Khoảng trống sự nghiệp dài (${gaps} tháng)`);
     }
 
-    return reasons.length > 0 ? reasons.join(' + ') : 'Vi phạm tiêu chí hệ thống';
+    return reasons.length
+        ? reasons.join(' + ')
+        : 'Vi phạm tiêu chí hệ thống';
 };

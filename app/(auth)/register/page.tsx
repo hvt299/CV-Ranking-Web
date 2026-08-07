@@ -92,6 +92,7 @@ export default function RegisterPage() {
             : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
 
         if (roleToSubmit) payload.role = roleToSubmit;
+        if (inviteToken) payload.invite_token = inviteToken;
         if (companyData) {
             payload.company_name = companyData.companyName;
             payload.tax_code = companyData.taxCode;

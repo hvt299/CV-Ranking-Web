@@ -18,6 +18,7 @@ type MenuItem = {
     icon: any;
     href: string;
     badge?: string;
+    pro?: boolean;
 };
 
 interface SidebarProps {
@@ -64,7 +65,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                 {
                     name: "Phân tích & Báo cáo",
                     icon: BarChart2,
-                    href: "/analytics"
+                    href: "/analytics",
+                    pro: true,
                 }
             ]
             : []),
@@ -193,6 +195,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                                         : "text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-400"
                                 )} />
                                 {showText && <span className="whitespace-nowrap flex-1">{item.name}</span>}
+                                {showText && item.pro && (
+                                    <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
+                                        Pro
+                                    </span>
+                                )}
+
                                 {showText && item.badge && (
                                     <span className="bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                                         {item.badge}

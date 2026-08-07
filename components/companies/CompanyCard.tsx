@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Building2, MapPin, Users, Star, Eye, BriefcaseIcon, Heart } from 'lucide-react';
 import { Company } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { COMPANY_SIZES } from '@/constants/company.constants';
 
 interface CompanyCardProps {
     company: Company;
@@ -78,7 +79,9 @@ export default function CompanyCard({ company }: CompanyCardProps) {
                     {company.size && (
                         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
                             <Users className="w-4 h-4 text-blue-400 shrink-0" />
-                            <span>Quy mô: {company.size}</span>
+                            <span>
+                                Quy mô: {COMPANY_SIZES.find(size => size.value === company.size)?.label || 'Đang cập nhật'}
+                            </span>
                         </div>
                     )}
                 </div>

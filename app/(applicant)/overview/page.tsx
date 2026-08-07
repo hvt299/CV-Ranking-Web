@@ -9,12 +9,14 @@ import ProfileHealthCard from '@/components/candidates/overview/ProfileHealthCar
 import QuickStatsCards from '@/components/candidates/overview/QuickStatsCards';
 import RecentApplications from '@/components/candidates/overview/RecentApplications';
 import RecommendedJobs from '@/components/candidates/overview/RecommendedJobs';
+import { useCurrentTime } from '@/hooks/useCurrentTime';
 
 export default function ApplicantOverviewPage() {
     const { user } = useAuth();
     const { profile, isLoading: isProfileLoading } = useMyProfile();
     const [applications, setApplications] = useState<any[]>([]);
     const [isLoadingApps, setIsLoadingApps] = useState(true);
+    const currentTime = useCurrentTime();
 
     useEffect(() => {
         const fetchApps = async () => {
@@ -41,6 +43,25 @@ export default function ApplicantOverviewPage() {
 
     return (
         <div className="max-w-7xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500">
+
+            {/* HEADER */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+                        Tổng quan ứng viên
+                    </h1>
+
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">
+                        Theo dõi sức khỏe hồ sơ, lịch sử ứng tuyển và các cơ hội việc làm phù hợp với bạn.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse"></span>
+                    {currentTime}
+                </div>
+            </div>
+
             {/* 1. Khối Chào mừng & Sức khỏe Hồ sơ */}
             <ProfileHealthCard user={user} profile={profile} />
 

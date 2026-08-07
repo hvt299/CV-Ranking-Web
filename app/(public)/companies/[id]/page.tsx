@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Building2, MapPin, Users, Star, Eye, Globe, FileText, CheckCircle2, Briefcase, ChevronLeft,
-    Loader2, XCircle, Share2, ShieldCheck, Map, Zap, DollarSign, Calendar, Heart } from 'lucide-react';
+import {
+    Building2, MapPin, Users, Star, Eye, Globe, FileText, CheckCircle2, Briefcase, ChevronLeft,
+    Loader2, XCircle, Share2, ShieldCheck, Map, Zap, DollarSign, Calendar, Heart
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -13,6 +15,7 @@ import apiClient from '@/lib/api-client';
 import { jobService } from '@/features/job/job.service';
 import { Company, Job } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { COMPANY_SIZES } from '@/constants/company.constants';
 
 export default function PublicCompanyDetailPage() {
     const params = useParams();
@@ -233,7 +236,9 @@ export default function PublicCompanyDetailPage() {
                                         <div className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl shrink-0"><Users className="w-4 h-4" /></div>
                                         <div>
                                             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-0.5">Quy mô công ty</p>
-                                            <p className="font-bold text-slate-700 dark:text-slate-200">{company.size}</p>
+                                            <p className="font-bold text-slate-700 dark:text-slate-200">
+                                                {COMPANY_SIZES.find(size => size.value === company.size)?.label || 'Đang cập nhật'}
+                                            </p>
                                         </div>
                                     </div>
                                 )}

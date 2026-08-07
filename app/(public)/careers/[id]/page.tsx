@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApplyModal } from '@/context/ApplyModalContext';
 import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
+import { COMPANY_SIZES } from '@/constants/company.constants';
 
 export default function PublicJobDetailPage() {
     const params = useParams();
@@ -311,7 +312,11 @@ export default function PublicJobDetailPage() {
                             <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-3 text-sm">
                                     <Users className="w-4 h-4 text-slate-400 shrink-0" />
-                                    <span className="text-slate-600 dark:text-slate-300">Quy mô: <span className="font-bold">{company?.size || 'Đang cập nhật'}</span></span>
+                                    <span className="text-slate-600 dark:text-slate-300">
+                                        Quy mô: <span className="font-bold">
+                                            {COMPANY_SIZES.find(size => size.value === company?.size)?.label || 'Đang cập nhật'}
+                                        </span>
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
                                     <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
