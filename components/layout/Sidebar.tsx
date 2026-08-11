@@ -3,23 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    LayoutDashboard, Briefcase, Users, CalendarCheck,
-    Mail, BarChart2, Settings, HelpCircle, ChevronLeft,
-    ChevronRight, Hexagon, X, FileText, User as UserIcon,
-    Building2, ShieldCheck, ClipboardCheck, FolderOpen
+    LayoutDashboard, Briefcase, Users,
+    BarChart2, Settings, HelpCircle, ChevronLeft,
+    ChevronRight, Hexagon, X, Building2, ShieldCheck
 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types";
-
-function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
+import { cn } from "@/utils/utils";
+import { useEffect, useState } from "react";
 
 type MenuItem = {
     name: string;
     icon: any;
     href: string;
     badge?: string;
+    pro?: boolean;
 };
 
 interface SidebarProps {
@@ -35,58 +33,58 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
     const role = user?.role || UserRole.APPLICANT;
     const isAdmin = role === UserRole.ADMIN;
-    const isApplicant = role === UserRole.APPLICANT;
-    const isHrOrAdmin = role === UserRole.ADMIN || role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER;
     const isHrOwner = role === UserRole.HR_OWNER;
-    const isHrMember = role === UserRole.HR_MEMBER;
 
-    const applicantMenu: MenuItem[] = [
-        { name: "Tìm việc làm", icon: Briefcase, href: "/apply" },
-        { name: "Thư viện CV", icon: FolderOpen, href: "/cv-library" },
-        { name: "Hồ sơ ứng tuyển", icon: FileText, href: "/my-applications" },
-        { name: "Tự đánh giá", icon: ClipboardCheck, href: "/self-score" },
-        { name: "Thông tin cá nhân", icon: UserIcon, href: "/profile" },
-    ];
+    const [viewMode, setViewMode] = useState<'OWNER' | 'MEMBER'>(isHrOwner ? 'OWNER' : 'MEMBER');
+
+    useEffect(() => {
+        if (isHrOwner) {
+            const saved = localStorage.getItem('cv_ranking_hr_view');
+            if (saved === 'MEMBER' || saved === 'OWNER') setViewMode(saved);
+        } else {
+            setViewMode('MEMBER');
+        }
+    }, [isHrOwner]);
+
+    const handleToggleView = () => {
+        const newMode = viewMode === 'OWNER' ? 'MEMBER' : 'OWNER';
+        setViewMode(newMode);
+        localStorage.setItem('cv_ranking_hr_view', newMode);
+        window.dispatchEvent(new Event('hrViewModeChanged'));
+        window.location.reload();
+    };
 
     const hrMenu: MenuItem[] = [
         { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
         { name: "Chiến dịch tuyển dụng", icon: Briefcase, href: "/jobs" },
         { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
-        { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
-        { name: "Hộp thư", icon: Mail, href: "/messages" },
-        ...(isHrOwner || isAdmin
+        ...(viewMode === 'OWNER'
             ? [
                 {
                     name: "Phân tích & Báo cáo",
                     icon: BarChart2,
-                    href: "/analytics"
+                    href: "/analytics",
+                    pro: true,
                 }
             ]
             : []),
     ];
 
     const adminMenu: MenuItem[] = [
-        { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
+        { name: "Tổng quan", icon: LayoutDashboard, href: "/admin/dashboard" },
         { name: "Quản lý công ty", icon: Building2, href: "/admin/companies" },
-        { name: "Quản lý tuyển dụng", icon: Briefcase, href: "/jobs" },
-        { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
-        { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
-        { name: "Hộp thư", icon: Mail, href: "/messages" },
-        { name: "Phân tích hệ thống", icon: BarChart2, href: "/analytics" },
+        { name: "Phân tích hệ thống", icon: BarChart2, href: "/admin/analytics" },
         { name: "Nhật ký hệ thống", icon: ShieldCheck, href: "/admin/audit-logs" },
     ];
 
-    const mainMenuItems = isApplicant
-        ? applicantMenu
-        : isAdmin
-            ? adminMenu
-            : hrMenu;
+    const mainMenuItems = isAdmin ? adminMenu : hrMenu;
 
-    const bottomItems: MenuItem[] = [
-        ...(!isApplicant
-            ? [{ name: "Cài đặt", icon: Settings, href: "/settings" }]
-            : []),
-        { name: "Trợ giúp", icon: HelpCircle, href: "/help" },
+    const bottomItems: MenuItem[] = isAdmin ? [
+        { name: "Cài đặt", icon: Settings, href: "/admin/settings" },
+        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
+    ] : [
+        { name: "Cài đặt", icon: Settings, href: "/settings" },
+        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
     ];
 
     return (
@@ -94,29 +92,29 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
             {/* OVERLAY & LAYOUT RENDER */}
             {isMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-slate-900/40 dark:bg-[#0f172a]/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+                    className="fixed inset-0 bg-slate-900/40 dark:bg-text/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}
 
             <aside
                 className={cn(
-                    "fixed md:relative top-0 left-0 h-full bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800 z-50 flex flex-col transition-all duration-300 shadow-2xl shrink-0",
+                    "fixed md:relative top-0 left-0 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 flex flex-col transition-all duration-300 shadow-2xl shrink-0",
                     isCollapsed ? "w-20" : "w-64",
                     isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                 )}
             >
                 <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800/80 shrink-0">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+                    <Link href="/dashboard" className="flex items-center gap-2 group relative z-50">
+                        <div className="w-10 h-10 bg-linear-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform shrink-0">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>
                         {(!isCollapsed || isMobileOpen) && (
                             <span className="text-xl font-black text-slate-900 dark:text-white whitespace-nowrap tracking-tight">
-                                ATS<span className="text-blue-500">SYSTEM</span>
+                                ATS<span className="text-primary-600 dark:text-primary-400">SYSTEM</span>
                             </span>
                         )}
-                    </div>
+                    </Link>
 
                     <button
                         onClick={() => setIsMobileOpen(false)}
@@ -128,22 +126,41 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-blue-600 text-white rounded-full items-center justify-center hover:bg-blue-500 hover:scale-110 shadow-lg shadow-blue-500/30 transition-all z-50"
+                    className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-primary-600 text-white rounded-full items-center justify-center hover:bg-primary-500 hover:scale-110 shadow-lg shadow-primary-500/30 transition-all z-50"
                 >
                     {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </button>
 
                 <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-800">
+
+                    {/* TOGGLE SWITCH DÀNH RIÊNG CHO HR OWNER */}
+                    {isHrOwner && (!isCollapsed || isMobileOpen) && (
+                        <div className="mb-6 px-2">
+                            <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl flex items-center shadow-inner border border-slate-200 dark:border-slate-700/50">
+                                <button
+                                    onClick={handleToggleView}
+                                    className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", viewMode === 'OWNER' ? "bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}
+                                >
+                                    Quản lý
+                                </button>
+                                <button
+                                    onClick={handleToggleView}
+                                    className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", viewMode === 'MEMBER' ? "bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}
+                                >
+                                    Tuyển dụng
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="px-3 mb-2">
                         {(!isCollapsed || isMobileOpen) && (
                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">
-                                {isApplicant
-                                    ? "Ứng viên"
-                                    : isAdmin
-                                        ? "Quản trị hệ thống"
-                                        : isHrOwner
-                                            ? "Nhà tuyển dụng"
-                                            : "Nhân sự"}
+                                {isAdmin
+                                    ? "Quản trị hệ thống"
+                                    : viewMode === 'OWNER'
+                                        ? "Quản lý Doanh nghiệp"
+                                        : "Chuyên viên Tuyển dụng"}
                             </p>
                         )}
                     </div>
@@ -161,22 +178,28 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                                     "flex items-center gap-3 rounded-xl transition-all font-medium text-sm group overflow-hidden relative",
                                     !showText ? "justify-center p-3" : "px-4 py-3",
                                     isActive
-                                        ? "bg-blue-100 dark:bg-blue-600/10 text-blue-600 dark:text-blue-500"
+                                        ? "bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400"
                                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50"
                                 )}
                             >
                                 {isActive && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-full" />
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-600 rounded-r-full" />
                                 )}
                                 <item.icon className={cn(
                                     "shrink-0 w-5 h-5 transition-colors",
                                     isActive
-                                        ? "text-blue-600 dark:text-blue-500"
+                                        ? "text-primary-600 dark:text-primary-400"
                                         : "text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-400"
                                 )} />
                                 {showText && <span className="whitespace-nowrap flex-1">{item.name}</span>}
+                                {showText && item.pro && (
+                                    <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
+                                        Pro
+                                    </span>
+                                )}
+
                                 {showText && item.badge && (
-                                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                    <span className="bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                                         {item.badge}
                                     </span>
                                 )}

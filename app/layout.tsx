@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import { AuthProvider } from "@/context/AuthContext";
+import { ApplyModalProvider } from "@/context/ApplyModalContext";
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import MainLayout from "@/components/layout/MainLayout";
 
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-be-vietnam",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "ATS Dashboard | Tuyển dụng thông minh",
@@ -20,15 +25,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+      <body className={`${beVietnamPro.variable} font-sans antialiased`} suppressHydrationWarning>
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <AuthProvider>
-              {/* ĐÃ GỠ BỎ <DashboardLayout> Ở ĐÂY */}
-              {/* BỌC MAIN LAYOUT Ở ĐÂY: Sẽ tự động phân luồng giao diện theo Role */}
-              <MainLayout>
+              <ApplyModalProvider>
                 {children}
-              </MainLayout>
+              </ApplyModalProvider>
             </AuthProvider>
           </ThemeProvider>
         </GoogleOAuthProvider>
