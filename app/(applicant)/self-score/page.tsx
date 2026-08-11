@@ -5,7 +5,7 @@ import { Bot, FileText, Briefcase, AlertTriangle, CheckCircle2, XCircle, Chevron
 import toast from 'react-hot-toast';
 import { applicationService } from '@/features/application/application.service';
 import { useExploreJobs } from '@/features/application/useApplication';
-import { getScoreTheme, getSubScoreClass, getPenaltyReasons } from '@/utils/score';
+import { getScoreTheme, getPenaltyReasons } from '@/utils/score';
 
 export default function SelfScorePage() {
     const { jobs, cvLibrary: cvs, isLoading: isLoadingData } = useExploreJobs();
@@ -64,19 +64,16 @@ export default function SelfScorePage() {
             `}} />
 
             {/* Header */}
-            <div className="mb-10">
-                <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                        Tự đánh giá năng lực
-                    </h1>
-                    <span className="px-2.5 py-1 rounded-md text-xs font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-md">
-                        Pro
-                    </span>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10">
+                <div>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Tự đánh giá năng lực</h1>
+                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-md">
+                            Pro
+                        </span>
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Sử dụng trí tuệ nhân tạo để đối chiếu CV của bạn với JD. Phân tích điểm mạnh, yếu và khả năng trúng tuyển.</p>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
-                    Sử dụng trí tuệ nhân tạo để đối chiếu CV của bạn với Job Description (JD).
-                    Phân tích điểm mạnh, điểm yếu và khả năng trúng tuyển hoàn toàn bí mật.
-                </p>
             </div>
 
             {/* BỐ CỤC 2 CỘT */}

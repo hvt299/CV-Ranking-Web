@@ -9,7 +9,15 @@ import Typewriter from '@/components/ui/Typewriter';
 import Select from 'react-select';
 import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
 
-const HERO_WORDS = ["Kỹ sư phần mềm", "Chuyên viên Marketing", "Giám đốc tài chính", "Nhà thiết kế UI/UX"];
+const HERO_WORDS = [
+    "Nhân viên kinh doanh", "Chuyên viên Marketing", "Chuyên viên chăm sóc khách hàng",
+    "Chuyên viên nhân sự", "Kỹ sư phần mềm", "Công nhân sản xuất",
+    "Chuyên viên tài chính", "Chuyên viên kinh doanh bất động sản", "Kỹ sư xây dựng",
+    "Kế toán viên", "Kỹ sư sản xuất", "Giáo viên", "Nhân viên bán hàng",
+    "Nhà báo", "Kỹ sư điện", "Nhân viên Logistics", "Chuyên viên tư vấn",
+    "Bác sĩ", "Nhà thiết kế UI/UX", "Quản lý nhà hàng", "Kỹ sư môi trường",
+    "Tài xế", "Biên dịch viên", "Luật sư", "Chuyên viên"
+];
 
 const staggerContainer: Variants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const fadeUp: Variants = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
@@ -70,7 +78,6 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
             setSubLocations([]);
         } else {
             setExpandedProvince(provCode);
-            // HeroSection nằm trong Client Component nên gọi được API
             const { systemService } = await import('@/features/system/system.service');
             const subs = await systemService.getSubLocations(provCode);
             setSubLocations(subs.filter((s: any) => s.version === domesticVersion));
@@ -111,9 +118,14 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
                 <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-bold mb-8 backdrop-blur-md text-slate-600 dark:text-slate-300 shadow-sm">
                     <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" /> Nền tảng Tuyển dụng AI thế hệ mới
                 </motion.div>
-                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.2] pb-3 mb-6">
+                <motion.h1
+                    variants={fadeUp}
+                    className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.2] pb-3 mb-6"
+                >
                     Khám phá cơ hội cho <br className="hidden md:block" />
-                    <Typewriter words={HERO_WORDS} />
+                    <span className="whitespace-nowrap">
+                        <Typewriter words={HERO_WORDS} />
+                    </span>
                 </motion.h1>
                 <motion.p variants={fadeUp} className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl font-medium leading-relaxed">
                     Ứng dụng mô hình LLM và Vector Database để loại bỏ định kiến, tự động khớp nối CV và Yêu cầu công việc với độ chính xác lên đến 98%.

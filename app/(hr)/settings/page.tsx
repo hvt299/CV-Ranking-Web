@@ -1,28 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Search, Building2, Save, CheckCircle, Mail, Briefcase, Globe, MapPin, User as UserIcon, Ban, XCircle } from 'lucide-react';
+import { Building2, Save, Mail, Briefcase, Globe, MapPin, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { UserRole, CompanyStatus } from '@/types';
+import { UserRole } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
-import { COMPANY_SIZES } from '@/constants/company.constants';
-import { ROLES } from '@/constants/user.constants';
+import { COMPANY_SIZES, COMPANY_STATUS_CONFIG } from '@/constants/company.constants';
 import { companyService } from '@/features/company/company.service';
 import { systemService, LocationUnit } from '@/features/system/system.service';
 import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function SettingsPage() {
     const { user } = useAuth();
-    const router = useRouter();
     const [mainTab, setMainTab] = useState<'personal' | 'business'>('personal');
 
     if (!user) return null;
 
     const isOwner = user.role === UserRole.HR_OWNER;
-    const isAdmin = user.role === UserRole.ADMIN;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 pb-32">
@@ -41,14 +37,6 @@ export default function SettingsPage() {
                     >
                         <UserIcon className="w-4 h-4" /> Cá nhân
                     </button>
-                    {isAdmin && (
-                        <button
-                            onClick={() => setMainTab('business')}
-                            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${mainTab === 'business' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Shield className="w-4 h-4" /> Quản trị
-                        </button>
-                    )}
                     {isOwner && (
                         <button
                             onClick={() => setMainTab('business')}
@@ -64,8 +52,6 @@ export default function SettingsPage() {
             <div className="w-full">
                 {mainTab === 'personal' ? (
                     <ProfileForm />
-                ) : isAdmin ? (
-                    <AdminSettingsSection user={user} />
                 ) : isOwner ? (
                     <CompanySettingsSection user={user} />
                 ) : null}
@@ -83,6 +69,26 @@ function CompanySettingsSection({ user }: { user: any }) {
     const [inviteEmail, setInviteEmail] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isUploadingLicense, setIsUploadingLicense] = useState(false);
+
+    const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingLicense(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await companyService.uploadFile(formData);
+            setCompany((prev: any) => ({ ...prev, license_file_url: res.file_url || res.url }));
+            toast.success('Tải giấy phép lên thành công!');
+        } catch (error) {
+            toast.error('Lỗi khi tải file lên');
+        } finally {
+            setIsUploadingLicense(false);
+        }
+    };
 
     const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
     const domesticVersion = company?.location?.version || 'new';
@@ -301,27 +307,16 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider mb-1">Trạng thái Doanh nghiệp</p>
                                 <p className="text-xs text-slate-500 font-medium">Chỉ công ty Đã duyệt mới được phép xuất bản chiến dịch Job.</p>
                             </div>
-                            {company.status === CompanyStatus.VERIFIED ? (
-                                <span className="px-4 py-2 bg-success-100 text-success-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
-                                    <CheckCircle className="w-4 h-4" />
-                                    Đã xác minh
-                                </span>
-                            ) : company.status === CompanyStatus.PENDING_VERIFICATION ? (
-                                <span className="px-4 py-2 bg-warning-100 text-warning-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
-                                    <Shield className="w-4 h-4" />
-                                    Đang chờ duyệt
-                                </span>
-                            ) : company.status === CompanyStatus.REJECTED ? (
-                                <span className="px-4 py-2 bg-error-100 text-error-700 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
-                                    <XCircle className="w-4 h-4" />
-                                    Bị từ chối
-                                </span>
-                            ) : company.status === CompanyStatus.SUSPENDED ? (
-                                <span className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm">
-                                    <Ban className="w-4 h-4" />
-                                    Tạm khóa
-                                </span>
-                            ) : null}
+                            {(() => {
+                                const config = COMPANY_STATUS_CONFIG[company.status] || COMPANY_STATUS_CONFIG['default'];
+                                const Icon = config.icon;
+                                return (
+                                    <span className={`px-4 py-2 rounded-xl text-sm font-black flex items-center gap-1.5 shadow-sm ${config.color}`}>
+                                        <Icon className="w-4 h-4" />
+                                        {config.label}
+                                    </span>
+                                );
+                            })()}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -448,33 +443,26 @@ function CompanySettingsSection({ user }: { user: any }) {
                                 />
 
                                 <label
-                                    className="group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 cursor-pointer transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                                    className={`group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 ${isUploadingLicense ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={(e) => {
                                         e.preventDefault();
+                                        if (isUploadingLicense) return;
                                         const file = e.dataTransfer.files?.[0];
-                                        if (file) setCompany({ ...company, license_file_url: file.name });
+                                        if (file) handleLicenseUpload({ target: { files: [file] } } as any);
                                     }}
                                 >
-                                    <input
-                                        type="file"
-                                        accept=".pdf,.png,.jpg,.jpeg"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) setCompany({ ...company, license_file_url: file.name });
-                                        }}
-                                    />
-
+                                    <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" onChange={handleLicenseUpload} disabled={isUploadingLicense} />
                                     <Briefcase className="w-12 h-12 text-primary-500 mb-4 group-hover:scale-110 transition-transform" />
-                                    <p className="font-bold text-slate-700 dark:text-slate-200">Kéo & thả file vào đây</p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">hoặc <span className="text-primary-600 font-bold">bấm để chọn file</span></p>
-                                    <p className="mt-2 text-xs text-slate-400 font-medium">PDF, JPG, PNG • Tối đa 10MB</p>
-
+                                    <p className="font-bold text-slate-700 dark:text-slate-200">{isUploadingLicense ? "Đang tải lên..." : "Kéo & thả file vào đây"}</p>
+                                    {!isUploadingLicense && (
+                                        <>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">hoặc <span className="text-primary-600 font-bold">bấm để chọn file</span></p>
+                                            <p className="mt-2 text-xs text-slate-400 font-medium">PDF, JPG, PNG • Tối đa 10MB</p>
+                                        </>
+                                    )}
                                     {company.license_file_url && (
-                                        <a href={company.license_file_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline mt-4 inline-block relative z-10 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-lg shadow-sm" onClick={(e) => e.stopPropagation()}>
-                                            Xem file hiện tại
-                                        </a>
+                                        <a href={company.license_file_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline mt-4 inline-block relative z-10 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-lg shadow-sm" onClick={(e) => e.stopPropagation()}>Xem file hiện tại</a>
                                     )}
                                 </label>
                             </div>
@@ -512,8 +500,19 @@ function CompanySettingsSection({ user }: { user: any }) {
                                     {members.map(m => (
                                         <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="p-5 pl-6">
-                                                <p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{m.full_name}</p>
-                                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{m.email}</p>
+                                                <div className="flex items-center gap-4">
+                                                    {m.avatar_url ? (
+                                                        <img src={m.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700 shrink-0" referrerPolicy="no-referrer" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 uppercase shadow-sm shrink-0">
+                                                            {m.full_name?.charAt(0) || 'U'}
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{m.full_name}</p>
+                                                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{m.email}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="p-5">
                                                 <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-lg shadow-sm ${m.role === UserRole.HR_OWNER ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}`}>{m.role}</span>
@@ -529,81 +528,6 @@ function CompanySettingsSection({ user }: { user: any }) {
                     </div>
                 )
             }
-        </div>
-    );
-}
-
-function AdminSettingsSection({ user }: { user: any }) {
-    const [users, setUsers] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-    useEffect(() => {
-        companyService.getAdminUsers()
-            .then(res => {
-                const usersData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-                setUsers(usersData);
-            })
-            .catch(() => toast.error('Không thể tải danh sách người dùng'))
-            .finally(() => setIsLoading(false));
-    }, []);
-
-    const handleRoleChange = async (userId: string, newRole: string) => {
-        setUpdatingId(userId);
-        try {
-            await companyService.updateUserRole(userId, newRole)
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-            toast.success('Đã cập nhật role thành công');
-        } catch (err: any) {
-            toast.error(err.response?.data?.detail || 'Lỗi khi cập nhật role');
-        } finally {
-            setUpdatingId(null);
-        }
-    };
-
-    const filtered = users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()));
-
-    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
-
-    return (
-        <div className="space-y-6 animate-in fade-in">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input type="text" placeholder="Tìm theo email hoặc tên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 transition-colors" />
-                </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 dark:border-slate-700">
-                        <tr><th className="p-5 pl-6">Người dùng</th><th className="p-5">Trạng thái</th><th className="p-5">Ngày tạo</th><th className="p-5 pr-6 text-right">Role</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                        {filtered.map(u => {
-                            const roleConfig = ROLES.find(r => r.value === u.role) || ROLES[0];
-                            return (
-                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td className="p-5 pl-6">
-                                        <div className="flex items-center gap-4">
-                                            {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700" /> : <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 uppercase shadow-sm">{u.full_name?.charAt(0)}</div>}
-                                            <div><p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{u.full_name}</p><p className="text-xs font-medium text-slate-400">{u.email}</p></div>
-                                        </div>
-                                    </td>
-                                    <td className="p-5"><span className={`text-[10px] uppercase tracking-wider font-black px-3 py-1.5 rounded-lg shadow-sm ${u.is_verified ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'}`}>{u.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}</span></td>
-                                    <td className="p-5 text-sm font-medium text-slate-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '—'}</td>
-                                    <td className="p-5 pr-6 text-right">
-                                        <select value={u.role || UserRole.APPLICANT} disabled={updatingId === u.id || u.email === user?.email} onChange={e => handleRoleChange(u.id, e.target.value)} className={`text-xs font-bold px-4 py-2 rounded-xl outline-none cursor-pointer border-none shadow-sm ${roleConfig.color} disabled:opacity-50 disabled:cursor-not-allowed transition-all`}>
-                                            {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                                        </select>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
         </div>
     );
 }

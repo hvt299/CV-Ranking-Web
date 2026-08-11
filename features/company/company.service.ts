@@ -1,7 +1,6 @@
 import apiClient from '@/lib/api-client';
 
 export const companyService = {
-    // === DÀNH CHO HR (CÔNG TY) ===
     lookupTax: async (taxCode: string) => {
         const response = await apiClient.get(`/companies/lookup-tax/${taxCode}`);
         return response.data;
@@ -27,7 +26,16 @@ export const companyService = {
         return response.data;
     },
 
-    // === DÀNH CHO ADMIN HỆ THỐNG ===
+    getAdminDashboard: async () => {
+        const response = await apiClient.get('/admin/dashboard/metrics');
+        return response.data.data;
+    },
+
+    getAdminAnalytics: async () => {
+        const response = await apiClient.get('/admin/analytics');
+        return response.data.data;
+    },
+
     getAdminCompanies: async () => {
         const response = await apiClient.get('/admin/companies');
         return response.data;
@@ -53,12 +61,16 @@ export const companyService = {
         return response.data;
     },
 
-    getAuditLogs: async () => {
-        const response = await apiClient.get('/admin/audit-logs');
+    updateUserStatus: async (userId: string, isActive: boolean) => {
+        const response = await apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive });
         return response.data;
     },
 
-    // Upload chung
+    getAuditLogs: async (params?: any) => {
+        const response = await apiClient.get('/admin/audit-logs', { params });
+        return response.data.data;
+    },
+
     uploadFile: async (formData: FormData) => {
         const response = await apiClient.post('/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }

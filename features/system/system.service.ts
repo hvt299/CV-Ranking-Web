@@ -23,5 +23,10 @@ export const systemService = {
 
         const response = await apiClient.get<Skill[]>('/system/skills', { params });
         return response.data;
+    },
+
+    async getStatistics(): Promise<any> {
+        const response = await apiClient.get('/system/statistics');
+        return response.data;
     }
 };

@@ -92,7 +92,7 @@ export default function CreateEnterpriseJobPage() {
             setIsLoading(false);
         }
     };
-    
+
     const STEPS = [
         { id: 1, title: 'Cơ bản', icon: Briefcase },
         { id: 2, title: 'Đãi ngộ & Vị trí', icon: MapPin },
@@ -104,7 +104,7 @@ export default function CreateEnterpriseJobPage() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="pb-20 space-y-8 font-sans"
+            className="pb-20 space-y-8 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
 
             <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">

@@ -1,5 +1,3 @@
-// Định nghĩa các Enum cốt lõi, ánh xạ 1:1 với app/schemas/common_schema.py từ Backend
-
 export enum UserRole {
     ADMIN = "admin",
     HR_OWNER = "hr_owner",
@@ -54,12 +52,19 @@ export enum AuditAction {
     COMPANY_VERIFIED = "company_verified",
     COMPANY_REJECTED = "company_rejected",
     COMPANY_SUSPENDED = "company_suspended",
+    COMPANY_UPDATED = "company_updated",
     APPLICATION_STATUS_CHANGED = "application_status_changed",
     APPLICATION_NOTE_ADDED = "application_note_added",
-    JOB_WEIGHTS_CHANGED = "job_weights_changed",
+    JOB_CREATED = "job_created",
+    JOB_UPDATED = "job_updated",
+    JOB_DELETED = "job_deleted",
     HR_MEMBER_INVITED = "hr_member_invited",
     HR_MEMBER_REMOVED = "hr_member_removed",
-    USER_SUSPENDED = "user_suspended"
+    USER_ROLE_UPDATED = "user_role_updated",
+    USER_STATUS_UPDATED = "user_status_updated",
+    USER_ANONYMIZED = "user_anonymized",
+    PASSWORD_RESET = "password_reset",
+    LOGIN_FAILED = "login_failed",
 }
 
 export enum SubscriptionTier {
@@ -85,17 +90,12 @@ export enum AlertFrequency {
     WEEKLY = "weekly"
 }
 
-// ============================================================================
-// CÁC INTERFACE DÙNG CHUNG (SHARED INTERFACES)
-// ============================================================================
-
 export interface ApiResponse<T> {
     status: string;
     message?: string;
     data: T;
 }
 
-// Cấu trúc Response chung cho API có phân trang (Pagination)
 export interface PaginatedResponse<T> {
     data: T[];
     total: number;

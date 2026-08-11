@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Target, Zap, ShieldCheck, TrendingUp, Award, Rocket } from 'lucide-react';
+import { systemService } from '@/features/system/system.service';
 
 import PublicHeader from '@/components/layout/PublicHeader';
+import Counter from '@/components/ui/Counter';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuth } from '@/context/AuthContext';
 
@@ -34,9 +36,20 @@ export default function AboutPage() {
     const { isAuthenticated, user } = useAuth();
     const [isScrolled, setIsScrolled] = useState(false);
 
+    const [sysStats, setSysStats] = useState({ candidates: 0, companies: 0, success_rate: 0 });
+
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
+
+        systemService.getStatistics().then(data => {
+            setSysStats({
+                candidates: data.total_candidates || 0,
+                companies: data.total_companies || 0,
+                success_rate: data.success_rate || 0
+            });
+        }).catch(console.error);
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -81,19 +94,27 @@ export default function AboutPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4 font-sans">
                         <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2">98%</h3>
+                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center">
+                                <Counter value={sysStats.success_rate} suffix="%" />
+                            </h3>
                             <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Độ chính xác AI Matching</p>
                         </div>
                         <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2">10k+</h3>
+                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center">
+                                <Counter value={sysStats.candidates} suffix={sysStats.candidates > 10 ? '+' : ''} />
+                            </h3>
                             <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Ứng viên tin dùng</p>
                         </div>
                         <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2">500+</h3>
+                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center">
+                                <Counter value={sysStats.companies} suffix={sysStats.companies > 10 ? '+' : ''} />
+                            </h3>
                             <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Doanh nghiệp đối tác</p>
                         </div>
                         <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2">24/7</h3>
+                            <h3 className="text-4xl font-black text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center">
+                                24/7
+                            </h3>
                             <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Hệ thống vận hành</p>
                         </div>
                     </div>

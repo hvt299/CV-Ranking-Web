@@ -45,18 +45,13 @@ export default function ApplicantOverviewPage() {
         <div className="max-w-7xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500">
 
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-2 flex items-center gap-3">
-                        Tổng quan ứng viên
-                    </h1>
-
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">
-                        Theo dõi sức khỏe hồ sơ, lịch sử ứng tuyển và các cơ hội việc làm phù hợp với bạn.
-                    </p>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Tổng quan ứng viên</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Theo dõi sức khỏe hồ sơ, lịch sử ứng tuyển và các cơ hội việc làm phù hợp với bạn.</p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 shrink-0">
                     <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse"></span>
                     {currentTime}
                 </div>

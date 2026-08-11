@@ -1,16 +1,13 @@
 import { SalaryRange } from '@/types';
 
-/** Loại bỏ tất cả ký tự không phải số */
 export const parseCurrency = (val: string): number => {
     const number = val.replace(/\D/g, '');
     return number ? Number(number) : 0;
 };
 
-/** Format tiền tệ Việt Nam */
 export const formatCurrency = (val: number): string =>
     new Intl.NumberFormat('vi-VN').format(val);
 
-/** Format dải lương */
 export const formatSalaryRange = (salary?: SalaryRange): string => {
     if (salary?.min_salary == null) return 'Thỏa thuận';
 
@@ -49,7 +46,6 @@ export const formatSalaryRange = (salary?: SalaryRange): string => {
     return `${formatShort(min)} - ${formatShort(max)}${curr}`;
 };
 
-/** Format ngày chuẩn Việt Nam */
 export const formatDate = (dateString?: string | Date): string => {
     if (!dateString) return 'Chưa cập nhật';
 
@@ -59,7 +55,36 @@ export const formatDate = (dateString?: string | Date): string => {
         : date.toLocaleDateString('vi-VN');
 };
 
-/** Format ngày Dashboard */
+export const formatDateTimeGMT7 = (
+    dateString?: string | Date
+): string => {
+    if (!dateString) return 'Chưa cập nhật';
+
+    const value =
+        dateString instanceof Date
+            ? dateString
+            : new Date(
+                /Z$|[+-]\d{2}:\d{2}$/.test(dateString)
+                    ? dateString
+                    : `${dateString}Z`
+            );
+
+    if (Number.isNaN(value.getTime())) {
+        return 'Ngày không hợp lệ';
+    }
+
+    return new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    }).format(value);
+};
+
 export const formatOverviewDate = (date: Date): string =>
     date.toLocaleDateString('vi-VN', {
         weekday: 'long',
@@ -68,7 +93,6 @@ export const formatOverviewDate = (date: Date): string =>
         year: 'numeric',
     });
 
-/** Độ mạnh mật khẩu */
 export const getPasswordStrength = (pass: string) => {
     let score = 0;
 
@@ -89,7 +113,6 @@ export const getPasswordStrength = (pass: string) => {
     return { score, color: 'bg-success-500', label: 'Mạnh' };
 };
 
-/** Countdown chi tiết */
 export const getCountdownParts = (deadline?: string | Date) => {
     if (!deadline) return null;
 
@@ -107,7 +130,6 @@ export const getCountdownParts = (deadline?: string | Date) => {
     };
 };
 
-/** Countdown hạn nộp hồ sơ */
 export const getDeadlineCountdown = (deadline?: string | Date): string => {
     if (!deadline) return 'Không thời hạn';
 

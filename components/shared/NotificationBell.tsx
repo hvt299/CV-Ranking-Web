@@ -27,6 +27,10 @@ export default function NotificationBell() {
     };
 
     useEffect(() => {
+        fetchNotifications();
+    }, [isAuthenticated, isApplicant]);
+
+    useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -189,6 +193,13 @@ export default function NotificationBell() {
                                 })}
                             </div>
                         )}
+                    </div>
+                    
+                    {/* Nút Xem tất cả */}
+                    <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl text-center">
+                        <a href="/notifications" className="text-sm font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline">
+                            Xem tất cả thông báo
+                        </a>
                     </div>
                 </div>
             )}

@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    LayoutDashboard, Briefcase, Users, CalendarCheck,
-    Mail, BarChart2, Settings, HelpCircle, ChevronLeft,
-    ChevronRight, Hexagon, X,
-    Building2, ShieldCheck
+    LayoutDashboard, Briefcase, Users,
+    BarChart2, Settings, HelpCircle, ChevronLeft,
+    ChevronRight, Hexagon, X, Building2, ShieldCheck
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types";
@@ -35,7 +34,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const role = user?.role || UserRole.APPLICANT;
     const isAdmin = role === UserRole.ADMIN;
     const isHrOwner = role === UserRole.HR_OWNER;
-    const isHrMember = role === UserRole.HR_MEMBER;
 
     const [viewMode, setViewMode] = useState<'OWNER' | 'MEMBER'>(isHrOwner ? 'OWNER' : 'MEMBER');
 
@@ -73,19 +71,18 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     ];
 
     const adminMenu: MenuItem[] = [
-        { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
+        { name: "Tổng quan", icon: LayoutDashboard, href: "/admin/dashboard" },
         { name: "Quản lý công ty", icon: Building2, href: "/admin/companies" },
-        { name: "Quản lý tuyển dụng", icon: Briefcase, href: "/jobs" },
-        { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
-        { name: "Lịch phỏng vấn", icon: CalendarCheck, href: "/interviews" },
-        { name: "Hộp thư", icon: Mail, href: "/messages" },
-        { name: "Phân tích hệ thống", icon: BarChart2, href: "/analytics" },
+        { name: "Phân tích hệ thống", icon: BarChart2, href: "/admin/analytics" },
         { name: "Nhật ký hệ thống", icon: ShieldCheck, href: "/admin/audit-logs" },
     ];
 
     const mainMenuItems = isAdmin ? adminMenu : hrMenu;
 
-    const bottomItems: MenuItem[] = [
+    const bottomItems: MenuItem[] = isAdmin ? [
+        { name: "Cài đặt", icon: Settings, href: "/admin/settings" },
+        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
+    ] : [
         { name: "Cài đặt", icon: Settings, href: "/settings" },
         { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
     ];
