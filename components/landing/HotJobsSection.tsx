@@ -1,51 +1,89 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
-import {
-    ArrowRight,
-    MapPin,
-    Building2,
-    DollarSign,
-    Clock,
-    Briefcase,
-    Flame,
-    Users,
-    Calendar
-} from 'lucide-react';
+import { Flame, ChevronRight, ChevronLeft, MapPin, Building2, DollarSign } from 'lucide-react';
 import { Job } from '@/types';
+import { formatSalaryRange } from '@/utils/format';
 
 interface HotJobsSectionProps {
     jobs: Job[];
-    onScrollToJobs: () => void;
 }
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
-const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: {
-            type: "spring",
-            stiffness: 100,
-            damping: 15
-        }
-    }
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
 };
 
-export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionProps) {
-    if (!jobs || jobs.length === 0) return null;
+export const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
+    <Link
+        href={`/careers/${job.id}`}
+        className="group block relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-orange-100 dark:border-orange-500/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 overflow-hidden"
+    >
+        <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-2xl group-hover:bg-orange-500/20 transition-colors pointer-events-none" />
+
+        <div className="relative z-10 flex gap-4">
+            {/* Logo */}
+            <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+                {job.company_logo ? (
+                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
+                ) : (
+                    <Building2 className="w-8 h-8 text-slate-300" />
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1 gap-2">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                        {job.title}
+                    </h3>
+                    <span className="flex items-center gap-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                        <Flame className="w-3 h-3" /> Hot
+                    </span>
+                </div>
+
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate mb-3">
+                    {job.company_name || 'Công ty Ẩn danh'}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold mt-auto">
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
+                        <DollarSign className="w-3.5 h-3.5" /> {formatSalaryRange(job.salary)}
+                    </span>
+                    {(job.location?.province_name || job.location?.country) && (
+                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md truncate max-w-30">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                                {job.location.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location.province_name}
+                            </span>
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    </Link>
+);
+
+export default function HotJobsSection({ jobs }: HotJobsSectionProps) {
+    const allHotJobs = jobs.filter(job => job.is_hot);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+    const totalPages = Math.ceil(allHotJobs.length / itemsPerPage) || 1;
+    const currentJobs = allHotJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    if (!allHotJobs || allHotJobs.length === 0) return null;
 
     return (
-        <section id="hot-jobs" className="py-32 px-6 relative">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-end mb-12">
+        <section className="py-16 md:py-24 bg-background dark:bg-slate-950 transition-colors font-sans border-b border-slate-200 dark:border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                     <div>
                         <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
                             Cơ hội{' '}
@@ -53,17 +91,24 @@ export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionP
                                 Việc Làm Hot
                             </span>
                         </h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">
-                            Những vị trí có mức đãi ngộ tốt nhất đang mở tuyển.
+                        <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
+                            Những vị trí có mức đãi ngộ tốt nhất đang chờ đón bạn.
                         </p>
                     </div>
 
-                    <button
-                        onClick={onScrollToJobs}
-                        className="hidden md:flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                    >
-                        Xem tất cả <ArrowRight className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <span>Sắp xếp theo:</span>
+                            <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-orange-500">
+                                <option value="default">Mặc định</option>
+                                <option value="salary_desc">Lương cao nhất</option>
+                                <option value="latest">Mới cập nhật</option>
+                            </select>
+                        </div>
+                        <Link href="/careers?is_hot=true" className="hidden md:flex items-center gap-2 text-orange-600 font-bold hover:text-orange-700 transition-colors bg-orange-50 dark:bg-orange-500/10 px-5 py-2.5 rounded-full">
+                            Xem tất cả <ChevronRight className="w-4 h-4" />
+                        </Link>
+                    </div>
                 </div>
 
                 <motion.div
@@ -71,171 +116,37 @@ export default function HotJobsSection({ jobs, onScrollToJobs }: HotJobsSectionP
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: '-50px' }}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
                 >
-                    {jobs.map((job) => {
-                        const isClosedManually = job.status === 'closed';
-                        const isExpired =
-                            job.deadline &&
-                            new Date(job.deadline).getTime() < Date.now();
-
-                        let badgeColor = 'bg-emerald-50 text-emerald-600';
-                        let statusText = 'ĐANG MỞ';
-
-                        if (isClosedManually) {
-                            badgeColor = 'bg-rose-50 text-rose-600';
-                            statusText = 'ĐÃ ĐÓNG';
-                        } else if (isExpired) {
-                            badgeColor = 'bg-amber-50 text-amber-600';
-                            statusText = 'HẾT HẠN';
-                        }
-
-                        return (
-                            <motion.div
-                                key={job.id}
-                                variants={cardVariants}
-                                className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-blue-400 dark:hover:border-slate-600 shadow-sm hover:shadow-xl transition-all flex flex-col h-full relative group overflow-hidden"
-                            >
-                                {/* Glow */}
-                                <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/5 dark:bg-orange-500/10 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                                {/* Ribbon */}
-                                <div className="absolute -right-12 top-6 bg-linear-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 w-40 text-center shadow-lg rotate-45 z-10 tracking-widest uppercase pointer-events-none opacity-90 flex items-center justify-center gap-1">
-                                    <Flame className="w-3 h-3" />
-                                    HOT
-                                </div>
-
-                                <div className="relative z-20 flex flex-col flex-1">
-                                    {/* Status */}
-                                    <div
-                                        className={`inline-flex w-fit mb-4 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${badgeColor}`}
-                                    >
-                                        {statusText}
-                                    </div>
-
-                                    {/* Title */}
-                                    <h3 className="font-bold text-xl pr-20 leading-tight line-clamp-2 text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                        {job.title}
-                                    </h3>
-
-                                    <div className="space-y-3 mt-3 mb-6">
-                                        {/* Company */}
-                                        <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 font-bold">
-                                            <Building2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                                            <span className="line-clamp-2">
-                                                {job.company_name}
-                                            </span>
-                                        </div>
-
-                                        {/* Location + Salary */}
-                                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                                                <MapPin className="w-4 h-4 text-slate-400" />
-                                                {job.location?.city || 'Việt Nam'}
-                                            </div>
-
-                                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-black bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
-                                                <DollarSign className="w-4 h-4" />
-                                                {job.salary?.min_salary &&
-                                                    job.salary?.max_salary
-                                                    ? `${new Intl.NumberFormat(
-                                                        'vi-VN'
-                                                    ).format(
-                                                        job.salary.min_salary /
-                                                        1000000
-                                                    )} - ${new Intl.NumberFormat(
-                                                        'vi-VN'
-                                                    ).format(
-                                                        job.salary.max_salary /
-                                                        1000000
-                                                    )} Tr`
-                                                    : 'Thỏa thuận'}
-                                            </div>
-                                        </div>
-
-                                        {/* Tags */}
-                                        <div className="flex flex-wrap gap-2 pt-1">
-                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1">
-                                                <Briefcase className="w-3 h-3" />
-                                                {job.job_level}
-                                            </span>
-
-                                            <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-blue-100 dark:border-blue-800/50">
-                                                <Clock className="w-3 h-3" />
-                                                {job.employment_type} •{' '}
-                                                {job.work_mode}
-                                            </span>
-
-                                            <span className="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1.5 rounded-md text-[11px] font-bold flex items-center gap-1 border border-purple-100 dark:border-purple-800/50">
-                                                <Users className="w-3 h-3" />
-                                                SL: {job.headcount || 1}
-                                            </span>
-
-                                            <span className="bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-md text-[11px] font-bold border border-amber-100 dark:border-amber-800/50">
-                                                KN:{' '}
-                                                {job.min_yoe != null
-                                                    ? `${job.min_yoe} năm`
-                                                    : 'Không yêu cầu'}
-                                            </span>
-                                        </div>
-
-                                        {/* Skills */}
-                                        <div className="flex flex-wrap gap-2">
-                                            {job.required_skills
-                                                ?.slice(0, 3)
-                                                .map((skill: any, i: number) => (
-                                                    <span
-                                                        key={i}
-                                                        className="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1.5 rounded-md text-[11px] font-bold border border-purple-100 dark:border-purple-800/50"
-                                                    >
-                                                        {typeof skill === 'string'
-                                                            ? skill
-                                                            : skill.name}
-                                                    </span>
-                                                ))}
-
-                                            {job.required_skills &&
-                                                job.required_skills.length >
-                                                3 && (
-                                                    <span className="text-[11px] font-bold text-slate-500 px-2 py-1.5">
-                                                        +
-                                                        {job.required_skills
-                                                            .length - 3}
-                                                    </span>
-                                                )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 mt-auto relative z-20">
-                                    <div
-                                        className={`flex items-center gap-1.5 text-xs font-bold ${isExpired
-                                                ? 'text-amber-500'
-                                                : 'text-slate-500'
-                                            }`}
-                                    >
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <span>
-                                            {job.deadline
-                                                ? `Hạn nộp: ${new Date(
-                                                    job.deadline
-                                                ).toLocaleDateString('vi-VN')}`
-                                                : 'Không thời hạn'}
-                                        </span>
-                                    </div>
-
-                                    <Link
-                                        href={`/jobs/${job.id}`}
-                                        className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 px-4 py-2 rounded-xl transition-colors"
-                                    >
-                                        Chi tiết
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                    {currentJobs.map((job) => (
+                        <motion.div key={job.id} variants={itemVariants}>
+                            <HotJobItem job={job} />
+                        </motion.div>
+                    ))}
                 </motion.div>
+
+                {/* Slider Phân trang */}
+                {totalPages > 1 && (
+                    <div className="mt-10 flex items-center justify-center gap-4">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                            <span className="text-orange-600 dark:text-orange-500">{currentPage}</span> / {totalPages} trang
+                        </div>
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
             </div>
         </section>
     );

@@ -3,9 +3,11 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
-import api from '@/lib/api';
+import { Lock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { authService } from '@/features/auth/auth.service';
+import AuthLogo from '@/components/ui/AuthLogo';
+import { getPasswordStrength } from '@/utils/format';
 
 function ResetPasswordContent() {
     const searchParams = useSearchParams();
@@ -14,7 +16,11 @@ function ResetPasswordContent() {
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    const passStrength = getPasswordStrength(password);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,9 +35,14 @@ function ResetPasswordContent() {
             return;
         }
 
+        if (passStrength.score < 2) {
+            toast.error('Mật khẩu quá yếu! Yêu cầu chữ hoa, số và ký tự đặc biệt.');
+            return;
+        }
+
         setIsLoading(true);
         try {
-            await api.post('/auth/reset-password', {
+            await authService.resetPassword({
                 token: token,
                 new_password: password
             });
@@ -56,56 +67,151 @@ function ResetPasswordContent() {
     if (!token) {
         return (
             <div className="text-center">
-                <h1 className="text-2xl font-bold text-rose-600 dark:text-rose-400 mb-2">Lỗi xác thực</h1>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">Liên kết đặt lại mật khẩu của bạn không hợp lệ hoặc bị thiếu.</p>
-                <Link href="/forgot-password" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">Yêu cầu liên kết mới</Link>
+                <h1 className="mb-2 text-2xl font-bold text-error-600 dark:text-error-500">
+                    Lỗi xác thực
+                </h1>
+
+                <p className="mb-6 text-text-muted">
+                    Liên kết đặt lại mật khẩu của bạn không hợp lệ hoặc bị thiếu.
+                </p>
+
+                <Link
+                    href="/forgot-password"
+                    className="font-bold text-primary-600 hover:underline"
+                >
+                    Yêu cầu liên kết mới
+                </Link>
             </div>
         );
     }
 
     return (
         <>
-            <div className="flex flex-col items-center mb-8 text-center">
-                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200 dark:shadow-none">
-                    <ShieldCheck className="text-white w-6 h-6" />
+            <div className="mb-8 flex flex-col items-center text-center">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-button-primary-bg shadow-card">
+                    <ShieldCheck className="h-6 w-6 text-button-primary-text" />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Tạo mật khẩu mới</h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
+
+                <h1 className="text-2xl font-bold text-text">
+                    Tạo mật khẩu mới
+                </h1>
+
+                <p className="mt-2 text-sm text-text-muted">
+                    Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
+                </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu mới</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-text">
+                        Mật khẩu mới
+                    </label>
+
                     <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-text-subtle" />
+
                         <input
-                            type="password" required minLength={8}
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            minLength={8}
+                            className="w-full rounded-xl border border-input-border bg-input-bg py-3 pr-12 pl-12 text-sm font-medium text-text outline-none transition-all placeholder:font-medium placeholder:text-text-subtle focus:border-input-focus focus:ring-2 focus:ring-primary-500/20"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute top-1/2 right-4 -translate-y-1/2 text-text-subtle hover:text-text"
+                        >
+                            {showPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                            ) : (
+                                <Eye className="h-5 w-5" />
+                            )}
+                        </button>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-                        *Tối thiểu 8 ký tự, gồm 1 chữ hoa, 1 chữ thường, 1 số & 1 ký tự đặc biệt.
-                    </p>
+
+                    <div className="mt-2">
+                        <div className="flex h-1.5 w-full gap-1 overflow-hidden rounded-full">
+                            <div
+                                className={`flex-1 ${passStrength.score >= 1
+                                    ? passStrength.color
+                                    : 'bg-border'
+                                    } transition-colors`}
+                            />
+
+                            <div
+                                className={`flex-1 ${passStrength.score >= 2
+                                    ? passStrength.color
+                                    : 'bg-border'
+                                    } transition-colors`}
+                            />
+
+                            <div
+                                className={`flex-1 ${passStrength.score >= 3
+                                    ? passStrength.color
+                                    : 'bg-border'
+                                    } transition-colors`}
+                            />
+                        </div>
+
+                        <div className="mt-1 flex items-center justify-between">
+                            <span className="text-[10px] font-medium text-text-muted">
+                                Ít nhất 8 ký tự, 1 chữ hoa, 1 số & 1 ký tự đặc biệt
+                            </span>
+
+                            <span
+                                className={`text-[10px] font-bold ${passStrength.color.replace(
+                                    'bg-',
+                                    'text-'
+                                )}`}
+                            >
+                                {passStrength.label}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Xác nhận Mật khẩu mới</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-text">
+                        Xác nhận Mật khẩu mới
+                    </label>
+
                     <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-text-subtle" />
+
                         <input
-                            type="password" required
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            required
+                            className="w-full rounded-xl border border-input-border bg-input-bg py-3 pr-12 pl-12 text-sm font-medium text-text outline-none transition-all placeholder:font-medium placeholder:text-text-subtle focus:border-input-focus focus:ring-2 focus:ring-primary-500/20"
                             placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute top-1/2 right-4 -translate-y-1/2 text-text-subtle hover:text-text"
+                        >
+                            {showConfirmPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                            ) : (
+                                <Eye className="h-5 w-5" />
+                            )}
+                        </button>
                     </div>
                 </div>
 
-                <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg dark:shadow-none flex items-center justify-center gap-2 mt-4">
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-button-primary-bg py-3.5 font-bold text-button-primary-text shadow-card transition-all hover:bg-button-primary-hover disabled:opacity-60"
+                >
                     {isLoading ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
                 </button>
             </form>
@@ -115,9 +221,24 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center p-4 transition-colors duration-300">
-            <div className="max-w-md w-full bg-white dark:bg-[#1e293b] rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none p-10 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
-                <Suspense fallback={<div className="text-center text-slate-500 dark:text-slate-400">Đang tải dữ liệu...</div>}>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4 transition-colors duration-300">
+            {/* Background Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-50 dark:opacity-20 pointer-events-none" />
+
+            <div className="pointer-events-none absolute top-[-10%] left-[-10%] h-[40%] w-[40%] rounded-full bg-primary-500/10 blur-[100px]" />
+
+            <div className="pointer-events-none absolute right-[-10%] bottom-[-10%] h-[40%] w-[40%] rounded-full bg-primary-700/10 blur-[100px]" />
+
+            <AuthLogo />
+
+            <div className="relative z-10 w-full max-w-md rounded-3xl border border-card-border bg-card-bg p-10 shadow-card transition-colors duration-300">
+                <Suspense
+                    fallback={
+                        <div className="text-center text-text-muted">
+                            Đang tải dữ liệu...
+                        </div>
+                    }
+                >
                     <ResetPasswordContent />
                 </Suspense>
             </div>
