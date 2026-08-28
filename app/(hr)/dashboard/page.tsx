@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useHRView } from '@/context/HRViewContext';
+import { useHRViewStore } from '@/store/useHRViewStore';
 import OwnerDashboard from '@/components/hr/dashboard/OwnerDashboard';
 import MemberWorkspace from '@/components/hr/dashboard/MemberWorkspace';
 import { formatOverviewDate } from '@/utils/format';
 
 export default function HRDashboardController() {
-  const { hrViewMode } = useHRView();
+  const { hrViewMode } = useHRViewStore();
   const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {

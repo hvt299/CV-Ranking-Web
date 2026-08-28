@@ -24,7 +24,7 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const [role, setRole] = useState<UserRole.HR_OWNER | UserRole.APPLICANT>(UserRole.APPLICANT);
+    const [role, setRole] = useState<UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT>(UserRole.APPLICANT);
     const [hrInfo, setHrInfo] = useState<HrInfoState>(DEFAULT_HR_INFO);
 
     const [error, setError] = useState('');
@@ -45,7 +45,7 @@ export default function RegisterPage() {
         const token = params.get('invite_token');
         if (token) {
             setInviteToken(token);
-            setRole(UserRole.HR_MEMBER as any);
+            setRole(UserRole.HR_MEMBER);
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 if (payload.email) setEmail(payload.email);
@@ -86,14 +86,31 @@ export default function RegisterPage() {
         await handleRegister(payload, !!inviteToken);
     };
 
-    const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
-        const payload: any = provider === 'google'
-            ? { access_token: accessToken }
-            : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };
+    const handleSocialAuth = async (
+        accessToken: string,
+        provider: 'google' | 'linkedin',
+        roleToSubmit?: UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT,
+        companyData?: HrInfoState
+    ) => {
+        const payload: any =
+            provider === 'google'
+                ? {
+                    access_token: accessToken,
+                }
+                : {
+                    code: accessToken,
+                    redirect_uri: `${window.location.origin}/linkedin`,
+                };
 
-        if (roleToSubmit) payload.role = roleToSubmit;
-        if (inviteToken) payload.invite_token = inviteToken;
-        if (companyData) {
+        if (roleToSubmit) {
+            payload.role = roleToSubmit;
+        }
+
+        if (inviteToken) {
+            payload.invite_token = inviteToken;
+        }
+
+        if (companyData && roleToSubmit === UserRole.HR_OWNER) {
             payload.company_name = companyData.companyName;
             payload.tax_code = companyData.taxCode;
             payload.industry = companyData.industry;
@@ -102,7 +119,10 @@ export default function RegisterPage() {
             payload.location = companyData.location;
         }
 
-        const result = await socialLoginFlow(provider, payload);
+        const result = await socialLoginFlow(
+            provider,
+            payload
+        );
 
         if (result?.requireRole) {
             setTempSocialToken(accessToken);
@@ -299,11 +319,27 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            {/* Modal social dùng chung */}
             <SocialRoleModal
                 isOpen={showRoleModal}
                 isLoading={isLoading}
-                onSubmit={(role, companyData) => handleSocialAuth(tempSocialToken, socialProvider, role, companyData)}
+                initialRole={
+                    inviteToken
+                        ? UserRole.HR_MEMBER
+                        : UserRole.APPLICANT
+                }
+                allowedRoles={
+                    inviteToken
+                        ? [UserRole.HR_MEMBER]
+                        : [UserRole.APPLICANT, UserRole.HR_OWNER]
+                }
+                onSubmit={(role, companyData) =>
+                    handleSocialAuth(
+                        tempSocialToken,
+                        socialProvider,
+                        role,
+                        companyData
+                    )
+                }
             />
         </div>
     );

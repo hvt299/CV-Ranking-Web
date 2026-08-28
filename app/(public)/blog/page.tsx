@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // --- MOCK DATA ---
 const CATEGORIES = ['Tất cả', 'Phỏng vấn', 'Viết CV', 'Định hướng', 'Góc HR'];
@@ -81,7 +81,7 @@ const MOCK_POSTS = [
 ];
 
 export default function BlogPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState('');

@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o types/api-schema.ts"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.2.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/utilities": "^3.2.2",
     "@react-oauth/google": "^0.13.4",
+    "@tanstack/react-query": "^5.102.8",
     "@types/js-cookie": "^3.0.6",
     "axios": "^1.14.0",
     "canvas-confetti": "^1.9.4",
@@ -28,10 +30,12 @@
     "react-hot-toast": "^2.6.0",
     "react-select": "^5.10.2",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
+    "@tanstack/react-query-devtools": "^5.102.8",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -39,6 +43,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.2.12",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5"
   },

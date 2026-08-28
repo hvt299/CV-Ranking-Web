@@ -9,13 +9,13 @@ import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import CompanyCard from '@/components/companies/CompanyCard';
 import CompanySearchBar from '@/components/companies/CompanySearchBar';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Company } from '@/types';
 import apiClient from '@/lib/api-client';
 import { systemService } from '@/features/system/system.service';
 
 export default function PublicCompaniesPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const searchParams = useSearchParams();
 
     const [companies, setCompanies] = useState<Company[]>([]);

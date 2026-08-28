@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import apiClient from '@/lib/api-client';
 import { jobService } from '@/features/job/job.service';
 import { Company, Job } from '@/types';
@@ -20,7 +20,7 @@ import { COMPANY_SIZES } from '@/constants/company.constants';
 export default function PublicCompanyDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
 
     const [company, setCompany] = useState<Company | null>(null);
     const [companyJobs, setCompanyJobs] = useState<Job[]>([]);

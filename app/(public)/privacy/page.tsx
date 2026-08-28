@@ -5,7 +5,7 @@ import { ShieldCheck, Database, Cpu, Share2, Server, UserCog, ChevronRight } fro
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const SECTIONS = [
     { id: 'collection', title: '1. Thu thập Dữ liệu', icon: Database },
@@ -16,7 +16,7 @@ const SECTIONS = [
 ];
 
 export default function PrivacyPolicyPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
 

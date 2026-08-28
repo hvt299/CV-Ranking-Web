@@ -6,7 +6,7 @@ import { MapPin, Briefcase, Heart, Send, Building2, DollarSign, Share2 } from 'l
 import { Job } from '@/types';
 import { formatSalaryRange, getCountdownParts } from '@/utils/format';
 import toast from 'react-hot-toast';
-import { useApplyModal } from '@/context/ApplyModalContext';
+import { useUIStore } from '@/store/useUIStore';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
@@ -18,7 +18,7 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job }: JobCardProps) {
-    const { openApplyModal } = useApplyModal();
+    const { openApplyModal } = useUIStore();
     const isExpired = Boolean(job.deadline && new Date(job.deadline).getTime() < Date.now());
 
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number, isExpired: boolean } | null>(null);

@@ -5,7 +5,7 @@ import { Headset, Mail, Phone, MapPin, Send, ChevronDown, ChevronUp, MessageSqua
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const FAQS = [
     {
@@ -27,7 +27,7 @@ const FAQS = [
 ];
 
 export default function SupportPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
     const [openFaq, setOpenFaq] = useState<number | null>(0);
 

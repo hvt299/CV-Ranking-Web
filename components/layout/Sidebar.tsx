@@ -7,7 +7,7 @@ import {
     BarChart2, Settings, HelpCircle, ChevronLeft,
     ChevronRight, Hexagon, X, Building2, ShieldCheck
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/useAuthStore";
 import { UserRole } from "@/types";
 import { cn } from "@/utils/utils";
 import { useEffect, useState } from "react";
@@ -29,7 +29,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: SidebarProps) {
     const pathname = usePathname();
-    const { user } = useAuth();
+    const { user } = useAuthStore();
 
     const role = user?.role || UserRole.APPLICANT;
     const isAdmin = role === UserRole.ADMIN;

@@ -18,8 +18,8 @@ import toast from 'react-hot-toast';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import JobCard from '@/components/jobs/JobCard';
-import { useAuth } from '@/context/AuthContext';
-import { useApplyModal } from '@/context/ApplyModalContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUIStore } from '@/store/useUIStore';
 import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
@@ -27,8 +27,8 @@ import { COMPANY_SIZES } from '@/constants/company.constants';
 export default function PublicJobDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isAuthenticated, user } = useAuth();
-    const { openApplyModal } = useApplyModal();
+    const { isAuthenticated, user } = useAuthStore();
+    const { openApplyModal } = useUIStore();
 
     const [job, setJob] = useState<Job | null>(null);
     const [company, setCompany] = useState<Company | null>(null);

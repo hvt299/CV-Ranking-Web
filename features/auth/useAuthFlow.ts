@@ -2,18 +2,18 @@ import { useState } from 'react';
 import { authService } from './auth.service';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function useAuthFlow() {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-    const { login: setAuthToken } = useAuth();
+    const { login: setAuthToken } = useAuthStore();
 
     const login = async (payload: any) => {
         setIsLoading(true);
         try {
             const res = await authService.login(payload);
-            setAuthToken(res.access_token);
+            setAuthToken(res.access_token, router);
             return true;
         } catch (err: any) {
             const detail = err.response?.data?.detail;
@@ -45,24 +45,30 @@ export function useAuthFlow() {
         }
     };
 
-    const socialLoginFlow = async (provider: 'google' | 'linkedin', payload: any) => {
+    const socialLoginFlow = async (
+        provider: 'google' | 'linkedin',
+        payload: any
+    ) => {
         setIsLoading(true);
         try {
             const res = await authService.socialLogin(provider, payload);
-            
-            // Trường hợp 1: Tài khoản mới, cần chọn Role
+
             if (res.status === 202 && res.data.action === 'require_role') {
                 return { requireRole: true };
             }
-            
-            // Trường hợp 2: Đăng nhập thành công luôn
-            setAuthToken(res.data.access_token);
+
+            setAuthToken(res.data.access_token, router);
             toast.success('Đăng nhập/Đăng ký thành công!');
             return { success: true };
-            
         } catch (err: any) {
-            toast.error(err.response?.data?.detail || `Lỗi xác thực ${provider}`);
-            return { success: false };
+            toast.error(
+                err.response?.data?.detail ||
+                `Lỗi xác thực ${provider}`
+            );
+
+            return {
+                success: false,
+            };
         } finally {
             setIsLoading(false);
         }

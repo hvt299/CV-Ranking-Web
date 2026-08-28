@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { Shield, Search, User as UserIcon, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types';
 import { ROLES } from '@/constants/user.constants';
 import { companyService } from '@/features/company/company.service';
 import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function AdminSettingsPage() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [mainTab, setMainTab] = useState<'personal' | 'admin'>('personal');
 
     if (!user || user.role !== UserRole.ADMIN) return null;

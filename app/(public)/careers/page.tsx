@@ -12,14 +12,14 @@ import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { HotJobItem } from '@/components/landing/HotJobsSection';
 import { LatestJobItem } from '@/components/landing/LatestJobsSection';
 
 export default function PublicJobsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
 
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);

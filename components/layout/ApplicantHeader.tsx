@@ -9,7 +9,7 @@ import {
     Menu, X, LayoutDashboard, FolderOpen, FileText, ClipboardCheck,
     Briefcase
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 
@@ -24,7 +24,7 @@ export default function ApplicantHeader() {
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, logout } = useAuthStore();
 
     const [mounted, setMounted] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -65,8 +65,7 @@ export default function ApplicantHeader() {
 
     const handleLogout = async () => {
         setIsDropdownOpen(false);
-        await logout();
-        router.push('/');
+        logout(router);
     };
 
     return (
@@ -75,7 +74,7 @@ export default function ApplicantHeader() {
 
                 {/* TRÁI: LOGO & DESKTOP NAV */}
                 <div className="flex items-center gap-8">
-                    <Link href="/dashboard" className="flex items-center gap-2 group relative z-50">
+                    <Link href="/overview" className="flex items-center gap-2 group relative z-50">
                         <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>

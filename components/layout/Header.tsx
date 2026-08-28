@@ -4,8 +4,8 @@ import { Search, Sun, Moon, Menu, Home, LogOut, ChevronDown, Settings } from 'lu
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
+import { usePathname, useRouter } from 'next/navigation';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 
@@ -18,8 +18,9 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
     const [mounted, setMounted] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { user, logout } = useAuth();
+    const { user, logout } = useAuthStore();
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => setMounted(true), []);
 
@@ -126,7 +127,13 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
 
                             <div className="h-px bg-slate-100 dark:bg-slate-700/50 my-2"></div>
 
-                            <button onClick={() => { setIsDropdownOpen(false); logout(); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                            <button
+                                onClick={() => {
+                                    setIsDropdownOpen(false);
+                                    logout(router);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                            >
                                 <LogOut className="w-4 h-4" /> Đăng xuất
                             </button>
                         </div>

@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, Clock, Briefcase, Eye, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Notification, NotificationReadStatus, ApplicationStatus, UserRole, NotificationType } from '@/types';
 import { applicationService } from '@/features/application/application.service';
 import { NOTIFICATION_CONFIG, APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
 
 export default function NotificationBell() {
-    const { user, isAuthenticated, loading } = useAuth();
+    const { user, isAuthenticated, loading } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);

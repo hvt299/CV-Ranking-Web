@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // Dữ liệu Mock mô phỏng chính xác SubscriptionPlanDB Schema từ Backend
 const MOCK_PLANS = [
@@ -40,7 +40,7 @@ const MOCK_PLANS = [
 ];
 
 export default function PricingPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 

@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const FEATURES = [
     {
@@ -40,7 +40,7 @@ const FEATURES = [
 ];
 
 export default function FeaturesPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {

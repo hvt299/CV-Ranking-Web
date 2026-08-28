@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import NotificationToast from '@/components/shared/NotificationToast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Hexagon } from 'lucide-react';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-    const { loading } = useAuth();
+    const { loading } = useAuthStore();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);

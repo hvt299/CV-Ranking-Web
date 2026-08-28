@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Building2, Save, Mail, Briefcase, Globe, MapPin, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types';
 import Select from 'react-select';
 import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
@@ -13,7 +13,7 @@ import { systemService, LocationUnit } from '@/features/system/system.service';
 import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function SettingsPage() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [mainTab, setMainTab] = useState<'personal' | 'business'>('personal');
 
     if (!user) return null;

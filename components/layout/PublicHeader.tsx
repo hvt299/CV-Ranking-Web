@@ -6,6 +6,7 @@ import { Hexagon, Search, Building2, Briefcase, LayoutDashboard, CreditCard, Men
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { UserRole } from '@/types';
 
 interface PublicHeaderProps {
     isAuthenticated?: boolean;
@@ -58,7 +59,7 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileMenuOpen]);
 
-    const systemLink = user?.role === 'applicant' ? '/overview' : '/dashboard';
+    const systemLink = user?.role === UserRole.APPLICANT ? '/overview' : user?.role === UserRole.ADMIN ? '/admin/dashboard' : '/dashboard';
 
     const headerBg = isScrolled || isMobileMenuOpen
         ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 py-3 shadow-sm'

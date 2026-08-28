@@ -10,6 +10,8 @@ import { useAuthFlow } from '@/features/auth/useAuthFlow';
 import AuthLogo from '@/components/ui/AuthLogo';
 import AuthSocialButtons from '@/components/auth/AuthSocialButtons';
 import SocialRoleModal from '@/components/auth/SocialRoleModal';
+import { UserRole } from '@/types';
+import { HrInfoState } from '@/components/auth/HrEnterpriseForm';
 
 export default function LoginPage() {
     const { login: handleLogin, isLoading, socialLoginFlow } = useAuthFlow();
@@ -30,7 +32,12 @@ export default function LoginPage() {
         await handleLogin({ email, password });
     };
 
-    const handleSocialAuth = async (accessToken: string, provider: 'google' | 'linkedin', roleToSubmit?: string, companyData?: any) => {
+    const handleSocialAuth = async (
+        accessToken: string,
+        provider: 'google' | 'linkedin',
+        roleToSubmit?: UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT,
+        companyData?: HrInfoState
+    ) => {
         const payload: any = provider === 'google'
             ? { access_token: accessToken }
             : { code: accessToken, redirect_uri: `${window.location.origin}/linkedin` };

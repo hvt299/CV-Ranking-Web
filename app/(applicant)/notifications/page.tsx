@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle2, Trash2, Clock, Briefcase, ChevronLeft, ChevronRight, Search, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Notification, NotificationReadStatus, ApplicationStatus, NotificationType, UserRole } from '@/types';
 import { applicationService } from '@/features/application/application.service';
 import { NOTIFICATION_CONFIG, APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
 
 export default function NotificationsPage() {
-    const { user, isAuthenticated, loading } = useAuth();
+    const { user, isAuthenticated, loading } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 

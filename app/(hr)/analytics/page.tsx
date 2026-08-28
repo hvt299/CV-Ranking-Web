@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useHRView } from '@/context/HRViewContext';
-import { useAuth } from '@/context/AuthContext';
+import { useHRViewStore } from '@/store/useHRViewStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { TrendingUp, Filter, Loader2, Activity } from 'lucide-react';
 import ProFeatureLock from '@/components/shared/ProFeatureLock';
@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 
 export default function AnalyticsPage() {
-    const { hrViewMode } = useHRView();
-    const { user } = useAuth();
+    const { hrViewMode } = useHRViewStore();
+    const { user } = useAuthStore();
     const router = useRouter();
 
     const [data, setData] = useState<any>(null);

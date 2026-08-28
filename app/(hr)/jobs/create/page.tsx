@@ -8,7 +8,7 @@ import {
     MapPin, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { jobService } from '@/features/job/job.service';
 import { LocationDetail } from '@/types';
 
@@ -20,7 +20,7 @@ import Step5SkillsAI from '@/components/jobs/form/Step5SkillsAI';
 
 export default function CreateEnterpriseJobPage() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
 
     const [currentStep, setCurrentStep] = useState(1);

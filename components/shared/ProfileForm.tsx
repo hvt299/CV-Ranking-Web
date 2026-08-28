@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Globe, Link, Save, Briefcase, Camera, Loader2, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useMyProfile } from '@/features/application/useApplication';
 import { UserRole } from '@/types';
 import apiClient from '@/lib/api-client';
 import { systemService, LocationUnit } from '@/features/system/system.service';
 
 export default function ProfileForm() {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser } = useAuthStore();
     const { profile, setProfile, isLoading, isSaving, updateProfile } = useMyProfile();
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 

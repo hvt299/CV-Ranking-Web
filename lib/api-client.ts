@@ -1,6 +1,8 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import toast from 'react-hot-toast';
 import { clearAllAuthData } from './auth-utils';
+import { ROUTES } from '../constants/routes';
 
 const apiClient = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
@@ -18,28 +20,48 @@ apiClient.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Xử lý lỗi tập trung (401, 403, 500...)
+// Response Interceptor: Xử lý lỗi toàn cục (Global Error Handling)
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            clearAllAuthData();
+        // Bỏ qua nếu là request từ Server Side (Next.js)
+        if (typeof window === 'undefined') return Promise.reject(error);
 
-            if (typeof window !== 'undefined') {
-                if (!window.location.pathname.includes('/login')) {
-                    window.location.href = '/login';
-                }
+        const status = error.response?.status;
+        const errorDetail = error.response?.data?.detail;
+
+        // Trích xuất message an toàn từ FastAPI
+        const errorMessage = typeof errorDetail === 'string'
+            ? errorDetail
+            : (Array.isArray(errorDetail) ? errorDetail[0]?.msg : null);
+
+        if (status === 401) {
+            clearAllAuthData();
+            if (!window.location.pathname.includes(ROUTES.LOGIN)) {
+                toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+                window.location.href = ROUTES.LOGIN;
             }
         }
-
-        // Thêm xử lý lỗi 403 Forbidden nếu cần
-        if (error.response?.status === 403) {
-            console.error("Bạn không có quyền thực hiện thao tác này.");
+        else if (status === 403) {
+            toast.error(errorMessage || 'Từ chối truy cập: Bạn không có quyền thực hiện thao tác này.');
+        }
+        else if (status === 402) {
+            toast.error(errorMessage || 'Tài khoản không đủ Credit hoặc yêu cầu nâng cấp gói cước.');
+        }
+        else if (status === 404) {
+            toast.error(errorMessage || 'Không tìm thấy dữ liệu.');
+        }
+        else if (status === 429) {
+            toast.error('Bạn thao tác quá nhanh. Vui lòng đợi một lát.');
+        }
+        else if (status >= 500) {
+            toast.error('Lỗi máy chủ nội bộ. Vui lòng thử lại sau.');
+        }
+        else if (!error.response) {
+            toast.error('Không thể kết nối đến máy chủ. Kiểm tra đường truyền mạng.');
         }
 
         return Promise.reject(error);

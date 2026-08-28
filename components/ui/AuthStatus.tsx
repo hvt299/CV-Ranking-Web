@@ -1,11 +1,11 @@
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { LogIn, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthStatus() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
 
     if (!isAuthenticated) {
         return (

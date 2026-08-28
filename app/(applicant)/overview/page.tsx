@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useMyProfile } from '@/features/application/useApplication';
 import apiClient from '@/lib/api-client';
 
@@ -12,7 +12,7 @@ import RecommendedJobs from '@/components/candidates/overview/RecommendedJobs';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 
 export default function ApplicantOverviewPage() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const { profile, isLoading: isProfileLoading } = useMyProfile();
     const [applications, setApplications] = useState<any[]>([]);
     const [isLoadingApps, setIsLoadingApps] = useState(true);
