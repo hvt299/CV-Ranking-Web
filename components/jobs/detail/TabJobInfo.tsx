@@ -52,7 +52,7 @@ export default function TabJobInfo({ jobInfo }: TabJobInfoProps) {
                 {jobInfo.other_info && jobInfo.other_info !== '<p></p>' && (
                     <div>
                         <h3 className="text-sm font-black text-slate-800 dark:text-white mb-3 uppercase tracking-wider flex items-center gap-2">
-                            <Info className="w-4 h-4 text-indigo-500" /> Thông tin khác
+                            <Info className="w-4 h-4 text-blue-500" /> Thông tin khác
                         </h3>
                         <div className="bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
                             {renderHTML(jobInfo.other_info)}
@@ -85,7 +85,7 @@ export default function TabJobInfo({ jobInfo }: TabJobInfoProps) {
 
                     {/* Địa điểm */}
                     <div className="flex items-start gap-3">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl shrink-0 mt-0.5">
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl shrink-0 mt-0.5">
                             <MapPin className="w-5 h-5" />
                         </div>
                         <div>

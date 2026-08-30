@@ -23,6 +23,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
+import { ROUTES } from '@/constants/routes';
 
 export default function PublicJobDetailPage() {
     const params = useParams();
@@ -81,9 +82,11 @@ export default function PublicJobDetailPage() {
         }
     };
 
-    const handleShare = () => {
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!job?.id) return;
-        const link = `${window.location.origin}/careers/${job.id}`;
+        const link = `${window.location.origin}${ROUTES.PUBLIC_JOB_DETAIL(job.id)}`;
         navigator.clipboard.writeText(link);
         toast.success('Đã sao chép link công việc!');
     };
@@ -109,7 +112,7 @@ export default function PublicJobDetailPage() {
                         <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
                         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Không tìm thấy công việc</h2>
                         <p className="text-slate-500 font-medium mb-8">Công việc này có thể đã hết hạn hoặc chiến dịch tuyển dụng đã bị đóng.</p>
-                        <button onClick={() => router.push('/careers')} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold rounded-xl hover:bg-blue-100 transition-colors w-full">
+                        <button onClick={() => router.push(ROUTES.PUBLIC_JOBS)} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold rounded-xl hover:bg-blue-100 transition-colors w-full">
                             Khám phá cơ hội khác
                         </button>
                     </div>
@@ -128,7 +131,7 @@ export default function PublicJobDetailPage() {
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full pt-28 pb-20 font-sans animate-in fade-in duration-500">
 
                 <button
-                    onClick={() => router.push('/careers')}
+                    onClick={() => router.push(ROUTES.PUBLIC_JOBS)}
                     className="flex items-center gap-2 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold mb-6 transition-colors w-fit"
                 >
                     <ChevronLeft className="w-4 h-4" /> Quay lại danh sách
@@ -250,7 +253,7 @@ export default function PublicJobDetailPage() {
                             {/* Địa điểm & Thời gian */}
                             <div>
                                 <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-lg"><MapPin className="w-5 h-5" /></div>
+                                    <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-lg"><MapPin className="w-5 h-5" /></div>
                                     Địa điểm và Thời gian
                                 </h3>
                                 <div className="space-y-4">
@@ -292,7 +295,7 @@ export default function PublicJobDetailPage() {
                         {/* Company Widget */}
                         <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                             <div className="flex items-center gap-4 mb-5">
-                                <Link href={`/companies/${job.company_id}`} className="w-16 h-16 rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center p-1 shrink-0 hover:scale-105 transition-transform">
+                                <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="w-16 h-16 rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center p-1 shrink-0 hover:scale-105 transition-transform">
                                     {company?.logo_url ? (
                                         <img src={company.logo_url} alt={company.name} className="w-full h-full object-contain" />
                                     ) : (
@@ -300,10 +303,10 @@ export default function PublicJobDetailPage() {
                                     )}
                                 </Link>
                                 <div>
-                                    <Link href={`/companies/${job.company_id}`} className="font-bold text-slate-900 dark:text-white hover:text-blue-600 line-clamp-2 transition-colors">
+                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="font-bold text-slate-900 dark:text-white hover:text-blue-600 line-clamp-2 transition-colors">
                                         {company?.name || job.company_name || 'Đang cập nhật'}
                                     </Link>
-                                    <Link href={`/companies/${job.company_id}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1 hover:underline">
+                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1 hover:underline">
                                         Xem trang công ty <ExternalLink className="w-3 h-3" />
                                     </Link>
                                 </div>
@@ -425,7 +428,7 @@ export default function PublicJobDetailPage() {
                                     <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ngoại ngữ</p>
                                     <div className="flex flex-wrap gap-2">
                                         {job.languages.map((lang: string, idx: number) => (
-                                            <span key={idx} className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-xs font-bold rounded-lg border border-indigo-200 dark:border-indigo-800/30">
+                                            <span key={idx} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-lg border border-blue-200 dark:border-blue-800/30">
                                                 {lang}
                                             </span>
                                         ))}

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/auth.service';
 import AuthLogo from '@/components/ui/AuthLogo';
 import { getPasswordStrength } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 function ResetPasswordContent() {
     const searchParams = useSearchParams();
@@ -47,7 +48,7 @@ function ResetPasswordContent() {
                 new_password: password
             });
             toast.success('Đổi mật khẩu thành công! Vui lòng đăng nhập.');
-            router.push('/login');
+            router.push(ROUTES.LOGIN);
         } catch (error: any) {
             const detail = error.response?.data?.detail;
 
@@ -76,7 +77,7 @@ function ResetPasswordContent() {
                 </p>
 
                 <Link
-                    href="/forgot-password"
+                    href={ROUTES.FORGOT_PASSWORD}
                     className="font-bold text-primary-600 hover:underline"
                 >
                     Yêu cầu liên kết mới

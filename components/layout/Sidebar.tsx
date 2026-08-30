@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { UserRole } from "@/types";
 import { cn } from "@/utils/utils";
 import { useEffect, useState } from "react";
+import { ROUTES } from "@/constants/routes";
 
 type MenuItem = {
     name: string;
@@ -55,15 +56,15 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     };
 
     const hrMenu: MenuItem[] = [
-        { name: "Tổng quan", icon: LayoutDashboard, href: "/dashboard" },
-        { name: "Chiến dịch tuyển dụng", icon: Briefcase, href: "/jobs" },
-        { name: "Kho hồ sơ", icon: Users, href: "/candidates" },
+        { name: "Tổng quan", icon: LayoutDashboard, href: ROUTES.HR_DASHBOARD },
+        { name: "Chiến dịch tuyển dụng", icon: Briefcase, href: ROUTES.HR_JOBS },
+        { name: "Kho hồ sơ", icon: Users, href: ROUTES.HR_CANDIDATES },
         ...(viewMode === 'OWNER'
             ? [
                 {
                     name: "Phân tích & Báo cáo",
                     icon: BarChart2,
-                    href: "/analytics",
+                    href: ROUTES.HR_ANALYTICS,
                     pro: true,
                 }
             ]
@@ -71,20 +72,20 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     ];
 
     const adminMenu: MenuItem[] = [
-        { name: "Tổng quan", icon: LayoutDashboard, href: "/admin/dashboard" },
-        { name: "Quản lý công ty", icon: Building2, href: "/admin/companies" },
-        { name: "Phân tích hệ thống", icon: BarChart2, href: "/admin/analytics" },
-        { name: "Nhật ký hệ thống", icon: ShieldCheck, href: "/admin/audit-logs" },
+        { name: "Tổng quan", icon: LayoutDashboard, href: ROUTES.ADMIN_DASHBOARD },
+        { name: "Quản lý công ty", icon: Building2, href: ROUTES.ADMIN_COMPANIES },
+        { name: "Phân tích hệ thống", icon: BarChart2, href: ROUTES.ADMIN_ANALYTICS },
+        { name: "Nhật ký hệ thống", icon: ShieldCheck, href: ROUTES.ADMIN_AUDIT_LOGS },
     ];
 
     const mainMenuItems = isAdmin ? adminMenu : hrMenu;
 
     const bottomItems: MenuItem[] = isAdmin ? [
-        { name: "Cài đặt", icon: Settings, href: "/admin/settings" },
-        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
+        { name: "Cài đặt", icon: Settings, href: ROUTES.ADMIN_SETTINGS },
+        { name: "Trợ giúp", icon: HelpCircle, href: ROUTES.SUPPORT },
     ] : [
-        { name: "Cài đặt", icon: Settings, href: "/settings" },
-        { name: "Trợ giúp", icon: HelpCircle, href: "/support" },
+        { name: "Cài đặt", icon: Settings, href: ROUTES.HR_SETTINGS },
+        { name: "Trợ giúp", icon: HelpCircle, href: ROUTES.SUPPORT },
     ];
 
     return (
@@ -105,7 +106,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                 )}
             >
                 <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800/80 shrink-0">
-                    <Link href="/dashboard" className="flex items-center gap-2 group relative z-50">
+                    <Link href={ROUTES.HR_DASHBOARD} className="flex items-center gap-2 group relative z-50">
                         <div className="w-10 h-10 bg-linear-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform shrink-0">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>

@@ -12,12 +12,13 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
+import { ROUTES } from '@/constants/routes';
 
 const NAV_ITEMS = [
-    { name: 'Tổng quan', href: '/overview', icon: LayoutDashboard },
-    { name: 'Thư viện CV', href: '/cv-library', icon: FolderOpen },
-    { name: 'Việc làm đã nộp', href: '/my-applications', icon: FileText },
-    { name: 'Tự đánh giá AI', href: '/self-score', icon: ClipboardCheck },
+    { name: 'Tổng quan', href: ROUTES.APPLICANT_DASHBOARD, icon: LayoutDashboard },
+    { name: 'Thư viện CV', href: ROUTES.APPLICANT_CV_LIBRARY, icon: FolderOpen },
+    { name: 'Việc làm đã nộp', href: ROUTES.APPLICANT_APPLICATIONS, icon: FileText },
+    { name: 'Tự đánh giá AI', href: ROUTES.APPLICANT_SELF_SCORE, icon: ClipboardCheck },
 ];
 
 export default function ApplicantHeader() {
@@ -74,7 +75,7 @@ export default function ApplicantHeader() {
 
                 {/* TRÁI: LOGO & DESKTOP NAV */}
                 <div className="flex items-center gap-8">
-                    <Link href="/overview" className="flex items-center gap-2 group relative z-50">
+                    <Link href={ROUTES.APPLICANT_DASHBOARD} className="flex items-center gap-2 group relative z-50">
                         <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>
@@ -159,15 +160,15 @@ export default function ApplicantHeader() {
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'email@example.com'}</p>
                                 </div>
 
-                                <Link href="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <Link href={ROUTES.APPLICANT_PROFILE} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <User className="w-4 h-4" /> Hồ sơ cá nhân
                                 </Link>
 
-                                <Link href="/" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <Link href={ROUTES.HOME} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <Home className="w-4 h-4" /> Về trang chủ
                                 </Link>
 
-                                <Link href="/careers" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <Link href={ROUTES.PUBLIC_JOBS} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <Briefcase className="w-4 h-4" /> Về trang tìm việc
                                 </Link>
 

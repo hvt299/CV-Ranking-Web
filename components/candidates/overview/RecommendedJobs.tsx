@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Sparkles, MapPin, DollarSign, Building2, ChevronRight, Briefcase } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { formatSalaryRange } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 interface RecommendedJobsProps {
     profile: any;
@@ -54,7 +55,7 @@ export default function RecommendedJobs({ profile }: RecommendedJobsProps) {
                     <div className="space-y-4">
                         {jobs.map((job) => (
                             <Link
-                                href={`/careers/${job.id}`}
+                                href={ROUTES.PUBLIC_JOB_DETAIL(job.id)}
                                 target="_blank"
                                 key={job.id}
                                 className="block p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all group"
@@ -106,7 +107,7 @@ export default function RecommendedJobs({ profile }: RecommendedJobsProps) {
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-3xl">
-                <Link href="/careers" className="flex items-center justify-center gap-1 text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+                <Link href={ROUTES.PUBLIC_JOBS} className="flex items-center justify-center gap-1 text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                     Khám phá tất cả <ChevronRight className="w-4 h-4" />
                 </Link>
             </div>

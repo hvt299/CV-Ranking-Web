@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuthStore } from '@/store/useAuthStore';
+import { ROUTES } from '@/constants/routes';
 
 // --- MOCK DATA ---
 const CATEGORIES = ['Tất cả', 'Phỏng vấn', 'Viết CV', 'Định hướng', 'Góc HR'];
@@ -20,7 +21,7 @@ const MOCK_POSTS = [
         category: 'Phỏng vấn',
         readTime: '5 phút đọc',
         date: '28/07/2026',
-        imageUrl: 'bg-linear-to-br from-blue-500 to-indigo-600',
+        imageUrl: 'bg-linear-to-br from-blue-500 to-blue-600',
         featured: true
     },
     {
@@ -177,7 +178,7 @@ export default function BlogPage() {
                     <div className="space-y-12">
                         {/* Bài viết nổi bật (Featured Post) - Chỉ hiện khi ở trang đầu/danh mục Tất cả */}
                         {featuredPost && activeCategory === 'Tất cả' && !searchQuery && (
-                            <Link href={`/blog/${featuredPost.slug}`} className="group block bg-white dark:bg-[#0a0a0a] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300">
+                            <Link href={`${ROUTES.BLOG}/${featuredPost.slug}`} className="group block bg-white dark:bg-[#0a0a0a] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300">
                                 <div className="flex flex-col md:flex-row">
                                     <div className={`md:w-1/2 h-64 md:h-auto ${featuredPost.imageUrl} relative overflow-hidden flex items-center justify-center`}>
                                         <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
@@ -207,7 +208,7 @@ export default function BlogPage() {
                         {/* Danh sách bài viết thông thường (Grid) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {regularPosts.map(post => (
-                                <Link key={post.id} href={`/blog/${post.slug}`} className="group bg-white dark:bg-[#0a0a0a] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                                <Link key={post.id} href={`${ROUTES.BLOG}/${post.slug}`} className="group bg-white dark:bg-[#0a0a0a] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
                                     {/* Thumbnail giả lập bằng Gradient */}
                                     <div className={`h-48 w-full ${post.imageUrl} relative overflow-hidden flex items-center justify-center shrink-0`}>
                                         <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />

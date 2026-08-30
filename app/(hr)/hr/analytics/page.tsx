@@ -8,6 +8,7 @@ import { TrendingUp, Filter, Loader2, Activity } from 'lucide-react';
 import ProFeatureLock from '@/components/shared/ProFeatureLock';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
+import { ROUTES } from '@/constants/routes';
 
 export default function AnalyticsPage() {
     const { hrViewMode } = useHRViewStore();
@@ -46,7 +47,7 @@ export default function AnalyticsPage() {
                 </div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Quyền truy cập bị từ chối</h2>
                 <p className="text-slate-500 font-medium max-w-md">Bạn đang ở chế độ Tuyển dụng (Member) hoặc không có quyền xem dữ liệu phân tích hệ thống.</p>
-                <button onClick={() => router.push('/dashboard')} className="mt-6 px-6 py-2.5 bg-primary-600 text-white font-bold rounded-xl">Quay lại Bàn làm việc</button>
+                <button onClick={() => router.push(ROUTES.HR_DASHBOARD)} className="mt-6 px-6 py-2.5 bg-primary-600 text-white font-bold rounded-xl">Quay lại Bàn làm việc</button>
             </div>
         );
     }

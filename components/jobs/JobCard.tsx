@@ -7,6 +7,7 @@ import { Job } from '@/types';
 import { formatSalaryRange, getCountdownParts } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { useUIStore } from '@/store/useUIStore';
+import { ROUTES } from '@/constants/routes';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
@@ -44,7 +45,8 @@ export default function JobCard({ job }: JobCardProps) {
     const handleShare = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        const link = `${window.location.origin}/careers/${job.id}`;
+        if (!job?.id) return;
+        const link = `${window.location.origin}${ROUTES.PUBLIC_JOB_DETAIL(job.id)}`;
         navigator.clipboard.writeText(link);
         toast.success('Đã sao chép link công việc!');
     };
@@ -60,7 +62,7 @@ export default function JobCard({ job }: JobCardProps) {
             )}
 
             {/* Khối 1: Logo Công ty (Bên trái) */}
-            <Link href={`/companies/${job.company_id}`} className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center overflow-hidden p-1 hover:opacity-80 transition-opacity">
+            <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id!)} className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center overflow-hidden p-1 hover:opacity-80 transition-opacity">
                 {job.company_logo ? (
                     <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
                 ) : (
@@ -72,14 +74,14 @@ export default function JobCard({ job }: JobCardProps) {
             <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
                     {/* Tên Job */}
-                    <Link href={`/careers/${job.id}`} className="block mb-1">
+                    <Link href={ROUTES.PUBLIC_JOB_DETAIL(job.id!)} className="block mb-1">
                         <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" title={job.title}>
                             {job.title}
                         </h3>
                     </Link>
 
                     {/* Tên Công ty */}
-                    <Link href={`/companies/${job.company_id}`} className="block mb-3">
+                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id!)} className="block mb-3">
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-1 hover:text-slate-700 dark:hover:text-slate-300 transition-colors" title={job.company_name}>
                             {job.company_name || 'Công ty Ẩn danh'}
                         </p>

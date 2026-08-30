@@ -37,7 +37,7 @@ export default function Typewriter({ words }: { words: string[] }) {
     }, [text, isDeleting, wordIndex, words]);
 
     return (
-        <span className="inline-block whitespace-nowrap text-left pb-2 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-300 border-r-4 border-blue-500 animate-[pulse_1s_step-end_infinite] pr-1">
+        <span className="inline-block whitespace-nowrap text-left pb-2 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 border-r-4 border-blue-500 animate-[pulse_1s_step-end_infinite] pr-1">
             {text}
         </span>
     );

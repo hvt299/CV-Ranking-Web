@@ -6,6 +6,7 @@ import { motion, Variants } from 'framer-motion';
 import { Flame, ChevronRight, ChevronLeft, MapPin, Building2, DollarSign } from 'lucide-react';
 import { Job } from '@/types';
 import { formatSalaryRange } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 interface HotJobsSectionProps {
     jobs: Job[];
@@ -23,7 +24,7 @@ const itemVariants: Variants = {
 
 export const HotJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
     <Link
-        href={`/careers/${job.id}`}
+        href={ROUTES.PUBLIC_JOB_DETAIL(job.id!)}
         className="group block relative bg-white dark:bg-slate-900 rounded-2xl p-5 border border-orange-100 dark:border-orange-500/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 overflow-hidden"
     >
         <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-2xl group-hover:bg-orange-500/20 transition-colors pointer-events-none" />
@@ -105,7 +106,7 @@ export default function HotJobsSection({ jobs }: HotJobsSectionProps) {
                                 <option value="latest">Mới cập nhật</option>
                             </select>
                         </div>
-                        <Link href="/careers?is_hot=true" className="hidden md:flex items-center gap-2 text-orange-600 font-bold hover:text-orange-700 transition-colors bg-orange-50 dark:bg-orange-500/10 px-5 py-2.5 rounded-full">
+                        <Link href={`${ROUTES.PUBLIC_JOBS}?is_hot=true`} className="hidden md:flex items-center gap-2 text-orange-600 font-bold hover:text-orange-700 transition-colors bg-orange-50 dark:bg-orange-500/10 px-5 py-2.5 rounded-full">
                             Xem tất cả <ChevronRight className="w-4 h-4" />
                         </Link>
                     </div>

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuthStore } from '@/store/useAuthStore';
+import { ROUTES } from '@/constants/routes';
 
 const FEATURES = [
     {
@@ -20,8 +21,8 @@ const FEATURES = [
         icon: ScanSearch,
         title: 'Khớp nối Vector Database',
         description: 'CV và Mô tả công việc (JD) được nhúng (Embedding) thành các Vector toán học không gian đa chiều. Thuật toán Cosine Similarity sẽ tự động chấm điểm độ phù hợp chính xác đến 98%, giúp HR tìm ra ứng viên sáng giá nhất chỉ trong 1 giây.',
-        color: 'text-indigo-500',
-        bg: 'bg-indigo-100 dark:bg-indigo-500/10'
+        color: 'text-blue-500',
+        bg: 'bg-blue-100 dark:bg-blue-500/10'
     },
     {
         icon: Fingerprint,
@@ -92,7 +93,7 @@ export default function FeaturesPage() {
                 </div>
 
                 {/* Khối Kêu gọi Hành động (CTA) */}
-                <div className="bg-linear-to-br from-blue-700 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 rounded-3xl p-10 md:p-16 text-center border border-blue-500/30 shadow-xl shadow-blue-900/20 relative overflow-hidden">
+                <div className="bg-linear-to-br from-blue-700 to-blue-700 dark:from-blue-800 dark:to-blue-900 rounded-3xl p-10 md:p-16 text-center border border-blue-500/30 shadow-xl shadow-blue-900/20 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
 
                     <div className="relative z-10">
@@ -104,10 +105,10 @@ export default function FeaturesPage() {
                             Bắt đầu trải nghiệm ATS System hoàn toàn miễn phí ngay hôm nay.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link href="/register" className="px-8 py-4 bg-white text-blue-600 font-black rounded-xl hover:bg-slate-50 transition-colors shadow-lg">
+                            <Link href={ROUTES.REGISTER} className="px-8 py-4 bg-white text-blue-600 font-black rounded-xl hover:bg-slate-50 transition-colors shadow-lg">
                                 Tạo tài khoản miễn phí
                             </Link>
-                            <Link href="/pricing" className="px-8 py-4 bg-blue-700/50 dark:bg-blue-800/50 text-white font-bold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-800 border border-blue-500 transition-colors">
+                            <Link href={ROUTES.PRICING} className="px-8 py-4 bg-blue-700/50 dark:bg-blue-800/50 text-white font-bold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-800 border border-blue-500 transition-colors">
                                 Xem bảng giá
                             </Link>
                         </div>

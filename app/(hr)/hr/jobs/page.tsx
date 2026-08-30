@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useJobList, useJobRanking } from '@/features/job/useJob';
 import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { ROUTES } from '@/constants/routes';
 
 function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any, deleteJob: (id: string) => void, isSelected: boolean, onToggleSelect: (id: string) => void }) {
     const { candidates, isLoading: isRankingLoading } = useJobRanking(job.id);
@@ -47,7 +48,7 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
                 </div>
 
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/jobs/edit/${job.id}`} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="Chỉnh sửa">
+                    <Link href={ROUTES.HR_JOB_EDIT(job.id)} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="Chỉnh sửa">
                         <Edit2 className="w-4 h-4" />
                     </Link>
                     <button onClick={() => deleteJob(job.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Xóa chiến dịch">
@@ -57,7 +58,7 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
             </div>
 
             {/* Main Info */}
-            <Link href={`/jobs/${job.id}`} className="block flex-1 group/title mb-4">
+            <Link href={ROUTES.HR_JOB_DETAIL(job.id)} className="block flex-1 group/title mb-4">
                 <h3 className="font-bold text-lg text-slate-800 dark:text-white line-clamp-2 leading-snug group-hover/title:text-primary-600 transition-colors" title={job.title}>
                     {job.title}
                 </h3>
@@ -92,7 +93,7 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
                     </div>
                 </div>
 
-                <Link href={`/jobs/${job.id}`} className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 transition-colors">
+                <Link href={ROUTES.HR_JOB_DETAIL(job.id)} className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-600 dark:group-hover:bg-primary-900/30 transition-colors">
                     <ArrowUpRight className="w-4 h-4" />
                 </Link>
             </div>
@@ -154,7 +155,7 @@ export default function JobsListPage() {
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các Job Description và phễu ứng viên của doanh nghiệp.</p>
                 </div>
                 <Link
-                    href="/jobs/create"
+                    href={ROUTES.HR_JOB_CREATE}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20"
                 >
                     <Plus className="w-4 h-4" /> Tạo chiến dịch mới

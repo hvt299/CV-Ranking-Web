@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
     ArrowLeft, Save, ChevronRight, ChevronLeft,
     Briefcase, FileText, BrainCircuit, CheckCircle2,
@@ -17,12 +17,16 @@ import Step2LocationSalary from '@/components/jobs/form/Step2LocationSalary';
 import Step3JD from '@/components/jobs/form/Step3JD';
 import Step4Criteria from '@/components/jobs/form/Step4Criteria';
 import Step5SkillsAI from '@/components/jobs/form/Step5SkillsAI';
+import { ROUTES } from '@/constants/routes';
 
-export default function CreateEnterpriseJobPage() {
+export default function EditEnterpriseJobPage() {
     const router = useRouter();
     const { user } = useAuthStore();
-    const [isLoading, setIsLoading] = useState(false);
+    const params = useParams();
+    const jobId = params.id as string;
 
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
     const [currentStep, setCurrentStep] = useState(1);
 
     const [formData, setFormData] = useState({
@@ -37,9 +41,101 @@ export default function CreateEnterpriseJobPage() {
     });
 
     const [isNegotiable, setIsNegotiable] = useState(false);
-    const [requiredSkills, setRequiredSkills] = useState([{ skill_id: null, name: '', weight: 0.5, min_years: 0 }]);
-    const [preferredSkills, setPreferredSkills] = useState([{ skill_id: null, name: '', weight: 0.2, min_years: 0 }]);
+    const [requiredSkills, setRequiredSkills] = useState([{ skill_id: null as string | null, name: '', weight: 0.5, min_years: 0 }]);
+    const [preferredSkills, setPreferredSkills] = useState([{ skill_id: null as string | null, name: '', weight: 0.2, min_years: 0 }]);
     const [aiWeights, setAiWeights] = useState({ skills: 40, nlp: 30, experience: 20, education: 10 });
+
+    useEffect(() => {
+        if (jobId) fetchJobDetail();
+    }, [jobId]);
+
+    const fetchJobDetail = async () => {
+        setIsFetching(true);
+        try {
+            const data = await jobService.getJobById(jobId);
+
+            setFormData({
+                title: data.title || '',
+                industry: data.industry || '',
+                job_level: data.job_level || 'Middle',
+                employment_type: data.employment_type || 'Full-time',
+                work_mode: data.work_mode || 'Onsite',
+                headcount: data.headcount || 1,
+                deadline: data.deadline ? data.deadline.split('T')[0] : '',
+                probation_period: data.probation_period || '2 tháng',
+                gender_requirement: data.gender_requirement || 'Không yêu cầu',
+                languages: data.languages || [],
+                required_certifications: data.required_certifications || [],
+                min_yoe: data.min_yoe || 0,
+                education: {
+                    min_level: data.education?.min_level || 'Không yêu cầu',
+                    preferred_majors: data.education?.preferred_majors || []
+                },
+                salary: {
+                    min_salary: data.salary?.min_salary ?? 10000000,
+                    max_salary: data.salary?.max_salary ?? 30000000,
+                    currency: data.salary?.currency || 'VND'
+                },
+                working_hours: data.working_hours || '',
+                location: {
+                    country: data.location?.country || 'Việt Nam',
+                    version: data.location?.version || 'new',
+                    province_code: data.location?.province_code || '',
+                    province_name: data.location?.province_name || '',
+                    district_code: data.location?.district_code || '',
+                    district_name: data.location?.district_name || '',
+                    ward_code: data.location?.ward_code || '',
+                    ward_name: data.location?.ward_name || '',
+                    street_address: data.location?.street_address || data.location?.full_address_snapshot || '',
+                    full_address_snapshot: data.location?.full_address_snapshot || ''
+                },
+                description: data.description || '',
+                requirements: data.requirements || '',
+                benefits: data.benefits || '',
+                other_info: data.other_info || '',
+                jd_file_url: data.jd_file_url || ''
+            });
+
+            setIsNegotiable(!(data.salary && data.salary.min_salary !== null && data.salary.min_salary !== undefined));
+
+            if (data.score_weights) {
+                setAiWeights({
+                    skills: Math.round((data.score_weights.skills_weight ?? 0.4) * 100),
+                    nlp: Math.round((data.score_weights.nlp_weight ?? 0.3) * 100),
+                    experience: Math.round((data.score_weights.experience_weight ?? 0.2) * 100),
+                    education: Math.round((data.score_weights.education_weight ?? 0.1) * 100)
+                });
+            }
+
+            setRequiredSkills(
+                data.required_skills && data.required_skills.length > 0
+                    ? data.required_skills.map((s: any) => ({
+                        skill_id: s.skill_id ?? null,
+                        name: s.name,
+                        weight: s.weight ?? 0.5,
+                        min_years: s.min_years ?? 0
+                    }))
+                    : [{ skill_id: null, name: '', weight: 0.5, min_years: 0 }]
+            );
+
+            setPreferredSkills(
+                data.preferred_skills && data.preferred_skills.length > 0
+                    ? data.preferred_skills.map((s: any) => ({
+                        skill_id: s.skill_id ?? null,
+                        name: s.name,
+                        weight: s.weight ?? 0.2,
+                        min_years: s.min_years ?? 0
+                    }))
+                    : [{ skill_id: null, name: '', weight: 0.2, min_years: 0 }]
+            );
+
+        } catch (error) {
+            toast.error("Không thể tải thông tin chiến dịch!");
+            router.push(ROUTES.HR_JOBS);
+        } finally {
+            setIsFetching(false);
+        }
+    };
 
     const handleNextStep = () => {
         if (currentStep === 1) {
@@ -83,11 +179,11 @@ export default function CreateEnterpriseJobPage() {
                     experience_weight: aiWeights.experience / 100, education_weight: aiWeights.education / 100
                 }
             };
-            await jobService.createJob(payload);
-            toast.success('Xuất bản chiến dịch tuyển dụng thành công!');
-            router.push('/jobs');
+            await jobService.updateJob(jobId, payload);
+            toast.success('Cập nhật chiến dịch thành công!');
+            router.push(ROUTES.HR_JOBS);
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Lỗi hệ thống khi tạo Job');
+            toast.error(error.response?.data?.detail || 'Lỗi hệ thống khi cập nhật Job');
         } finally {
             setIsLoading(false);
         }
@@ -100,6 +196,14 @@ export default function CreateEnterpriseJobPage() {
         { id: 4, title: 'Tiêu chí', icon: GraduationCap },
         { id: 5, title: 'Kỹ năng & AI', icon: BrainCircuit, isPro: true }
     ];
+
+    if (isFetching) {
+        return (
+            <div className="flex justify-center py-20">
+                <div className="animate-spin h-10 w-10 border-b-2 border-primary-600 rounded-full"></div>
+            </div>
+        );
+    }
 
     return (
         <form
@@ -114,8 +218,8 @@ export default function CreateEnterpriseJobPage() {
                             <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">Tạo Chiến Dịch Mới</h1>
-                            <p className="text-xs text-slate-500 font-medium mt-0.5">Thiết lập bộ thông số cho AI Scoring</p>
+                            <h1 className="text-2xl font-black text-slate-800 dark:text-white">Cập Nhật Chiến Dịch</h1>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">Chỉnh sửa thông số cho AI Scoring</p>
                         </div>
                     </div>
                 </div>
@@ -139,7 +243,6 @@ export default function CreateEnterpriseJobPage() {
                                 </div>
                                 <span className={`absolute -bottom-8 w-32 flex items-center justify-center text-center text-xs font-bold transition-colors ${isActive ? 'text-primary-600 dark:text-primary-400' : isCompleted ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}>
                                     {step.title}
-                                    {/* BADGE PRO */}
                                     {step.isPro && (
                                         <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
                                             Pro
@@ -153,7 +256,7 @@ export default function CreateEnterpriseJobPage() {
                 <div className="h-8"></div>
             </div>
 
-            {/* CONTENT RENDER 5 BƯỚC */}
+            {/* CONTENT RENDER */}
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 min-h-100 transition-all">
                 {currentStep === 1 && <Step1Basic formData={formData} setFormData={setFormData} />}
                 {currentStep === 2 && <Step2LocationSalary formData={formData} setFormData={setFormData} isNegotiable={isNegotiable} setIsNegotiable={setIsNegotiable} />}
@@ -181,7 +284,7 @@ export default function CreateEnterpriseJobPage() {
                     </button>
                 ) : (
                     <button type="submit" disabled={isLoading} className="px-8 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-colors">
-                        <Save className="w-5 h-5" /> {isLoading ? 'Đang xuất bản...' : 'Hoàn tất & Xuất bản Job'}
+                        <Save className="w-5 h-5" /> {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
                     </button>
                 )}
             </div>

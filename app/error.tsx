@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertOctagon, RefreshCcw, Home, Terminal, Search } from 'lucide-react';
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 
 export default function GlobalError({
     error,
@@ -51,13 +52,13 @@ export default function GlobalError({
 
                 <div className="flex flex-col sm:flex-row w-full gap-3">
                     <Link
-                        href="/careers"
+                        href={ROUTES.PUBLIC_JOBS}
                         className="flex-1 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
                         <Search className="w-4 h-4" /> Khám phá việc làm
                     </Link>
                     <Link
-                        href="/"
+                        href={ROUTES.HOME}
                         className="flex-1 px-6 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2"
                     >
                         <Home className="w-4 h-4" /> Về Trang chủ

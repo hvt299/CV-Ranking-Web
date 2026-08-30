@@ -23,7 +23,7 @@ export default function TabAIConfig({ jobInfo }: TabAIConfigProps) {
             {/* KHỐI 1: TRỌNG SỐ AI */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <BrainCircuit className="w-5 h-5 text-indigo-500" />
+                    <BrainCircuit className="w-5 h-5 text-blue-500" />
                     <h3 className="text-base font-black text-slate-800 dark:text-white tracking-wider">
                         Phân bổ Trọng số Thuật toán AI
                     </h3>
@@ -140,7 +140,7 @@ export default function TabAIConfig({ jobInfo }: TabAIConfigProps) {
                                 <span className="block text-sm font-medium text-slate-500 mb-2">Ngoại ngữ</span>
                                 <div className="flex flex-wrap gap-1.5">
                                     {jobInfo.languages.map((lang: string, idx: number) => (
-                                        <span key={idx} className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/50 text-[11px] font-bold rounded-md">{lang}</span>
+                                        <span key={idx} className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50 text-[11px] font-bold rounded-md">{lang}</span>
                                     ))}
                                 </div>
                             </div>

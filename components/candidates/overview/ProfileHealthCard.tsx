@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ShieldCheck, ChevronRight, AlertCircle } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 interface ProfileHealthCardProps {
     user: any;
@@ -65,7 +66,7 @@ export default function ProfileHealthCard({ user, profile }: ProfileHealthCardPr
                                 <AlertCircle className="w-4 h-4" /> Bổ sung thông tin để tăng 30% cơ hội trúng tuyển
                             </p>
                             <Link
-                                href="/profile"
+                                href={ROUTES.APPLICANT_PROFILE}
                                 className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1 shadow-sm shrink-0"
                             >
                                 Cập nhật ngay <ChevronRight className="w-3.5 h-3.5" />

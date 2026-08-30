@@ -5,6 +5,7 @@ import { Building2, MapPin, Users, Star, Eye, BriefcaseIcon, Heart } from 'lucid
 import { Company } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
+import { ROUTES } from '@/constants/routes';
 
 interface CompanyCardProps {
     company: Company;
@@ -15,7 +16,7 @@ export default function CompanyCard({ company }: CompanyCardProps) {
 
     return (
         <div
-            onClick={() => router.push(`/companies/${company.id}`)}
+            onClick={() => router.push(ROUTES.PUBLIC_COMPANY_DETAIL(company.id))}
             className="cursor-pointer group bg-white dark:bg-text rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:-translate-y-1 transition-all duration-300 shadow-sm overflow-hidden flex flex-col h-full relative"
         >
             {/* Nút Lưu (Thả tim) nổi trên Card */}

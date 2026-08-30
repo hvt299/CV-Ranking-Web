@@ -175,10 +175,10 @@ export default function SelfScorePage() {
 
                                 {/* Job Description */}
                                 <div className="w-20 h-28 sm:w-24 sm:h-32 bg-slate-50 dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
-                                    <Briefcase className="w-10 h-10 text-indigo-500 mb-2" />
+                                    <Briefcase className="w-10 h-10 text-blue-500 mb-2" />
                                     <span className="text-[10px] font-bold text-slate-400">JOB REQ</span>
                                     {/* Laser scan line with delay */}
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-scan-laser" style={{ animationDelay: '0.5s' }} />
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-scan-laser" style={{ animationDelay: '0.5s' }} />
                                 </div>
                             </div>
 

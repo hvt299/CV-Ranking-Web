@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { usePathname, useRouter } from 'next/navigation';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
+import { ROUTES } from '@/constants/routes';
 
 interface HeaderProps {
     setIsMobileOpen: (val: boolean) => void;
@@ -114,14 +115,14 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                             </div>
 
                             <Link
-                                href={role === UserRole.ADMIN ? "/admin/settings" : (role === UserRole.APPLICANT ? "/profile" : "/settings")}
+                                href={role === UserRole.ADMIN ? ROUTES.ADMIN_SETTINGS : (role === UserRole.APPLICANT ? ROUTES.APPLICANT_PROFILE : ROUTES.HR_SETTINGS)}
                                 onClick={() => setIsDropdownOpen(false)}
                                 className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                             >
                                 <Settings className="w-4 h-4" /> Thiết lập thông tin
                             </Link>
 
-                            <Link href="/" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <Link href={ROUTES.HOME} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                 <Home className="w-4 h-4" /> Về trang chủ
                             </Link>
 

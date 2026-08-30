@@ -7,6 +7,7 @@ import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
 import { authService } from '@/features/auth/auth.service';
 import confetti from 'canvas-confetti';
 import AuthLogo from '@/components/ui/AuthLogo';
+import { ROUTES } from '@/constants/routes';
 
 function VerifyContent() {
     const searchParams = useSearchParams();
@@ -77,7 +78,7 @@ function VerifyContent() {
                     <p className="mt-2 text-text-muted">{message}</p>
 
                     <Link
-                        href="/login"
+                        href={ROUTES.LOGIN}
                         className="group mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-button-primary-bg py-3.5 font-bold text-button-primary-text shadow-card transition-all hover:bg-button-primary-hover"
                     >
                         Đến trang Đăng nhập
@@ -101,14 +102,14 @@ function VerifyContent() {
 
                     <div className="mt-8 flex w-full gap-4">
                         <Link
-                            href="/login"
+                            href={ROUTES.LOGIN}
                             className="flex-1 rounded-xl border border-border bg-surface-hover py-3.5 text-center font-bold text-text transition-all hover:border-border-hover"
                         >
                             Đăng nhập
                         </Link>
 
                         <Link
-                            href="/register"
+                            href={ROUTES.REGISTER}
                             className="flex-1 rounded-xl bg-button-primary-bg py-3.5 text-center font-bold text-button-primary-text shadow-card transition-all hover:bg-button-primary-hover"
                         >
                             Đăng ký lại

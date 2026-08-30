@@ -1,5 +1,6 @@
 'use client';
 
+import { ROUTES } from '@/constants/routes';
 import { Hexagon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,23 +28,23 @@ export default function PublicFooter() {
                 <div>
                     <h4 className="font-black text-slate-900 dark:text-white mb-5 uppercase tracking-wider text-xs">Dành cho Ứng viên</h4>
                     <ul className="space-y-3.5 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                        <li><Link href="/careers" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Việc làm mới nhất</Link></li>
-                        <li><Link href="/companies" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Danh sách công ty</Link></li>
-                        <li><Link href="/blog" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Cẩm nang nghề nghiệp</Link></li>
+                        <li><Link href={ROUTES.PUBLIC_JOBS} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Việc làm mới nhất</Link></li>
+                        <li><Link href={ROUTES.PUBLIC_COMPANIES} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Danh sách công ty</Link></li>
+                        <li><Link href={ROUTES.BLOG} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Cẩm nang nghề nghiệp</Link></li>
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-black text-slate-900 dark:text-white mb-5 uppercase tracking-wider text-xs">Doanh nghiệp</h4>
                     <ul className="space-y-3.5 text-sm text-slate-500 dark:text-slate-400 font-medium">
                         <li><Link href="/features" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Sản phẩm & Tính năng</Link></li>
-                        <li><Link href="/pricing" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Bảng giá dịch vụ</Link></li>
-                        <li><Link href="/support" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Hỗ trợ khách hàng</Link></li>
+                        <li><Link href={ROUTES.PRICING} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Bảng giá dịch vụ</Link></li>
+                        <li><Link href={ROUTES.SUPPORT} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Hỗ trợ khách hàng</Link></li>
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-black text-slate-900 dark:text-white mb-5 uppercase tracking-wider text-xs">Về ATS System</h4>
                     <ul className="space-y-3.5 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                        <li><Link href="/about" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Về chúng tôi</Link></li>
+                        <li><Link href={ROUTES.ABOUT} className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Về chúng tôi</Link></li>
                         <li><Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Điều khoản dịch vụ</Link></li>
                         <li><Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 inline-block transition-all">Chính sách bảo mật</Link></li>
                     </ul>

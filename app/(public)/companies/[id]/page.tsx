@@ -16,6 +16,7 @@ import { jobService } from '@/features/job/job.service';
 import { Company, Job } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
+import { ROUTES } from '@/constants/routes';
 
 export default function PublicCompanyDetailPage() {
     const params = useParams();
@@ -27,9 +28,11 @@ export default function PublicCompanyDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    const handleShare = () => {
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!company?.id) return;
-        const link = `${window.location.origin}/companies/${company.id}`;
+        const link = `${window.location.origin}${ROUTES.PUBLIC_COMPANY_DETAIL(company.id)}`;
         navigator.clipboard.writeText(link);
         toast.success('Đã sao chép link công ty!');
     };
@@ -85,7 +88,7 @@ export default function PublicCompanyDetailPage() {
                         <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
                         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">Không tìm thấy công ty</h2>
                         <p className="text-slate-500 font-medium mb-8">Công ty này không tồn tại hoặc chưa được hệ thống xác thực (KYC).</p>
-                        <button onClick={() => router.push('/companies')} className="px-6 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold rounded-xl hover:bg-indigo-100 transition-colors w-full">
+                        <button onClick={() => router.push(ROUTES.PUBLIC_COMPANIES)} className="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold rounded-xl hover:bg-blue-100 transition-colors w-full">
                             Khám phá công ty khác
                         </button>
                     </div>
@@ -101,7 +104,7 @@ export default function PublicCompanyDetailPage() {
 
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full pt-28 pb-20 animate-in fade-in duration-500">
                 <button
-                    onClick={() => router.push('/companies')}
+                    onClick={() => router.push(ROUTES.PUBLIC_COMPANIES)}
                     className="flex items-center gap-2 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold mb-6 transition-colors w-fit"
                 >
                     <ChevronLeft className="w-4 h-4" /> Danh sách công ty
@@ -175,7 +178,7 @@ export default function PublicCompanyDetailPage() {
                         {/* Box: Giới thiệu công ty */}
                         <div className="bg-white dark:bg-text border border-slate-200 dark:border-slate-800 p-8 md:p-10 rounded-3xl shadow-sm">
                             <h3 className="text-lg font-black text-slate-800 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
-                                <div className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-lg"><FileText className="w-5 h-5" /></div>
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-lg"><FileText className="w-5 h-5" /></div>
                                 Giới thiệu về công ty
                             </h3>
 
@@ -293,7 +296,7 @@ export default function PublicCompanyDetailPage() {
                             {companyJobs.length > 0 ? (
                                 <div className="space-y-4">
                                     {companyJobs.slice(0, 3).map(job => (
-                                        <div key={job.id} onClick={() => router.push(`/careers/${job.id}`)} className="cursor-pointer group block border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                                        <div key={job.id} onClick={() => router.push(ROUTES.PUBLIC_JOB_DETAIL(job.id))} className="cursor-pointer group block border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                                             <h4 className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-1 mb-1.5 transition-colors text-sm">
                                                 {job.title}
                                             </h4>

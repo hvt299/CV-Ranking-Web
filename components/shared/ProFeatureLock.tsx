@@ -1,5 +1,6 @@
 'use client';
 
+import { ROUTES } from '@/constants/routes';
 import { Lock, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -34,7 +35,7 @@ export default function ProFeatureLock({
                 </p>
 
                 <Link
-                    href="/pricing"
+                    href={ROUTES.PRICING}
                     className="w-full py-3.5 bg-warning-500 hover:bg-warning-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-warning-500/25 transition-all"
                 >
                     <Sparkles className="w-4 h-4" /> Nâng cấp ngay <ArrowRight className="w-4 h-4" />

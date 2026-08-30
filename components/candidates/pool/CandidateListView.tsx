@@ -136,7 +136,7 @@ export default function CandidateListView({ candidates, selectedIds, onToggleSel
                                         <Eye className="w-4 h-4" />
                                     </button>
                                 )}
-                                <button onClick={() => onViewSkills(cv)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-colors" title="Xem chi tiết phân tích">
+                                <button onClick={() => onViewSkills(cv)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Xem chi tiết phân tích">
                                     <FileText className="w-4 h-4" />
                                 </button>
                                 <button onClick={() => onDeleteCV(cv.id, cv.filename)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors" title="Xóa vĩnh viễn">

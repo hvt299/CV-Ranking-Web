@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 import StatusBadge from '@/components/ui/StatusBadge';
 import DocumentViewer from '@/components/shared/DocumentViewer';
+import { ROUTES } from '@/constants/routes';
 
 export default function MyApplicationsPage() {
     const [applications, setApplications] = useState<any[]>([]);
@@ -103,7 +104,7 @@ export default function MyApplicationsPage() {
                                     {/* Header Card: Job & Company */}
                                     <div className="flex items-start justify-between gap-4 mb-4">
                                         <div className="flex-1 min-w-0">
-                                            <Link href={`/careers/${app.job_id}`} target="_blank" className="font-bold text-slate-900 dark:text-white text-base truncate block hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title={app.job_title}>
+                                            <Link href={ROUTES.PUBLIC_JOB_DETAIL(app.job_id)} target="_blank" className="font-bold text-slate-900 dark:text-white text-base truncate block hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title={app.job_title}>
                                                 {app.job_title}
                                             </Link>
                                             <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
@@ -144,7 +145,7 @@ export default function MyApplicationsPage() {
                                         </button>
 
                                         <Link
-                                            href={`/careers/${app.job_id}`}
+                                            href={ROUTES.PUBLIC_JOB_DETAIL(app.job_id)}
                                             target="_blank"
                                             className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-colors"
                                             title="Xem chi tiết việc làm"
@@ -191,7 +192,7 @@ export default function MyApplicationsPage() {
                     <Briefcase className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Bạn chưa ứng tuyển công việc nào</h3>
                     <p className="text-slate-500 font-medium mb-6">Hãy khám phá các cơ hội nghề nghiệp và gửi CV ngay nhé!</p>
-                    <Link href="/careers" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-primary-500/20">
+                    <Link href={ROUTES.PUBLIC_JOBS} className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-primary-500/20">
                         Tìm việc ngay <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>

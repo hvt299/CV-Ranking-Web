@@ -15,6 +15,7 @@ import PublicFooter from '@/components/layout/PublicFooter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { HotJobItem } from '@/components/landing/HotJobsSection';
 import { LatestJobItem } from '@/components/landing/LatestJobsSection';
+import { ROUTES } from '@/constants/routes';
 
 export default function PublicJobsPage() {
     const router = useRouter();
@@ -160,7 +161,7 @@ export default function PublicJobsPage() {
 
     const handleCardClick = (e: React.MouseEvent, jobId: string) => {
         if ((e.target as Element).closest('button')) return;
-        router.push(`/careers/${jobId}`);
+        router.push(ROUTES.PUBLIC_JOB_DETAIL(jobId));
     };
 
     const hotJobs = filteredJobs.filter(j => j.is_hot);
@@ -338,7 +339,7 @@ export default function PublicJobsPage() {
                         <div>
                             <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
                                 Khám phá{' '}
-                                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500">
+                                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-500">
                                     Việc Làm Mới Nhất
                                 </span>
                             </h2>

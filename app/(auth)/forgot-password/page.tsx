@@ -6,6 +6,7 @@ import { Mail, ArrowRight, KeyRound, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/auth.service';
 import AuthLogo from '@/components/ui/AuthLogo';
+import { ROUTES } from '@/constants/routes';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -103,7 +104,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="mt-8 text-center">
                     <Link
-                        href="/login"
+                        href={ROUTES.LOGIN}
                         className="flex items-center justify-center gap-2 text-sm font-semibold text-text-muted transition-colors hover:text-text"
                     >
                         <ArrowRight className="h-4 w-4 rotate-180" />

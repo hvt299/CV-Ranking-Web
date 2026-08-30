@@ -5,6 +5,7 @@ import { Briefcase, FileText, Sparkles, Users, TrendingUp, TrendingDown, Loader2
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { APPLICATION_STATUS_CONFIG } from '@/constants/application.constants';
+import { ROUTES } from '@/constants/routes';
 
 export default function OwnerDashboard({
     currentTime
@@ -55,7 +56,7 @@ export default function OwnerDashboard({
                 </div>
 
                 <Link
-                    href="/jobs/create"
+                    href={ROUTES.HR_JOB_CREATE}
                     className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all"
                 >
                     + Tạo chiến dịch mới
@@ -74,7 +75,7 @@ export default function OwnerDashboard({
                 <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                         <h2 className="text-lg font-black text-slate-800 dark:text-white">Tiến độ Chiến dịch đang mở</h2>
-                        <Link href="/jobs" className="text-sm font-bold text-primary-600 hover:underline">Xem tất cả</Link>
+                        <Link href={ROUTES.HR_JOBS} className="text-sm font-bold text-primary-600 hover:underline">Xem tất cả</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -87,31 +88,39 @@ export default function OwnerDashboard({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {pipelines.map((job: any) => {
-                                    const progress = job.target_hiring > 0 ? Math.min(100, (job.current_hired / job.target_hiring) * 100) : 0;
-                                    return (
-                                        <tr key={job.job_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                                            <td className="p-4 pl-6 font-bold text-sm text-slate-800 dark:text-white">
-                                                <Link href={`/jobs/${job.job_id}`} className="hover:text-primary-600 transition-colors">{job.title}</Link>
-                                                <div className="text-xs font-medium text-slate-500 mt-1">Tổng: {job.total_cvs} CV</div>
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <span className="bg-info-50 text-info-600 dark:bg-info-500/10 dark:text-info-400 font-bold px-2.5 py-1 rounded-lg text-xs">+{job.new_cvs}</span>
-                                            </td>
-                                            <td className="p-4 text-center font-bold text-sm text-slate-700 dark:text-slate-300">
-                                                {job.current_hired} / {job.target_hiring > 0 ? job.target_hiring : '∞'}
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-success-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                                {pipelines.length > 0 ? (
+                                    pipelines.map((job: any) => {
+                                        const progress = job.target_hiring > 0 ? Math.min(100, (job.current_hired / job.target_hiring) * 100) : 0;
+                                        return (
+                                            <tr key={job.job_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+                                                <td className="p-4 pl-6 font-bold text-sm text-slate-800 dark:text-white">
+                                                    <Link href={ROUTES.HR_JOB_DETAIL(job.job_id)} className="hover:text-primary-600 transition-colors">{job.title}</Link>
+                                                    <div className="text-xs font-medium text-slate-500 mt-1">Tổng: {job.total_cvs} CV</div>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <span className="bg-info-50 text-info-600 dark:bg-info-500/10 dark:text-info-400 font-bold px-2.5 py-1 rounded-lg text-xs">+{job.new_cvs}</span>
+                                                </td>
+                                                <td className="p-4 text-center font-bold text-sm text-slate-700 dark:text-slate-300">
+                                                    {job.current_hired} / {job.target_hiring > 0 ? job.target_hiring : '∞'}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-success-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400 w-8">{progress.toFixed(0)}%</span>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 w-8">{progress.toFixed(0)}%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
+                                                </td>
+                                            </tr>
+                                        )
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="p-8 text-center text-slate-500 font-medium">
+                                            Chưa có chiến dịch nào đang mở.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -126,7 +135,7 @@ export default function OwnerDashboard({
                         {recentApps.map((app: any) => {
                             const config = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG['new'];
                             return (
-                                <Link key={app.id} href={`/jobs/${app.job_id}`} className="block p-3 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                                <Link key={app.id} href={ROUTES.HR_JOB_DETAIL(app.job_id)} className="block p-3 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
                                     <div className="flex justify-between items-start mb-1">
                                         <p className="font-bold text-sm text-slate-800 dark:text-white truncate pr-2">{app.candidate_name}</p>
                                         <span className={`text-[10px] px-2 py-0.5 rounded border font-bold shrink-0 ${config.color} ${config.borderColor}`}>{config.label}</span>

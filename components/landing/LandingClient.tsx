@@ -19,6 +19,7 @@ import WorkflowSection from '@/components/landing/WorkflowSection';
 import FaqSection from '@/components/landing/FaqSection';
 import BottomCTA from '@/components/landing/BottomCTA';
 import PublicFooter from '@/components/layout/PublicFooter';
+import { ROUTES } from '@/constants/routes';
 
 export default function LandingClient() {
     const router = useRouter();
@@ -79,7 +80,7 @@ export default function LandingClient() {
     }, []);
 
     const handleSelectCompany = (companyName: string) => {
-        router.push(`/careers?company=${encodeURIComponent(companyName)}`);
+        router.push(`${ROUTES.PUBLIC_JOBS}?company=${encodeURIComponent(companyName)}`);
     };
 
     return (

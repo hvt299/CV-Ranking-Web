@@ -2,14 +2,15 @@ import { create } from 'zustand';
 import Cookies from 'js-cookie';
 import apiClient from '@/lib/api-client';
 import { clearAllAuthData } from '@/lib/auth-utils';
-import { User, UserRole } from '@/types'; // Đảm bảo import đúng đường dẫn type của bạn
+import { User, UserRole } from '@/types';
+import { ROUTES } from '@/constants/routes';
 
 interface AuthState {
     isAuthenticated: boolean;
     user: User | null;
     loading: boolean;
     initAuth: () => Promise<void>;
-    login: (token: string, router: any) => Promise<void>; // Truyền router từ component vào
+    login: (token: string, router: any) => Promise<void>;
     logout: (router: any) => void;
     updateUser: (userData: Partial<User>) => void;
 }
@@ -45,34 +46,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             set({ isAuthenticated: true, user: fetchedUser, loading: false });
 
-            // Logic Redirect cũ từ Context
             switch (fetchedUser.role) {
                 case UserRole.APPLICANT:
-                    router.push('/overview');
+                    router.push(ROUTES.APPLICANT_DASHBOARD);
                     break;
                 case UserRole.HR_OWNER:
                 case UserRole.HR_MEMBER:
-                    router.push('/dashboard');
+                    router.push(ROUTES.HR_DASHBOARD);
                     break;
                 case UserRole.ADMIN:
-                    router.push('/admin/dashboard');
+                    router.push(ROUTES.ADMIN_DASHBOARD);
                     break;
                 default:
                     console.error('Unknown user role:', fetchedUser.role);
-                    router.push('/overview');
+                    router.push(ROUTES.APPLICANT_DASHBOARD);
                     break;
             }
         } catch (error) {
             clearAllAuthData();
             set({ isAuthenticated: false, user: null, loading: false });
-            router.push('/login');
+            router.push(ROUTES.LOGIN);
         }
     },
 
     logout: (router: any) => {
         clearAllAuthData();
         set({ isAuthenticated: false, user: null });
-        router.push('/login');
+        router.push(ROUTES.LOGIN);
     },
 
     updateUser: (userData: Partial<User>) => {

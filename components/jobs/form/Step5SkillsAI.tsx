@@ -170,7 +170,7 @@ export default function Step5SkillsAI({
             {/* Block 2: AI Weights */}
             <div className="space-y-6 pt-4">
                 <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                         <BrainCircuit className="w-5 h-5" />
                     </div>
                     <div>

@@ -13,6 +13,7 @@ import HrEnterpriseForm, { HrInfoState, DEFAULT_HR_INFO } from '@/components/aut
 import AuthSocialButtons from '@/components/auth/AuthSocialButtons';
 import SocialRoleModal from '@/components/auth/SocialRoleModal';
 import { getPasswordStrength } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 export default function RegisterPage() {
     const { register: handleRegister, isLoading, socialLoginFlow } = useAuthFlow();
@@ -192,7 +193,7 @@ export default function RegisterPage() {
 
                     {/* Thông báo nếu có inviteToken */}
                     {inviteToken && (
-                        <div className="bg-info-50 dark:bg-indigo-900/20 border border-info-100 dark:border-indigo-800 p-4 rounded-2xl flex items-center gap-3">
+                        <div className="bg-info-50 dark:bg-blue-900/20 border border-info-100 dark:border-blue-800 p-4 rounded-2xl flex items-center gap-3">
                             <div className="p-2 bg-info-100 dark:bg-info-500/20 text-info-600 rounded-full shrink-0">
                                 <Users className="w-5 h-5" />
                             </div>
@@ -308,7 +309,7 @@ export default function RegisterPage() {
 
                 <div className="mt-8 text-center space-y-4">
                     <p className="text-slate-600 dark:text-text-subtle text-sm font-medium">
-                        Đã có tài khoản? <Link href="/login" className="text-primary-600 dark:text-primary-400 font-bold hover:underline transition-colors">Đăng nhập ngay</Link>
+                        Đã có tài khoản? <Link href={ROUTES.LOGIN} className="text-primary-600 dark:text-primary-400 font-bold hover:underline transition-colors">Đăng nhập ngay</Link>
                     </p>
                     <div className="flex flex-col items-center justify-center gap-1.5 pt-6 border-t border-border dark:border-slate-800">
                         <span className="text-xs text-text-muted dark:text-text-subtle font-medium">Bạn gặp khó khăn khi tạo tài khoản?</span>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Briefcase, Calendar, Edit2, Share2, MoreHorizontal, Flame } from 'lucide-react';
 import { Job } from '@/types';
 import toast from 'react-hot-toast';
+import { ROUTES } from '@/constants/routes';
 
 interface JobDetailHeaderProps {
     jobInfo: Job;
@@ -18,8 +19,11 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
     const isExpired = jobInfo.deadline && new Date(jobInfo.deadline).getTime() < new Date().getTime();
     const isActive = !isClosed && !isExpired;
 
-    const handleShare = () => {
-        const link = `${window.location.origin}/careers/${jobInfo.id}`;
+    const handleShare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!jobInfo?.id) return;
+        const link = `${window.location.origin}${ROUTES.PUBLIC_JOB_DETAIL(jobInfo.id)}`;
         navigator.clipboard.writeText(link);
         toast.success('Đã sao chép link công việc!');
     };
@@ -32,7 +36,7 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
         <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
             {/* Nút Quay lại & Breadcrumb */}
             <button
-                onClick={() => router.push('/jobs')}
+                onClick={() => router.push(ROUTES.HR_JOBS)}
                 className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 font-bold mb-4 transition-colors w-fit"
             >
                 <ArrowLeft className="w-4 h-4" /> Danh sách chiến dịch
@@ -98,7 +102,7 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
                 {/* Hành động (Action Buttons) */}
                 <div className="flex items-center gap-2 shrink-0">
                     <Link
-                        href={`/jobs/edit/${jobInfo.id}`}
+                        href={ROUTES.HR_JOB_EDIT(jobInfo.id)}
                         className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl transition-colors flex items-center gap-2"
                     >
                         <Edit2 className="w-4 h-4" /> <span className="hidden sm:inline">Chỉnh sửa</span>

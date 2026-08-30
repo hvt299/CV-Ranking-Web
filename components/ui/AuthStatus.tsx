@@ -1,5 +1,6 @@
 'use client';
 
+import { ROUTES } from '@/constants/routes';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LogIn, User } from 'lucide-react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ export default function AuthStatus() {
                 <LogIn className="w-4 h-4 text-amber-600" />
                 <span className="text-sm text-amber-700 dark:text-amber-300">
                     Bạn chưa đăng nhập.{' '}
-                    <Link href="/login" className="font-medium underline hover:no-underline">
+                    <Link href={ROUTES.LOGIN} className="font-medium underline hover:no-underline">
                         Đăng nhập ngay
                     </Link>
                 </span>

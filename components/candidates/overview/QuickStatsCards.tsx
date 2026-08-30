@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Briefcase, Clock, Award, FolderOpen, ArrowRight } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 interface QuickStatsCardsProps {
     applications: any[];
@@ -19,21 +20,21 @@ export default function QuickStatsCards({ applications }: QuickStatsCardsProps) 
                 value={totalApplied}
                 icon={Briefcase}
                 colorClass="text-primary-600 bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400"
-                link="/my-applications"
+                link={ROUTES.APPLICANT_APPLICATIONS}
             />
             <StatCard
                 title="Đang chờ xem xét"
                 value={pending}
                 icon={Clock}
                 colorClass="text-warning-600 bg-warning-100 dark:bg-warning-500/10 dark:text-warning-400"
-                link="/my-applications"
+                link={ROUTES.APPLICANT_APPLICATIONS}
             />
             <StatCard
                 title="Lọt vào vòng trong"
                 value={success}
                 icon={Award}
                 colorClass="text-success-600 bg-success-100 dark:bg-success-500/10 dark:text-success-400"
-                link="/my-applications"
+                link={ROUTES.APPLICANT_APPLICATIONS}
             />
 
             {/* Card đặc biệt điều hướng sang CV Library */}
@@ -45,7 +46,7 @@ export default function QuickStatsCards({ applications }: QuickStatsCardsProps) 
                 </div>
                 <div>
                     <p className="text-slate-500 dark:text-slate-400 font-semibold text-sm mb-1">Thư viện CV</p>
-                    <Link href="/cv-library" className="inline-flex items-center gap-1.5 text-sm font-black text-info-600 dark:text-info-400 group-hover:text-info-700 dark:group-hover:text-info-300 transition-colors">
+                    <Link href={ROUTES.APPLICANT_CV_LIBRARY} className="inline-flex items-center gap-1.5 text-sm font-black text-info-600 dark:text-info-400 group-hover:text-info-700 dark:group-hover:text-info-300 transition-colors">
                         Quản lý hồ sơ <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>

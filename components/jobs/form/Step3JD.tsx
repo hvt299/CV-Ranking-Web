@@ -32,7 +32,7 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                     <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -52,7 +52,7 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
                                 type="button"
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`px-5 py-3 text-sm font-bold whitespace-nowrap transition-all border-b-2 ${activeTab === tab.id
-                                    ? 'border-indigo-600 text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900'
+                                    ? 'border-blue-600 text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-900'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                                     }`}
                             >
@@ -97,7 +97,7 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
                 <div className="flex items-center gap-4">
                     <label className="cursor-pointer flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm group">
                         <div className="flex flex-col items-center">
-                            <UploadCloud className="w-8 h-8 text-slate-400 mb-2 group-hover:text-indigo-500 transition-colors" />
+                            <UploadCloud className="w-8 h-8 text-slate-400 mb-2 group-hover:text-blue-500 transition-colors" />
                             <span className="text-sm text-slate-500 font-medium">Bấm hoặc kéo thả file JD gốc lên đây</span>
                         </div>
                         <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={(e) => {

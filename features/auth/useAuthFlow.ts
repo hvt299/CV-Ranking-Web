@@ -3,6 +3,7 @@ import { authService } from './auth.service';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
+import { ROUTES } from '@/constants/routes';
 
 export function useAuthFlow() {
     const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +35,7 @@ export function useAuthFlow() {
             } else {
                 toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.', { duration: 5000 });
             }
-            router.push('/login');
+            router.push(ROUTES.LOGIN);
             return true;
         } catch (err: any) {
             const detail = err.response?.data?.detail;

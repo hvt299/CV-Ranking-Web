@@ -5,6 +5,7 @@ import { X, FileText, Send, Loader2, ShieldCheck, UploadCloud, ChevronDown } fro
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 import { applicationService } from '@/features/application/application.service';
+import { ROUTES } from '@/constants/routes';
 
 interface ApplyModalProps {
     jobId: string;
@@ -117,7 +118,7 @@ export default function ApplyModal({ jobId, jobTitle, onClose }: ApplyModalProps
                             <div className="p-4 border border-dashed border-rose-200 dark:border-rose-900/50 rounded-xl bg-rose-50/50 dark:bg-rose-500/10 flex flex-col items-center justify-center text-center gap-2">
                                 <UploadCloud className="w-6 h-6 text-rose-400" />
                                 <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Bạn chưa có CV nào trong hệ thống.</p>
-                                <a href="/cv-library" target="_blank" className="text-xs font-bold text-blue-600 hover:underline">
+                                <a href={ROUTES.APPLICANT_CV_LIBRARY} target="_blank" className="text-xs font-bold text-blue-600 hover:underline">
                                     Mở Thư viện CV để tải lên
                                 </a>
                             </div>

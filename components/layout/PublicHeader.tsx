@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { UserRole } from '@/types';
+import { ROUTES } from '@/constants/routes';
 
 interface PublicHeaderProps {
     isAuthenticated?: boolean;
@@ -15,15 +16,15 @@ interface PublicHeaderProps {
 }
 
 const NAV_ITEMS = [
-    { name: 'Việc làm', href: '/careers', icon: Search },
-    { name: 'Công ty', href: '/companies', icon: Building2 },
+    { name: 'Việc làm', href: ROUTES.PUBLIC_JOBS, icon: Search },
+    { name: 'Công ty', href: ROUTES.PUBLIC_COMPANIES, icon: Building2 },
     {
         name: 'Sản phẩm',
         href: '#',
         icon: Layers,
         children: [
             { name: 'Tính năng cốt lõi', href: '/features', icon: Sparkles },
-            { name: 'Bảng giá dịch vụ', href: '/pricing', icon: CreditCard },
+            { name: 'Bảng giá dịch vụ', href: ROUTES.PRICING, icon: CreditCard },
         ]
     },
     {
@@ -31,9 +32,9 @@ const NAV_ITEMS = [
         href: '#',
         icon: BookOpen,
         children: [
-            { name: 'Về chúng tôi', href: '/about', icon: Info },
-            { name: 'Cẩm nang nghề nghiệp', href: '/blog', icon: FileText },
-            { name: 'Trung tâm hỗ trợ', href: '/support', icon: HelpCircle },
+            { name: 'Về chúng tôi', href: ROUTES.ABOUT, icon: Info },
+            { name: 'Cẩm nang nghề nghiệp', href: ROUTES.BLOG, icon: FileText },
+            { name: 'Trung tâm hỗ trợ', href: ROUTES.SUPPORT, icon: HelpCircle },
         ]
     }
 ];
@@ -59,7 +60,7 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileMenuOpen]);
 
-    const systemLink = user?.role === UserRole.APPLICANT ? '/overview' : user?.role === UserRole.ADMIN ? '/admin/dashboard' : '/dashboard';
+    const systemLink = user?.role === UserRole.APPLICANT ? ROUTES.APPLICANT_DASHBOARD : user?.role === UserRole.ADMIN ? ROUTES.ADMIN_DASHBOARD : ROUTES.HR_DASHBOARD;
 
     const headerBg = isScrolled || isMobileMenuOpen
         ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 py-3 shadow-sm'
@@ -71,7 +72,7 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
 
                 {/* Logo */}
                 <div className="flex items-center gap-8">
-                    <Link href="/" className="flex items-center gap-2 group relative z-50">
+                    <Link href={ROUTES.HOME} className="flex items-center gap-2 group relative z-50">
                         <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>
@@ -154,10 +155,10 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
                         </Link>
                     ) : (
                         <div className="hidden lg:flex items-center gap-2">
-                            <Link href="/login" className="px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-full transition-colors">
+                            <Link href={ROUTES.LOGIN} className="px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-full transition-colors">
                                 Đăng nhập
                             </Link>
-                            <Link href="/register" className="px-6 py-2.5 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md shadow-blue-500/20 transition-all flex items-center gap-2">
+                            <Link href={ROUTES.REGISTER} className="px-6 py-2.5 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md shadow-blue-500/20 transition-all flex items-center gap-2">
                                 <Briefcase className="w-4 h-4" /> Bắt đầu miễn phí
                             </Link>
                         </div>
@@ -210,10 +211,10 @@ export default function PublicHeader({ isAuthenticated = false, user = null, isS
                                 </Link>
                             ) : (
                                 <>
-                                    <Link href="/register" className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md">
+                                    <Link href={ROUTES.REGISTER} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md">
                                         Tạo tài khoản miễn phí
                                     </Link>
-                                    <Link href="/login" className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
+                                    <Link href={ROUTES.LOGIN} className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
                                         Đăng nhập hệ thống
                                     </Link>
                                 </>

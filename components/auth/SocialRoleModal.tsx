@@ -153,16 +153,16 @@ export default function SocialRoleModal({
                     )}
 
                     {isHrMember && (
-                        <div className="col-span-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-4 flex items-center gap-3">
-                            <div className="p-2 bg-indigo-100 dark:bg-indigo-500/20 rounded-full">
-                                <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                        <div className="col-span-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-full">
+                                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                             </div>
 
                             <div>
-                                <p className="font-bold text-indigo-700 dark:text-indigo-400">
+                                <p className="font-bold text-blue-700 dark:text-blue-400">
                                     Thành viên doanh nghiệp
                                 </p>
-                                <p className="text-xs text-indigo-600/80 dark:text-indigo-400/80">
+                                <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
                                     Bạn sẽ gia nhập doanh nghiệp thông qua thư mời.
                                 </p>
                             </div>

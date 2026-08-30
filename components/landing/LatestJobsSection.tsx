@@ -6,6 +6,7 @@ import { motion, Variants } from 'framer-motion';
 import { ChevronRight, ChevronLeft, MapPin, Building2, DollarSign } from 'lucide-react';
 import { Job } from '@/types';
 import { formatSalaryRange } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 interface LatestJobsSectionProps {
     jobs: Job[];
@@ -23,7 +24,7 @@ const itemVariants: Variants = {
 
 export const LatestJobItem = ({ job }: { job: Partial<Job> & { company_name?: string, company_logo?: string } }) => (
     <Link
-        href={`/careers/${job.id}`}
+        href={ROUTES.PUBLIC_JOB_DETAIL(job.id!)}
         className="group flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-md hover:shadow-blue-500/5"
     >
         {/* Logo */}
@@ -83,7 +84,7 @@ export default function LatestJobsSection({ jobs }: LatestJobsSectionProps) {
                     <div>
                         <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
                             Khám phá{' '}
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500">
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-500">
                                 Việc Làm Mới Nhất
                             </span>
                         </h2>
@@ -100,7 +101,7 @@ export default function LatestJobsSection({ jobs }: LatestJobsSectionProps) {
                                 <option value="salary_desc">Lương cao nhất</option>
                             </select>
                         </div>
-                        <Link href="/careers" className="hidden md:flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition-colors bg-blue-50 dark:bg-blue-900/20 px-5 py-2.5 rounded-full">
+                        <Link href={ROUTES.PUBLIC_JOBS} className="hidden md:flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition-colors bg-blue-50 dark:bg-blue-900/20 px-5 py-2.5 rounded-full">
                             Xem tất cả <ChevronRight className="w-4 h-4" />
                         </Link>
                     </div>

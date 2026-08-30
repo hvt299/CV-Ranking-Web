@@ -12,6 +12,7 @@ import AuthSocialButtons from '@/components/auth/AuthSocialButtons';
 import SocialRoleModal from '@/components/auth/SocialRoleModal';
 import { UserRole } from '@/types';
 import { HrInfoState } from '@/components/auth/HrEnterpriseForm';
+import { ROUTES } from '@/constants/routes';
 
 export default function LoginPage() {
     const { login: handleLogin, isLoading, socialLoginFlow } = useAuthFlow();
@@ -106,7 +107,7 @@ export default function LoginPage() {
                     <div>
                         <div className="flex justify-between items-center mb-1.5">
                             <label className="text-sm font-semibold text-text dark:text-slate-300">Mật khẩu</label>
-                            <Link href="/forgot-password" className="text-sm text-primary-600 font-medium hover:underline transition-colors">Quên mật khẩu?</Link>
+                            <Link href={ROUTES.FORGOT_PASSWORD} className="text-sm text-primary-600 font-medium hover:underline transition-colors">Quên mật khẩu?</Link>
                         </div>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle w-5 h-5" />
@@ -142,7 +143,7 @@ export default function LoginPage() {
                 <AuthSocialButtons onGoogleClick={loginWithGoogle} onLinkedInClick={linkedInLogin} mode="login" />
 
                 <p className="text-center mt-8 text-text-muted text-sm font-medium">
-                    Chưa có tài khoản? <Link href="/register" className="text-primary-600 font-bold hover:underline transition-colors">Tạo tài khoản</Link>
+                    Chưa có tài khoản? <Link href={ROUTES.REGISTER} className="text-primary-600 font-bold hover:underline transition-colors">Tạo tài khoản</Link>
                 </p>
             </div>
 

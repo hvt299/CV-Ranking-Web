@@ -5,6 +5,7 @@ import { Calendar, Clock, Loader2, Briefcase, Users, FileText, CheckCircle2 } fr
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { APPLICATION_STATUS_CONFIG } from '@/constants/application.constants';
+import { ROUTES } from '@/constants/routes';
 
 export default function MemberWorkspace({
     currentTime
@@ -57,7 +58,7 @@ export default function MemberWorkspace({
                 </div>
 
                 <Link
-                    href="/candidates"
+                    href={ROUTES.HR_CANDIDATES}
                     className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all"
                 >
                     Mở Kho hồ sơ
@@ -105,7 +106,7 @@ export default function MemberWorkspace({
                     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
                             <h2 className="text-lg font-black text-slate-800 dark:text-white">Chiến dịch đang phụ trách</h2>
-                            <Link href="/jobs" className="text-sm font-bold text-primary-600 hover:underline">Xem bảng Kanban</Link>
+                            <Link href={ROUTES.HR_JOBS} className="text-sm font-bold text-primary-600 hover:underline">Xem bảng Kanban</Link>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -122,7 +123,7 @@ export default function MemberWorkspace({
                                         return (
                                             <tr key={job.job_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                                                 <td className="p-4 pl-6 font-bold text-sm text-slate-800 dark:text-white">
-                                                    <Link href={`/jobs/${job.job_id}`} className="hover:text-primary-600 transition-colors">{job.title}</Link>
+                                                    <Link href={ROUTES.HR_JOB_DETAIL(job.job_id)} className="hover:text-primary-600 transition-colors">{job.title}</Link>
                                                     <div className="text-xs font-medium text-slate-500 mt-1">Tổng: {job.total_cvs} ứng viên tham gia</div>
                                                 </td>
                                                 <td className="p-4 text-center">
@@ -160,7 +161,7 @@ export default function MemberWorkspace({
                             {recentApps.map((app: any) => {
                                 const config = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG['new'];
                                 return (
-                                    <Link key={app.id} href={`/jobs/${app.job_id}`} className="flex items-center justify-between p-4 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                                    <Link key={app.id} href={ROUTES.HR_JOB_DETAIL(app.job_id)} className="flex items-center justify-between p-4 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
                                         <div className="flex-1 min-w-0 pr-4">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{app.candidate_name}</p>

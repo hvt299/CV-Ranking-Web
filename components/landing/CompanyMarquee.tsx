@@ -1,5 +1,6 @@
 'use client';
 
+import { ROUTES } from '@/constants/routes';
 import { Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -29,7 +30,7 @@ export default function CompanyMarquee({ companies, onSelectCompany }: CompanyMa
                                 key={i}
                                 onClick={() => {
                                     if (companyId) {
-                                        router.push(`/companies/${companyId}`);
+                                        router.push(ROUTES.PUBLIC_COMPANY_DETAIL(companyId));
                                     } else if (onSelectCompany) {
                                         onSelectCompany(companyName);
                                     }

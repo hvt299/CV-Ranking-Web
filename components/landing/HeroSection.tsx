@@ -8,6 +8,7 @@ import { Sparkles, Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 import Typewriter from '@/components/ui/Typewriter';
 import Select from 'react-select';
 import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
+import { ROUTES } from '@/constants/routes';
 
 const HERO_WORDS = [
     "Nhân viên kinh doanh", "Chuyên viên Marketing", "Chuyên viên chăm sóc khách hàng",
@@ -105,7 +106,7 @@ export default function HeroSection({ searchQuery, setSearchQuery, filters, setF
         if (filters.wardCodes?.length > 0) params.append('wards', filters.wardCodes.join(','));
         if (filters.foreignLocation) params.append('foreign', filters.foreignLocation);
 
-        router.push(`/careers?${params.toString()}`);
+        router.push(`${ROUTES.PUBLIC_JOBS}?${params.toString()}`);
     };
 
     return (

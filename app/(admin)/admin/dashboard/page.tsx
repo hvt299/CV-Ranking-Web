@@ -5,6 +5,7 @@ import { Users, Building2, ShieldAlert, Briefcase, ChevronRight, Loader2 } from 
 import Link from 'next/link';
 import { companyService } from '@/features/company/company.service';
 import { formatOverviewDate } from '@/utils/format';
+import { ROUTES } from '@/constants/routes';
 
 export default function AdminDashboardPage() {
     const [data, setData] = useState<any>(null);
@@ -61,7 +62,7 @@ export default function AdminDashboardPage() {
                     <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
                         Doanh nghiệp chờ duyệt mới nhất
                     </h2>
-                    <Link href="/admin/companies" className="text-sm font-bold text-primary-600 hover:underline flex items-center">Xem tất cả <ChevronRight className="w-4 h-4" /></Link>
+                    <Link href={ROUTES.ADMIN_COMPANIES} className="text-sm font-bold text-primary-600 hover:underline flex items-center">Xem tất cả <ChevronRight className="w-4 h-4" /></Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -82,7 +83,7 @@ export default function AdminDashboardPage() {
                                     <td className="p-4 font-mono text-sm">{c.tax_code}</td>
                                     <td className="p-4 text-xs font-medium text-slate-500">{new Date(c.created_at).toLocaleDateString('vi-VN')}</td>
                                     <td className="p-4 text-right pr-6">
-                                        <Link href="/admin/companies" className="px-3 py-1.5 bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 rounded-lg text-xs font-bold transition-colors">
+                                        <Link href={ROUTES.ADMIN_COMPANIES} className="px-3 py-1.5 bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 rounded-lg text-xs font-bold transition-colors">
                                             Kiểm duyệt
                                         </Link>
                                     </td>
