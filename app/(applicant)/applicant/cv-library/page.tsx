@@ -71,7 +71,7 @@ export default function CVLibraryPage() {
 
             {/* KHU VỰC UPLOAD CHUNG */}
             <div className="relative bg-primary-50/50 dark:bg-primary-900/10 border-2 border-dashed border-primary-200 dark:border-primary-800 rounded-3xl p-10 text-center hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all group overflow-hidden">
-                <input type="file" multiple accept=".pdf,.docx" onChange={handleUpload} disabled={isUploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10" />
+                <input type="file" multiple accept=".pdf,.docx" onChange={handleUpload} disabled={isUploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-5" />
                 {isUploading ? (
                     <div className="flex flex-col items-center justify-center space-y-4">
                         <div className="relative w-14 h-14">

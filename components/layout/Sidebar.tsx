@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    LayoutDashboard, Briefcase, Users,
+    LayoutDashboard, Briefcase, Users, FolderOpen, FileText, ClipboardCheck, Home,
     BarChart2, Settings, HelpCircle, ChevronLeft,
     ChevronRight, Hexagon, X, Building2, ShieldCheck
 } from "lucide-react";
@@ -78,14 +78,19 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
         { name: "Nhật ký hệ thống", icon: ShieldCheck, href: ROUTES.ADMIN_AUDIT_LOGS },
     ];
 
-    const mainMenuItems = isAdmin ? adminMenu : hrMenu;
+    const applicantMenu: MenuItem[] = [
+        { name: "Tổng quan", icon: LayoutDashboard, href: ROUTES.APPLICANT_DASHBOARD },
+        { name: "Thư viện CV", icon: FolderOpen, href: ROUTES.APPLICANT_CV_LIBRARY },
+        { name: "Việc làm đã nộp", icon: FileText, href: ROUTES.APPLICANT_APPLICATIONS },
+        { name: "Tự đánh giá AI", icon: ClipboardCheck, href: ROUTES.APPLICANT_SELF_SCORE, pro: true },
+    ];
 
-    const bottomItems: MenuItem[] = isAdmin ? [
-        { name: "Cài đặt", icon: Settings, href: ROUTES.ADMIN_SETTINGS },
+    const mainMenuItems = isAdmin ? adminMenu : role === UserRole.APPLICANT ? applicantMenu : hrMenu;
+
+    const bottomItems: MenuItem[] = [
+        { name: "Cài đặt", icon: Settings, href: isAdmin ? ROUTES.ADMIN_SETTINGS : role === UserRole.APPLICANT ? ROUTES.APPLICANT_PROFILE : ROUTES.HR_SETTINGS },
         { name: "Trợ giúp", icon: HelpCircle, href: ROUTES.SUPPORT },
-    ] : [
-        { name: "Cài đặt", icon: Settings, href: ROUTES.HR_SETTINGS },
-        { name: "Trợ giúp", icon: HelpCircle, href: ROUTES.SUPPORT },
+        { name: "Về trang chủ", icon: Home, href: ROUTES.HOME },
     ];
 
     return (
@@ -106,7 +111,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                 )}
             >
                 <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800/80 shrink-0">
-                    <Link href={ROUTES.HR_DASHBOARD} className="flex items-center gap-2 group relative z-50">
+                    <Link href={isAdmin ? ROUTES.ADMIN_DASHBOARD : role === UserRole.APPLICANT ? ROUTES.APPLICANT_DASHBOARD : ROUTES.HR_DASHBOARD} className="flex items-center gap-2 group relative z-50">
                         <div className="w-10 h-10 bg-linear-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform shrink-0">
                             <Hexagon className="w-6 h-6 text-white" fill="currentColor" />
                         </div>
@@ -159,9 +164,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">
                                 {isAdmin
                                     ? "Quản trị hệ thống"
-                                    : viewMode === 'OWNER'
-                                        ? "Quản lý Doanh nghiệp"
-                                        : "Chuyên viên Tuyển dụng"}
+                                    : role === UserRole.APPLICANT
+                                        ? "Không gian Ứng viên"
+                                        : viewMode === 'OWNER'
+                                            ? "Quản lý Doanh nghiệp"
+                                            : "Chuyên viên Tuyển dụng"}
                             </p>
                         )}
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Sun, Moon, Menu, Home, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
@@ -9,12 +9,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 import { ROUTES } from '@/constants/routes';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface HeaderProps {
     setIsMobileOpen: (val: boolean) => void;
 }
 
 export default function Header({ setIsMobileOpen }: HeaderProps) {
+    const { data: subscriptionRes } = useSubscription();
+    const planInfo = subscriptionRes?.data;
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -100,18 +103,38 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                             <span className="text-sm font-bold text-slate-700 dark:text-white leading-tight line-clamp-1 max-w-30">
                                 {user?.full_name || 'User'}
                             </span>
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight">
-                                {getRoleDisplayName()}
-                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight">
+                                    {getRoleDisplayName()}
+                                </span>
+                                {planInfo?.current_plan && role !== UserRole.ADMIN && (
+                                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                                        {planInfo.current_plan.replace('HR ', '').replace('Ứng viên ', '')}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
                     </button>
 
                     {isDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 animate-in fade-in slide-in-from-top-2">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white">{user?.full_name || 'User'}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'email@example.com'}</p>
+                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2 bg-slate-50/50 dark:bg-slate-800/50">
+                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user?.full_name || 'User'}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">{user?.email || 'email@example.com'}</p>
+
+                                {role !== UserRole.ADMIN && planInfo && (
+                                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg mt-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase">Gói hiện tại</span>
+                                            <span className="text-xs font-black text-primary-600 truncate max-w-20">{planInfo.current_plan}</span>
+                                        </div>
+                                        <div className="flex flex-col text-right">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase">Credit</span>
+                                            <span className="text-xs font-black text-slate-800 dark:text-white">{planInfo.credits_remaining || 0}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <Link
@@ -122,9 +145,15 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 <Settings className="w-4 h-4" /> Thiết lập thông tin
                             </Link>
 
-                            <Link href={ROUTES.HOME} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <Home className="w-4 h-4" /> Về trang chủ
-                            </Link>
+                            {role !== UserRole.ADMIN && (
+                                <Link
+                                    href={role === UserRole.APPLICANT ? ROUTES.APPLICANT_BILLING : ROUTES.HR_BILLING}
+                                    onClick={() => setIsDropdownOpen(false)}
+                                    className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                >
+                                    <CreditCard className="w-4 h-4" /> Quản lý gói cước
+                                </Link>
+                            )}
 
                             <div className="h-px bg-slate-100 dark:bg-slate-700/50 my-2"></div>
 

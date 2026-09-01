@@ -26,7 +26,7 @@ export default function ProfileHealthCard({ user, profile }: ProfileHealthCardPr
             {/* Background trang trí */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
 
-            <div className="relative z-10 shrink-0">
+            <div className="relative z-5 shrink-0">
                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-full p-1 border-2 border-primary-100 dark:border-primary-900/50 bg-white dark:bg-slate-800">
                     <img
                         src={user?.avatar_url || `https://ui-avatars.com/api/?name=${user?.full_name}&background=random`}
@@ -37,7 +37,7 @@ export default function ProfileHealthCard({ user, profile }: ProfileHealthCardPr
                 </div>
             </div>
 
-            <div className="flex-1 relative z-10 text-center md:text-left w-full">
+            <div className="flex-1 relative z-5 text-center md:text-left w-full">
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2">
                     {getGreeting()}, <span className="text-primary-600 dark:text-primary-400">{user?.full_name?.split(' ').pop() || 'Bạn'}</span>!
                 </h2>

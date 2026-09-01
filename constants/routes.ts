@@ -20,7 +20,7 @@ export const ROUTES = {
     APPLICANT_SELF_SCORE: '/applicant/self-score',
     APPLICANT_PROFILE: '/applicant/profile',
     APPLICANT_SETTINGS: '/applicant/settings',
-    APPLICANT_BILLING: '/applicant/settings/billing',
+    APPLICANT_BILLING: '/applicant/billing',
 
     // HR
     HR_DASHBOARD: '/hr/dashboard',
@@ -31,7 +31,7 @@ export const ROUTES = {
     HR_CANDIDATES: '/hr/candidates',
     HR_ANALYTICS: '/hr/analytics',
     HR_SETTINGS: '/hr/settings',
-    HR_BILLING: '/hr/settings/billing',
+    HR_BILLING: '/hr/billing',
 
     // ADMIN
     ADMIN_DASHBOARD: '/admin/dashboard',
