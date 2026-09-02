@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Zap, CheckCircle2, History, QrCode, Loader2, ShieldCheck } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // Thêm useQueryClient
+import { Zap, ShieldCheck } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { subscriptionService } from '@/features/subscription/subscription.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import CheckoutModal from '@/components/billing/CheckoutModal';
+import PlanCard from '@/components/billing/PlanCard';
+import BillingLedger from '@/components/billing/BillingLedger';
 
 export default function HrBillingPage() {
     const queryClient = useQueryClient();
@@ -95,107 +97,26 @@ export default function HrBillingPage() {
             </div>
 
             {/* LƯỚI GÓI CƯỚC */}
-            <div id="pricing-grid" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="pricing-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {plans.map((plan: any) => {
-                    const isCurrent = planInfo?.current_plan_code === plan.plan_code;
-                    const isHighlighted = !!plan.badge;
+                    const isTopup = plan.billing_cycle_days === 0 && plan.current_price > 0;
+                    const isCurrentPlan = !isTopup && planInfo?.current_plan_code === plan.plan_code;
 
                     return (
-                        <div
+                        <PlanCard
                             key={plan.plan_code}
-                            className={`relative p-6 rounded-3xl border-2 transition-all flex flex-col ${isCurrent ? 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 opacity-60' : isHighlighted ? 'border-amber-400 shadow-sm bg-white dark:bg-slate-900' : 'border-slate-200 dark:border-slate-800 hover:border-primary-300 dark:hover:border-primary-700 bg-white dark:bg-slate-900'}`}
-                        >
-                            {isHighlighted && !isCurrent && (
-                                <div className="absolute -top-3 left-6 bg-linear-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
-                                    {plan.badge}
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-lg font-black text-slate-800 dark:text-white">{plan.name}</h3>
-                                {isCurrent && <span className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-1 rounded-md uppercase">Đang dùng</span>}
-                            </div>
-
-                            <div className="mb-4">
-                                <p className="text-2xl font-black text-slate-800 dark:text-white">
-                                    {plan.current_price === 0 ? 'Miễn phí' : plan.current_price.toLocaleString('vi-VN')} <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{plan.current_price > 0 && 'VNĐ'}</span>
-                                </p>
-                                <p className="text-sm text-slate-500 mt-1">/ {plan.billing_cycle_days === 0 ? 'Vĩnh viễn' : `${plan.billing_cycle_days} ngày`}</p>
-                            </div>
-
-                            <ul className="space-y-3 mb-6 flex-1">
-                                {plan.display_features?.map((feat: string, idx: number) => (
-                                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 font-medium">
-                                        <CheckCircle2 className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" /> {feat}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <button
-                                onClick={() => handleSubscribe(plan)}
-                                disabled={isCurrent || processingPlanCode !== null}
-                                className={`w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-colors disabled:opacity-50 ${isCurrent ? 'bg-slate-200 dark:bg-slate-700 text-slate-500' : 'bg-primary-600 hover:bg-primary-700 text-white shadow-md'}`}
-                            >
-                                {isCurrent ? 'Đang sử dụng' : processingPlanCode === plan.plan_code ? (
-                                    <><Loader2 className="w-4 h-4 animate-spin" /> Đang xử lý...</>
-                                ) : 'Nâng cấp ngay'}
-                            </button>
-                        </div>
-                    )
+                            plan={plan}
+                            isCurrentPlan={isCurrentPlan}
+                            isProcessing={processingPlanCode === plan.plan_code}
+                            onSubscribe={handleSubscribe}
+                            customButtonText="Nâng cấp ngay"
+                        />
+                    );
                 })}
             </div>
 
             {/* SỔ CÁI GIAO DỊCH */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-                        <History className="w-5 h-5 text-primary-500" /> Sổ cái Giao dịch (Ledger)
-                    </h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase text-slate-500 font-bold">
-                            <tr>
-                                <th className="p-4 pl-6">Thời gian</th>
-                                <th className="p-4">Nội dung / Hành động</th>
-                                <th className="p-4 text-center">Biến động Credit</th>
-                                <th className="p-4 text-center pr-6">Số dư</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {isTxLoading ? (
-                                <tr><td colSpan={4} className="p-8 text-center text-slate-500"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></td></tr>
-                            ) : transactions.length > 0 ? (
-                                transactions.map((tx: any) => {
-                                    const isAddition = tx.credit_cost < 0;
-                                    const displayCost = isAddition ? `+${Math.abs(tx.credit_cost)}` : `-${tx.credit_cost}`;
-
-                                    return (
-                                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                                            <td className="p-4 pl-6 text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
-                                                {new Date(tx.created_at).toLocaleString('vi-VN')}
-                                            </td>
-                                            <td className="p-4 text-sm font-bold text-slate-800 dark:text-white">
-                                                {tx.action_type.replace('UPGRADE_', 'Nâng cấp gói: ')}
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <span className={`px-2 py-1 rounded-md text-xs font-black ${isAddition ? 'bg-success-50 text-success-600 dark:bg-success-500/10' : 'bg-error-50 text-error-600 dark:bg-error-500/10'}`}>
-                                                    {displayCost}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-center pr-6 font-black text-slate-700 dark:text-slate-200">
-                                                {tx.balance_after}
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-                            ) : (
-                                <tr><td colSpan={4} className="p-8 text-center text-slate-500 font-medium">Chưa có giao dịch nào phát sinh.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <BillingLedger transactions={transactions} isLoading={isTxLoading} />
 
             <CheckoutModal
                 isOpen={isCheckoutModalOpen}

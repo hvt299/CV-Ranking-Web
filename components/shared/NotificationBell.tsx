@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Notification, NotificationReadStatus, ApplicationStatus, UserRole, NotificationType } from '@/types';
 import { applicationService } from '@/features/application/application.service';
 import { NOTIFICATION_CONFIG, APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
+import { ROUTES } from '@/constants/routes';
 
 export default function NotificationBell() {
     const { user, isAuthenticated, loading } = useAuthStore();
@@ -197,7 +198,7 @@ export default function NotificationBell() {
                     
                     {/* Nút Xem tất cả */}
                     <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl text-center">
-                        <a href="/notifications" className="text-sm font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline">
+                        <a href={ROUTES.APPLICANT_NOTIFICATIONS} className="text-sm font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline">
                             Xem tất cả thông báo
                         </a>
                     </div>

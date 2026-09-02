@@ -9,26 +9,24 @@ import ProFeatureLock from '@/components/shared/ProFeatureLock';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import { ROUTES } from '@/constants/routes';
+import { useCredits } from '@/hooks/useCredits';
 
 export default function AnalyticsPage() {
     const { hrViewMode } = useHRViewStore();
     const { user } = useAuthStore();
     const router = useRouter();
+    const { isPro, isLoading: isCreditsLoading } = useCredits();
 
     const [data, setData] = useState<any>(null);
-    const [isProActive, setIsProActive] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!user?.company_id || hrViewMode === 'MEMBER') return;
+        if (!user?.company_id || hrViewMode === 'MEMBER' || isCreditsLoading) return;
 
         const fetchAnalytics = async () => {
             try {
-                const res = await apiClient.get(`/companies/${user.company_id}/analytics`);
-                setIsProActive(res.data.is_pro_active);
-                if (res.data.is_pro_active) {
-                    setData(res.data.data);
-                }
+                const res = await apiClient.get(`/jobs/dashboard/metrics?scope=company`);
+                setData(res.data.data);
             } catch (error) {
                 console.error("Lỗi khi tải Analytics:", error);
             } finally {
@@ -36,8 +34,12 @@ export default function AnalyticsPage() {
             }
         };
 
-        fetchAnalytics();
-    }, [user?.company_id, hrViewMode]);
+        if (isPro) {
+            fetchAnalytics();
+        } else {
+            setIsLoading(false);
+        }
+    }, [user?.company_id, hrViewMode, isPro, isCreditsLoading]);
 
     if (hrViewMode === 'MEMBER') {
         return (
@@ -52,7 +54,7 @@ export default function AnalyticsPage() {
         );
     }
 
-    if (isLoading) {
+    if (isLoading || isCreditsLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-primary-500">
                 <Loader2 className="w-10 h-10 animate-spin mb-4" />
@@ -61,20 +63,20 @@ export default function AnalyticsPage() {
         );
     }
 
-    const funnelData = data?.funnel_chart || [];
-    const aiScoreData = data?.ai_score_distribution || [];
-    const trendData = data?.applications_trend || [];
+    const funnelData = data?.funnel_chart || [{ name: 'Lượt xem', value: 1200 }, { name: 'Ứng tuyển', value: 300 }, { name: 'Phỏng vấn', value: 45 }];
+    const aiScoreData = data?.ai_score_distribution || [{ name: 'Tốt', value: 40, color: '#10b981' }, { name: 'Khá', value: 35, color: '#3b82f6' }];
+    const trendData = data?.applications_trend || [{ date: '01/09', cv_count: 12 }, { date: '02/09', cv_count: 19 }];
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
                     <div className="flex items-center">
                         <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
                             Phân tích Hiệu suất
                         </h1>
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
-                            Pro
+                        <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-warning-500 to-warning-600 text-white uppercase tracking-widest shadow-sm">
+                            Enterprise
                         </span>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -83,7 +85,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="flex gap-2">
-                    <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl px-4 py-2.5 outline-none focus:border-primary-500 shadow-sm cursor-pointer disabled:opacity-50" disabled={!isProActive}>
+                    <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl px-4 py-2.5 outline-none focus:border-primary-500 shadow-sm cursor-pointer disabled:opacity-50" disabled={!isPro}>
                         <option value="30">30 ngày qua</option>
                         <option value="90">3 tháng qua</option>
                         <option value="all">Toàn thời gian</option>
@@ -92,10 +94,10 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="relative space-y-6">
-                {!isProActive && <ProFeatureLock />}
+                {!isPro && <ProFeatureLock description="Báo cáo chuyên sâu về phễu chuyển đổi và chất lượng ứng viên chỉ dành cho gói HR Enterprise." requiredTierName="Enterprise" title="Phân tích Tuyển dụng" />}
 
                 {/* BIỂU ĐỒ 3: LƯU LƯỢNG ỨNG TUYỂN FULL WIDTH */}
-                <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isProActive ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h3 className="font-black text-slate-800 dark:text-white text-lg">Lưu lượng Ứng tuyển (14 ngày)</h3>
@@ -127,7 +129,7 @@ export default function AnalyticsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* BIỂU ĐỒ 1: PHỄU TUYỂN DỤNG */}
-                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isProActive ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
                         <div className="flex items-center justify-between mb-8">
                             <div>
                                 <h3 className="font-black text-slate-800 dark:text-white text-lg">Phễu chuyển đổi (Funnel)</h3>
@@ -156,7 +158,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* BIỂU ĐỒ 2: PHÂN BỔ ĐIỂM AI */}
-                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isProActive ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
                         <div className="flex items-center justify-between mb-8">
                             <div>
                                 <h3 className="font-black text-slate-800 dark:text-white text-lg">Chất lượng Nguồn CV (AI)</h3>
@@ -169,21 +171,12 @@ export default function AnalyticsPage() {
                                 <PieChart>
                                     <Pie data={aiScoreData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
                                         {aiScoreData.map((entry: any, index: number) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell key={`cell-${index}`} fill={entry.color || 'var(--color-primary-500)'} />
                                         ))}
                                     </Pie>
                                     <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
                                 </PieChart>
                             </ResponsiveContainer>
-                        </div>
-
-                        <div className="flex justify-center gap-6 mt-4">
-                            {aiScoreData.map((item: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                    {item.name}
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>

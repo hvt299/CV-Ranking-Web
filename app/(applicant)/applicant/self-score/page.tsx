@@ -1,14 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, FileText, Briefcase, AlertTriangle, CheckCircle2, XCircle, ChevronDown, Award, Sparkles, Target, Zap, GraduationCap } from 'lucide-react';
+import { Bot, FileText, Briefcase, AlertTriangle, CheckCircle2, XCircle, ChevronDown, Award, Sparkles, Target, Zap, GraduationCap, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 import { applicationService } from '@/features/application/application.service';
 import { useExploreJobs } from '@/features/application/useApplication';
 import { getScoreTheme, getPenaltyReasons } from '@/utils/score';
+import { useCredits } from '@/hooks/useCredits';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import ProFeatureLock from '@/components/shared/ProFeatureLock';
+import { ROUTES } from '@/constants/routes';
 
 export default function SelfScorePage() {
     const { jobs, cvLibrary: cvs, isLoading: isLoadingData } = useExploreJobs();
+    const { isPro } = useCredits();
+
+    // Lấy thông tin gói cước để hiển thị chính xác hạn mức
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('applicant');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'app_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const maxScoresPerDay = currentPlan?.features?.max_self_scores_per_day || 3;
 
     const [selectedJob, setSelectedJob] = useState('');
     const [selectedCv, setSelectedCv] = useState('');
@@ -45,44 +59,40 @@ export default function SelfScorePage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto pb-20 animate-in fade-in duration-500">
-            {/* INLINE STYLES FOR SCANNING ANIMATION */}
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             <style dangerouslySetInnerHTML={{
                 __html: `
-                @keyframes scan-laser {
-                    0% { top: -10%; opacity: 0; }
-                    10% { opacity: 1; }
-                    90% { opacity: 1; }
-                    100% { top: 110%; opacity: 0; }
-                }
-                @keyframes slide-right {
-                    0% { left: -50%; }
-                    100% { left: 150%; }
-                }
+                @keyframes scan-laser { 0% { top: -10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 110%; opacity: 0; } }
+                @keyframes slide-right { 0% { left: -50%; } 100% { left: 150%; } }
                 .animate-scan-laser { animation: scan-laser 2s linear infinite; }
                 .animate-slide-right { animation: slide-right 1.5s ease-in-out infinite; }
             `}} />
 
-            {/* Header */}
+            {/* Header & Hạn mức (Quota) */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Tự đánh giá năng lực</h1>
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-md">
-                            Pro
-                        </span>
-                    </div>
+                <div className="flex-1">
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Tự đánh giá năng lực</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Sử dụng trí tuệ nhân tạo để đối chiếu CV của bạn với JD. Phân tích điểm mạnh, yếu và khả năng trúng tuyển.</p>
+                </div>
+                <div className="shrink-0 bg-info-50 dark:bg-info-500/10 border border-info-100 dark:border-info-500/20 p-3 rounded-2xl flex items-center gap-4 transition-colors">
+                    <div className="w-10 h-10 bg-info-100 dark:bg-info-500/20 text-info-600 dark:text-info-500 flex items-center justify-center rounded-xl">
+                        <Activity className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-info-600 dark:text-info-500 uppercase tracking-wider mb-0.5">Hạn mức theo gói</p>
+                        <p className="text-sm font-black text-info-700 dark:text-info-100">
+                            {maxScoresPerDay} lượt / ngày <span className="text-[10px] font-bold text-info-600 dark:text-info-500 ml-1 uppercase">(Reset 00:00)</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {/* BỐ CỤC 2 CỘT */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
-                {/* CỘT TRÁI: FORM (5 cols) */}
-                <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 lg:sticky lg:top-24">
-                    <div className="space-y-6">
-                        {/* BƯỚC 1: CHỌN JOB */}
+                {/* CỘT TRÁI: FORM (Đã gỡ bỏ sticky để không bị trôi lơ lửng) */}
+                <div className="lg:col-span-5 h-full bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
+                    <div className="space-y-6 flex-1 flex flex-col">
                         <div className="space-y-3">
                             <label className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <Briefcase className="w-4 h-4 text-primary-500" /> 1. Chọn vị trí muốn ứng tuyển
@@ -103,7 +113,6 @@ export default function SelfScorePage() {
                             </div>
                         </div>
 
-                        {/* BƯỚC 2: CHỌN CV */}
                         <div className="space-y-3">
                             <label className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-primary-500" /> 2. Chọn CV từ Thư viện
@@ -124,27 +133,59 @@ export default function SelfScorePage() {
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="mt-auto space-y-5 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <div className="p-4 bg-primary-50 dark:bg-primary-500/10 border border-primary-100 dark:border-primary-500/20 rounded-2xl">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 shrink-0 rounded-xl bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                                        <Target className="w-4 h-4" />
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm font-black text-slate-800 dark:text-white mb-1">
+                                            AI sẽ đánh giá những gì?
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            Độ khớp kỹ năng, kinh nghiệm, học vấn, mức độ phù hợp ngữ nghĩa
+                                            và các dấu hiệu bất thường trong CV.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between px-1">
+                                <span className="text-xs font-semibold text-slate-400">
+                                    Còn lại hôm nay
+                                </span>
+                                <span className="text-xs font-black text-primary-600 dark:text-primary-400">
+                                    {maxScoresPerDay} lượt
+                                </span>
+                            </div>
+
                             <button
-                                onClick={handleScore} disabled={isScoring || !selectedJob || !selectedCv}
+                                onClick={handleScore}
+                                disabled={isScoring || !selectedJob || !selectedCv}
                                 className="w-full py-4 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-primary-500/20 transition-all active:scale-[0.98]"
                             >
                                 {isScoring ? (
-                                    <><div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div> Đang phân tích...</>
+                                    <>
+                                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                                        Đang phân tích...
+                                    </>
                                 ) : (
-                                    <><Sparkles className="w-5 h-5" /> Bắt đầu phân tích AI</>
+                                    <>
+                                        <Sparkles className="w-5 h-5" />
+                                        Bắt đầu phân tích AI
+                                    </>
                                 )}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* CỘT PHẢI: ANIMATION & RESULTS (7 cols) */}
-                <div className="lg:col-span-7">
-
-                    {/* TRẠNG THÁI: CHƯA PHÂN TÍCH */}
+                {/* CỘT PHẢI: ANIMATION & RESULTS */}
+                <div className="lg:col-span-7 h-full">
                     {!isScoring && !result && (
-                        <div className="h-full min-h-100 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-sm">
+                        <div className="min-h-full flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-sm">
                             <div className="relative w-32 h-32 mb-6 mx-auto">
                                 <div className="absolute inset-0 bg-primary-500/10 blur-xl rounded-full"></div>
                                 <Bot className="w-full h-full text-slate-300 dark:text-slate-700 relative z-10" strokeWidth={1} />
@@ -154,30 +195,22 @@ export default function SelfScorePage() {
                         </div>
                     )}
 
-                    {/* TRẠNG THÁI: ĐANG PHÂN TÍCH (ANIMATION QUÉT CV VÀ JD) */}
                     {isScoring && (
-                        <div className="h-full min-h-100 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-sm relative overflow-hidden">
+                        <div className="min-h-full flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-sm relative overflow-hidden">
                             <div className="absolute inset-0 bg-primary-500/5 animate-pulse"></div>
 
                             <div className="flex items-center justify-center w-full max-w-md relative z-10 gap-4 sm:gap-8">
-                                {/* CV Doc */}
                                 <div className="w-20 h-28 sm:w-24 sm:h-32 bg-slate-50 dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
                                     <FileText className="w-10 h-10 text-primary-500 mb-2" />
                                     <span className="text-[10px] font-bold text-slate-400">YOUR CV</span>
-                                    {/* Laser scan line */}
                                     <div className="absolute top-0 left-0 w-full h-1 bg-primary-400 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan-laser" />
                                 </div>
-
-                                {/* Connection Line */}
                                 <div className="flex-1 h-1 bg-slate-100 dark:bg-slate-800 relative overflow-hidden rounded-full">
                                     <div className="absolute top-0 left-0 h-full w-1/3 bg-linear-to-r from-transparent via-primary-500 to-transparent animate-slide-right" />
                                 </div>
-
-                                {/* Job Description */}
                                 <div className="w-20 h-28 sm:w-24 sm:h-32 bg-slate-50 dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
                                     <Briefcase className="w-10 h-10 text-blue-500 mb-2" />
                                     <span className="text-[10px] font-bold text-slate-400">JOB REQ</span>
-                                    {/* Laser scan line with delay */}
                                     <div className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-scan-laser" style={{ animationDelay: '0.5s' }} />
                                 </div>
                             </div>
@@ -187,7 +220,6 @@ export default function SelfScorePage() {
                         </div>
                     )}
 
-                    {/* TRẠNG THÁI: KẾT QUẢ PHÂN TÍCH */}
                     {!isScoring && result && (() => {
                         const score = result.total_score || 0;
                         const theme = getScoreTheme(score);
@@ -203,8 +235,6 @@ export default function SelfScorePage() {
 
                                 {/* Khối Gauge & Các chỉ số */}
                                 <div className="flex flex-col md:flex-row gap-10 items-center justify-center mb-8">
-
-                                    {/* Vòng tròn Điểm */}
                                     <div className="text-center shrink-0">
                                         <div className="relative w-40 h-40 mx-auto">
                                             <svg className="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 48 48">
@@ -225,7 +255,6 @@ export default function SelfScorePage() {
                                         </div>
                                     </div>
 
-                                    {/* 4 Thanh Bar chi tiết */}
                                     <div className="w-full max-w-sm space-y-3">
                                         <ScoreRow icon={Target} label="Kỹ năng chuyên môn" score={breakdown.skills_score} colorClass="text-info-600 bg-info-100" />
                                         <ScoreRow icon={Zap} label="Độ khớp Ngữ nghĩa (AI)" score={breakdown.nlp_score} colorClass="text-primary-600 bg-primary-100" />
@@ -234,7 +263,7 @@ export default function SelfScorePage() {
                                     </div>
                                 </div>
 
-                                {/* Missing & Matched Skills */}
+                                {/* Missing & Matched Skills (Luôn hiển thị) */}
                                 <div className="space-y-6 mb-8">
                                     <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
                                         <h4 className="text-sm font-black flex items-center gap-2 mb-3 text-success-600 dark:text-success-400">
@@ -271,7 +300,7 @@ export default function SelfScorePage() {
                                     </div>
                                 </div>
 
-                                {/* Cảnh báo Penalty */}
+                                {/* Cảnh báo Penalty (Luôn hiển thị) */}
                                 {(breakdown.penalty_score > 0 || (breakdown.fraud_analysis?.reasons && breakdown.fraud_analysis.reasons.length > 0)) && (
                                     <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800/50 rounded-2xl flex items-start gap-3">
                                         <AlertTriangle className="w-5 h-5 text-error-500 shrink-0 mt-0.5" />
@@ -286,11 +315,65 @@ export default function SelfScorePage() {
                                     </div>
                                 )}
 
+                                {/* Khu vực AI Mentor (Mồi nhử bị làm mờ nếu ở gói Free) */}
+                                <div className="relative mt-8">
+                                    {!isPro && (
+                                        <ProFeatureLock
+                                            title="Mở khóa AI Mentor"
+                                            description="Biết điểm yếu là chưa đủ. Nâng cấp gói Plus để AI hướng dẫn bạn cách viết lại từng câu chữ, chèn keyword chuẩn ATS và tăng 80% tỷ lệ trúng tuyển."
+                                            requiredTierName="PLUS"
+                                            requiredTierLevel={1}
+                                        />
+                                    )}
+
+                                    <div className={`bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 ${!isPro ? 'filter blur-[6px] pointer-events-none select-none opacity-40' : ''}`}>
+                                        <h4 className="text-lg font-black flex items-center gap-2 mb-4 text-primary-600 dark:text-primary-400">
+                                            <Bot className="w-6 h-6" /> AI Mentor: Hướng dẫn khắc phục chi tiết
+                                        </h4>
+
+                                        <div className="space-y-4">
+                                            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                                <p className="font-bold text-sm text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4 text-amber-500" /> Tối ưu hóa Mô tả kinh nghiệm
+                                                </p>
+                                                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                    Thay vì viết chung chung, hãy sử dụng cấu trúc [Hành động] + [Kết quả] + [Công cụ]. Ví dụ: "Sử dụng ReactJS để tối ưu hóa hiệu suất ứng dụng, giảm 30% thời gian tải trang."
+                                                </p>
+                                            </div>
+                                            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                                <p className="font-bold text-sm text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4 text-amber-500" /> Bổ sung Keyword chuẩn ATS
+                                                </p>
+                                                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                    Hệ thống nhận thấy bạn đang thiếu các keyword quan trọng mà JD yêu cầu. Khuyến nghị chèn thêm các từ khóa: <strong className="text-slate-800 dark:text-white">Microservices, Docker, CI/CD</strong> vào phần kỹ năng chuyên môn.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         );
                     })()}
                 </div>
             </div>
+
+            {/* BANNER MỒI NHỬ GLOBAL (Chỉ hiển thị khi người dùng là gói Free, xuất hiện kể cả khi chưa chấm điểm) */}
+            {!isPro && (
+                <div className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-8 border border-primary-200 dark:border-primary-800/50 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 transition-colors">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2 mb-2">
+                            <Sparkles className="w-6 h-6 text-warning-500" /> Mở khóa AI Mentor: Sửa CV theo thời gian thực
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm max-w-2xl">
+                            Khám phá tiềm năng trúng tuyển của bạn. Nâng cấp gói <strong className="text-slate-800 dark:text-slate-200">Plus</strong> để AI phân tích chuyên sâu từng câu chữ, gợi ý cách viết lại và chèn keyword chuẩn ATS giúp tăng 80% cơ hội qua vòng hồ sơ.
+                        </p>
+                    </div>
+                    <Link href={ROUTES.APPLICANT_BILLING} className="relative z-10 shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md shadow-primary-500/20 transition-all">
+                        Nâng cấp ngay
+                    </Link>
+                </div>
+            )}
         </div>
     );
 }

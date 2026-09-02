@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle2, Zap, HelpCircle, Loader2, Building2, User } from 'lucide-react';
+import { CreditCard, HelpCircle, Loader2, Building2, User } from 'lucide-react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
@@ -12,11 +14,22 @@ import { subscriptionService } from '@/features/subscription/subscription.servic
 import { useSubscription } from '@/hooks/useSubscription';
 import { ROUTES } from '@/constants/routes';
 
+import PlanCard from '@/components/billing/PlanCard';
+import CheckoutModal from '@/components/billing/CheckoutModal';
+
 export default function PricingPage() {
     const { isAuthenticated, user } = useAuthStore();
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
     const [isScrolled, setIsScrolled] = useState(false);
     const [audience, setAudience] = useState<'hr' | 'applicant'>('hr');
+    const [cycleFilter, setCycleFilter] = useState<'monthly' | 'yearly' | 'topup'>('monthly');
     const { data: myPlan } = useSubscription();
+
+    const [checkoutData, setCheckoutData] = useState<any>(null);
+    const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+    const [processingPlanCode, setProcessingPlanCode] = useState<string | null>(null);
 
     const { data: plansRes, isLoading } = useQuery({
         queryKey: ['subscription-plans', audience],
@@ -31,9 +44,27 @@ export default function PricingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const formatPrice = (price: number) => {
-        if (price === 0) return 'Miễn phí';
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    const handleSubscribe = async (plan: any) => {
+        if (!isAuthenticated) {
+            router.push(ROUTES.REGISTER);
+            return;
+        }
+
+        if (plan.current_price === 0) {
+            toast.error('Gói miễn phí đã được kích hoạt mặc định.');
+            return;
+        }
+
+        try {
+            setProcessingPlanCode(plan.plan_code);
+            const res = await subscriptionService.createCheckoutSession(plan.plan_code);
+            setCheckoutData(res.data);
+            setIsCheckoutModalOpen(true);
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || 'Không thể tạo phiên thanh toán.');
+        } finally {
+            setProcessingPlanCode(null);
+        }
     };
 
     return (
@@ -44,7 +75,7 @@ export default function PricingPage() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]" />
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
 
-                <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+                <div className="max-w-7xl mx-auto px-6 relative z-5 text-center">
                     <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-primary-200 dark:border-primary-800/50">
                         <CreditCard className="w-8 h-8" />
                     </div>
@@ -56,87 +87,76 @@ export default function PricingPage() {
                     </p>
 
                     {/* Bộ lọc Đối tượng */}
-                    <div className="mt-8 inline-flex items-center p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-                        <button
-                            onClick={() => setAudience('hr')}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${audience === 'hr' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Building2 className="w-4 h-4" /> Nhà tuyển dụng
-                        </button>
-                        <button
-                            onClick={() => setAudience('applicant')}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${audience === 'applicant' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <User className="w-4 h-4" /> Ứng viên
-                        </button>
+                    <div className="mt-8 flex flex-col items-center gap-4">
+                        <div className="inline-flex items-center p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <button
+                                onClick={() => setAudience('hr')}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${audience === 'hr' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                <Building2 className="w-4 h-4" /> Nhà tuyển dụng
+                            </button>
+                            <button
+                                onClick={() => setAudience('applicant')}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${audience === 'applicant' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                <User className="w-4 h-4" /> Ứng viên
+                            </button>
+                        </div>
+
+                        {/* Bộ lọc Chu kỳ */}
+                        <div className="inline-flex items-center p-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <button
+                                onClick={() => setCycleFilter('monthly')}
+                                className={`px-5 py-2 text-sm rounded-lg font-bold transition-all ${cycleFilter === 'monthly' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                Gói Tháng
+                            </button>
+                            <button
+                                onClick={() => setCycleFilter('yearly')}
+                                className={`px-5 py-2 text-sm rounded-lg font-bold transition-all ${cycleFilter === 'yearly' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                Gói Năm (Tiết kiệm)
+                            </button>
+                            <button
+                                onClick={() => setCycleFilter('topup')}
+                                className={`px-5 py-2 text-sm rounded-lg font-bold transition-all ${cycleFilter === 'topup' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                Nạp Lẻ Credit
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-16 -mt-16 relative z-20">
+            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 w-full py-16 -mt-16 relative z-5">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
                         <p className="text-slate-500 font-medium">Đang tải bảng giá...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-                        {plans.map((plan: any) => {
-                            const isHighlighted = !!plan.badge;
-                            // [MỚI] So khớp gói hiện tại thông qua API myPlan. Phải check data bên trong myPlanRes
-                            const isCurrentPlan = myPlan?.data?.current_plan_code === plan.plan_code;
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch justify-center">
+                        {plans.filter((plan: any) => {
+                            if (plan.billing_cycle_days === 0 && plan.current_price === 0) {
+                                return cycleFilter === 'monthly' || cycleFilter === 'yearly';
+                            }
+                            if (cycleFilter === 'monthly') return plan.billing_cycle_days === 30;
+                            if (cycleFilter === 'yearly') return plan.billing_cycle_days === 365;
+                            if (cycleFilter === 'topup') return plan.billing_cycle_days === 0 && plan.current_price > 0;
+                            return true;
+                        }).map((plan: any) => {
+                            const isTopup = plan.billing_cycle_days === 0 && plan.current_price > 0;
+                            const isCurrentPlan = !isTopup && myPlan?.data?.current_plan_code === plan.plan_code;
 
                             return (
-                                <div key={plan.id} className={`relative flex flex-col h-full bg-white dark:bg-[#0a0a0a] rounded-3xl p-6 shadow-sm transition-all duration-300 ${isHighlighted ? 'border-2 border-amber-400 shadow-primary-500/10 md:-translate-y-2' : 'border border-slate-200 dark:border-slate-800'}`}>
-                                    {isHighlighted && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-linear-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md whitespace-nowrap">
-                                            <Zap className="w-3 h-3" /> {plan.badge}
-                                        </div>
-                                    )}
-
-                                    <div className="mb-6 text-center border-b border-slate-100 dark:border-slate-800 pb-6">
-                                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">{plan.name}</h3>
-                                        <p className="text-xs text-slate-500 mb-4 min-h-8">{plan.description || ''}</p>
-
-                                        <div className="flex flex-col items-center justify-center gap-1">
-                                            {plan.original_price > plan.current_price && (
-                                                <span className="text-sm text-slate-400 line-through">
-                                                    {formatPrice(plan.original_price)}
-                                                </span>
-                                            )}
-                                            <span className="text-3xl font-black text-slate-900 dark:text-white">
-                                                {formatPrice(plan.current_price)}
-                                            </span>
-                                            <span className="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1">
-                                                {(!plan.billing_cycle_days || plan.billing_cycle_days === 0)
-                                                    ? 'Vĩnh viễn'
-                                                    : `/ ${plan.billing_cycle_days} ngày`}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <ul className="space-y-3 mb-8 flex-1">
-                                        {plan.display_features?.map((featureText: string, index: number) => (
-                                            <li key={index} className="flex items-start gap-2">
-                                                <CheckCircle2 className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
-                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                                                    {featureText}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {isCurrentPlan ? (
-                                        <button disabled className="w-full py-3 rounded-xl font-bold flex items-center justify-center transition-colors text-sm bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed">
-                                            Đang sử dụng
-                                        </button>
-                                    ) : (
-                                        <Link href={isAuthenticated ? `/${audience}/settings/billing?plan=${plan.plan_code}` : ROUTES.REGISTER}
-                                            className={`w-full py-3 rounded-xl font-bold flex items-center justify-center transition-colors text-sm ${isHighlighted ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-500/20' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                                            {isAuthenticated ? 'Chọn gói này' : 'Bắt đầu ngay'}
-                                        </Link>
-                                    )}
-                                </div>
+                                <PlanCard
+                                    key={plan.id || plan.plan_code}
+                                    plan={plan}
+                                    isCurrentPlan={isCurrentPlan}
+                                    isProcessing={processingPlanCode === plan.plan_code}
+                                    onSubscribe={handleSubscribe}
+                                    customButtonText={isAuthenticated ? 'Chọn gói này' : 'Bắt đầu ngay'}
+                                />
                             );
                         })}
                     </div>
@@ -156,6 +176,17 @@ export default function PricingPage() {
             </main>
 
             <PublicFooter />
+
+            <CheckoutModal
+                isOpen={isCheckoutModalOpen}
+                onClose={() => setIsCheckoutModalOpen(false)}
+                checkoutData={checkoutData}
+                initialCredits={myPlan?.data?.credits_remaining || 0}
+                onSuccess={() => {
+                    setIsCheckoutModalOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+                }}
+            />
         </div>
     );
 }

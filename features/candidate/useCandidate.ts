@@ -3,8 +3,10 @@ import { candidateService } from './candidate.service';
 import { jobService } from '@/features/job/job.service';
 import { CV, Job, JobStatus } from '@/types';
 import toast from 'react-hot-toast';
+import { useCredits } from '@/hooks/useCredits';
 
 export function useTalentPool() {
+    const { checkCredits, invalidateCredits } = useCredits();
     const [candidates, setCandidates] = useState<CV[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -84,9 +86,16 @@ export function useTalentPool() {
 
     const mapCvToJob = async (cvId: string, jobId: string) => {
         if (!cvId || !jobId) return toast.error("Vui lòng chọn một chiến dịch!");
+
+        // 1. Gatekeeper Check (Giả định giá 1 action = 1 Credit)
+        if (!checkCredits(1, "Chấm điểm CV AI")) return false;
+
         try {
             await candidateService.mapCvToJob(cvId, jobId);
             toast.success("Đã đưa ứng viên vào chiến dịch & bắt đầu chấm điểm AI!");
+
+            // 2. Đồng bộ số dư
+            invalidateCredits();
             return true;
         } catch (error: any) {
             toast.error(error.response?.data?.detail || "Lỗi khi ghép CV");
@@ -97,6 +106,9 @@ export function useTalentPool() {
     const mapMultipleCvsToJob = async (cvIds: string[], jobId: string) => {
         if (!cvIds || cvIds.length === 0 || !jobId) return toast.error("Vui lòng chọn ứng viên và chiến dịch!");
 
+        // 1. Gatekeeper Check (Giả định Batch Cost = số lượng CV)
+        if (!checkCredits(cvIds.length, "Chấm điểm hàng loạt")) return false;
+
         setIsMapping(true);
         try {
             const res = await candidateService.mapMultipleCvsToJob(cvIds, jobId);
@@ -106,6 +118,9 @@ export function useTalentPool() {
                 if (res.errors && res.errors.length > 0) {
                     toast.error(`Có ${res.errors.length} hồ sơ gặp lỗi khi ghép.`);
                 }
+
+                // 2. Đồng bộ số dư
+                invalidateCredits();
                 return true;
             } else {
                 toast.error("Không có hồ sơ nào được ghép thành công.");

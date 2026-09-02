@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard } from 'lucide-react';
+import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard, Zap } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
@@ -10,6 +10,7 @@ import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 import { ROUTES } from '@/constants/routes';
 import { useSubscription } from '@/hooks/useSubscription';
+import { cn } from '@/utils/utils';
 
 interface HeaderProps {
     setIsMobileOpen: (val: boolean) => void;
@@ -108,7 +109,16 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                     {getRoleDisplayName()}
                                 </span>
                                 {planInfo?.current_plan && role !== UserRole.ADMIN && (
-                                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                                    <span className={cn(
+                                        "text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider border",
+                                        planInfo.current_plan_code?.includes('enterprise') || planInfo.current_plan_code?.includes('vip')
+                                            ? "bg-linear-to-r from-warning-500 to-warning-600 text-white border-warning-400"
+                                            : planInfo.current_plan_code?.includes('pro') || planInfo.current_plan_code?.includes('premium')
+                                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800"
+                                                : planInfo.current_plan_code?.includes('starter') || planInfo.current_plan_code?.includes('plus')
+                                                    ? "bg-info-50 dark:bg-info-900/30 text-info-600 dark:text-info-400 border-info-200 dark:border-info-800"
+                                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                                    )}>
                                         {planInfo.current_plan.replace('HR ', '').replace('Ứng viên ', '')}
                                     </span>
                                 )}
@@ -124,14 +134,23 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">{user?.email || 'email@example.com'}</p>
 
                                 {role !== UserRole.ADMIN && planInfo && (
-                                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg mt-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase">Gói hiện tại</span>
-                                            <span className="text-xs font-black text-primary-600 truncate max-w-20">{planInfo.current_plan}</span>
+                                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg mt-2 gap-3">
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Gói hiện tại</span>
+                                            {/* Bỏ max-w-20, dùng truncate để tự động cắt nếu quá dài, nhưng ưu tiên flex-1 */}
+                                            <span className="text-xs font-black text-primary-600 truncate" title={planInfo.current_plan}>
+                                                {planInfo.current_plan}
+                                            </span>
                                         </div>
-                                        <div className="flex flex-col text-right">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase">Credit</span>
-                                            <span className="text-xs font-black text-slate-800 dark:text-white">{planInfo.credits_remaining || 0}</span>
+                                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                                        <div className="flex flex-col items-end shrink-0">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Credit</span>
+                                            <div className="flex items-center gap-1">
+                                                <Zap className="w-3.5 h-3.5 text-amber-500" fill="currentColor" />
+                                                <span className="text-xs font-black text-slate-800 dark:text-white">
+                                                    {(planInfo.credits_remaining || 0).toLocaleString('vi-VN')}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

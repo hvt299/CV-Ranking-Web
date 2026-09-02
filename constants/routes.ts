@@ -21,6 +21,7 @@ export const ROUTES = {
     APPLICANT_PROFILE: '/applicant/profile',
     APPLICANT_SETTINGS: '/applicant/settings',
     APPLICANT_BILLING: '/applicant/billing',
+    APPLICANT_NOTIFICATIONS: '/applicant/notifications',
 
     // HR
     HR_DASHBOARD: '/hr/dashboard',

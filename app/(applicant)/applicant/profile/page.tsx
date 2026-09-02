@@ -4,7 +4,7 @@ import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function ProfilePage() {
     return (
-        <div className="max-w-7xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Hồ sơ cá nhân</h1>

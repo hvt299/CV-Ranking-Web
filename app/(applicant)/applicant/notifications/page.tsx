@@ -75,7 +75,7 @@ export default function NotificationsPage() {
     const unreadCount = notifications.filter(n => n.status === NotificationReadStatus.UNREAD).length;
 
     return (
-        <div className="max-w-7xl mx-auto pb-20 space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
