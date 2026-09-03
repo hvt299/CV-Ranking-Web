@@ -11,6 +11,9 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/useAuthStore';
 import { jobService } from '@/features/job/job.service';
 import { LocationDetail } from '@/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
 
 import Step1Basic from '@/components/jobs/form/Step1Basic';
 import Step2LocationSalary from '@/components/jobs/form/Step2LocationSalary';
@@ -28,6 +31,24 @@ export default function EditEnterpriseJobPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [currentStep, setCurrentStep] = useState(1);
+
+    // Tracking edit count
+    const [currentEditCount, setCurrentEditCount] = useState(0);
+
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+
+    const unlockPlan = plansRes?.data?.find(
+        (p: any) => p.features?.can_customize_ai_weights
+    );
+    const unlockPlanName = unlockPlan?.name || 'Enterprise';
+    const unlockBadgeConfig = getTierBadgeConfig(unlockPlan?.tier_level || 3);
+
+    const maxJobEdits = currentPlan?.features?.max_job_edits || 5;
+    const isEditQuotaExceeded = currentEditCount >= maxJobEdits;
 
     const [formData, setFormData] = useState({
         title: '', industry: '', job_level: 'Middle', employment_type: 'Full-time', work_mode: 'Onsite', headcount: 1,
@@ -53,6 +74,9 @@ export default function EditEnterpriseJobPage() {
         setIsFetching(true);
         try {
             const data = await jobService.getJobById(jobId);
+
+            // Ghi nhận số lần đã sửa
+            setCurrentEditCount(data.edit_count || 0);
 
             setFormData({
                 title: data.title || '',
@@ -194,7 +218,7 @@ export default function EditEnterpriseJobPage() {
         { id: 2, title: 'Đãi ngộ & Vị trí', icon: MapPin },
         { id: 3, title: 'Nội dung JD', icon: FileText },
         { id: 4, title: 'Tiêu chí', icon: GraduationCap },
-        { id: 5, title: 'Kỹ năng & AI', icon: BrainCircuit, isPro: true }
+        { id: 5, title: 'Kỹ năng & AI', icon: BrainCircuit }
     ];
 
     if (isFetching) {
@@ -236,24 +260,47 @@ export default function EditEnterpriseJobPage() {
                         const Icon = step.icon;
                         const isActive = currentStep === step.id;
                         const isCompleted = currentStep > step.id;
+
                         return (
                             <div key={step.id} className="flex flex-col items-center relative group">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4 ${isActive ? 'bg-primary-600 text-white border-primary-100 dark:border-primary-900 shadow-lg scale-110' : isCompleted ? 'bg-emerald-500 text-white border-emerald-100 dark:border-emerald-900' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-600'}`}>
-                                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
-                                </div>
-                                <span className={`absolute -bottom-8 w-32 flex items-center justify-center text-center text-xs font-bold transition-colors ${isActive ? 'text-primary-600 dark:text-primary-400' : isCompleted ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}>
-                                    {step.title}
-                                    {step.isPro && (
-                                        <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
-                                            Pro
-                                        </span>
+                                <div
+                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4 ${isActive
+                                        ? 'bg-primary-600 text-white border-primary-100 dark:border-primary-900 shadow-lg scale-110'
+                                        : isCompleted
+                                            ? 'bg-emerald-500 text-white border-emerald-100 dark:border-emerald-900'
+                                            : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-600'
+                                        }`}
+                                >
+                                    {isCompleted ? (
+                                        <CheckCircle2 className="w-6 h-6" />
+                                    ) : (
+                                        <Icon className="w-5 h-5" />
                                     )}
-                                </span>
+                                </div>
+
+                                <div
+                                    className={`absolute top-15 left-1/2 -translate-x-1/2 w-40 text-center text-xs font-bold ${isActive
+                                        ? 'text-primary-600 dark:text-primary-400'
+                                        : isCompleted
+                                            ? 'text-emerald-600 dark:text-emerald-500'
+                                            : 'text-slate-400 dark:text-slate-500'
+                                        }`}
+                                >
+                                    <div>{step.title}</div>
+
+                                    {step.id === 5 && (
+                                        <div
+                                            className={`w-fit mx-auto mt-1.5 px-2 py-0.5 rounded-md text-[9px] font-black border uppercase tracking-widest shadow-sm ${unlockBadgeConfig.bg} ${unlockBadgeConfig.text} ${unlockBadgeConfig.border}`}
+                                        >
+                                            {unlockPlanName.replace('HR ', '')}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )
+                        );
                     })}
                 </div>
-                <div className="h-8"></div>
+                <div className="h-12"></div>
             </div>
 
             {/* CONTENT RENDER */}
@@ -283,9 +330,17 @@ export default function EditEnterpriseJobPage() {
                         Tiếp tục <ChevronRight className="w-4 h-4" />
                     </button>
                 ) : (
-                    <button type="submit" disabled={isLoading} className="px-8 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-colors">
-                        <Save className="w-5 h-5" /> {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
-                    </button>
+                    <div className="relative flex items-center gap-4 group">
+                        <span className="text-xs font-bold text-slate-500">Đã sửa: {currentEditCount}/{maxJobEdits} lần</span>
+                        <button type="submit" disabled={isLoading || isEditQuotaExceeded} className="px-8 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/30 disabled:shadow-none flex items-center gap-2 transition-colors">
+                            <Save className="w-5 h-5" /> {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                        </button>
+                        {isEditQuotaExceeded && (
+                            <div className="absolute bottom-full right-0 mb-2 w-max px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                Đã hết số lần sửa cho phép. Vui lòng tạo Job mới.
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </form>

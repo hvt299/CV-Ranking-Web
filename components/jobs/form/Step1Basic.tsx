@@ -1,8 +1,11 @@
 'use client';
 
 import Select from 'react-select';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Flame } from 'lucide-react';
 import { GROUPED_INDUSTRIES, JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import ProFeatureLock from '@/components/shared/ProFeatureLock';
 import { useTheme } from 'next-themes';
 
 interface Step1Props {
@@ -13,6 +16,17 @@ interface Step1Props {
 export default function Step1Basic({ formData, setFormData }: Step1Props) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+
+    // Kéo dữ liệu Subscription để check quyền gắn nhãn HOT
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const canSetHotJob = currentPlan?.features?.can_set_hot_job || false;
+    
+    // Tìm gói cước mở khóa tính năng HOT
+    const unlockHotPlan = plansRes?.data?.find((p: any) => p.features?.can_set_hot_job);
+    const unlockHotPlanName = unlockHotPlan?.name || 'Enterprise';
 
     const customSelectStyles = {
         control: (base: any, state: any) => ({
@@ -43,12 +57,46 @@ export default function Step1Basic({ formData, setFormData }: Step1Props) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Tên vị trí tuyển dụng <span className="text-rose-500">*</span></label>
-                    <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-primary-500 dark:text-white shadow-sm transition-colors" placeholder="VD: Senior ReactJS Developer" />
+                <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div className="flex-1 w-full">
+                        <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Tên vị trí tuyển dụng <span className="text-rose-500">*</span></label>
+                        <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-primary-500 dark:text-white shadow-sm transition-colors" placeholder="VD: Senior ReactJS Developer" />
+                    </div>
+
+                    {/* Block Gắn nhãn HOT */}
+                    <div className="shrink-0 w-full sm:w-auto relative group">
+                        <label className={`flex items-center gap-3 h-12.5 px-4 rounded-xl border transition-all ${formData.is_hot ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'} ${!canSetHotJob ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+                            <div className={`p-1.5 rounded-lg ${formData.is_hot ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}>
+                                <Flame className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-800 dark:text-white leading-tight">Gắn nhãn HOT</span>
+                                <span className="text-[10px] text-slate-500 font-medium mt-0.5">Tăng x3 lượt tiếp cận</span>
+                            </div>
+
+                            {/* Nút Toggle */}
+                            <div className="ml-2 relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none" style={{ backgroundColor: formData.is_hot ? '#f97316' : '#cbd5e1' }}>
+                                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${formData.is_hot ? 'translate-x-5' : 'translate-x-1'}`} />
+                                <input
+                                    type="checkbox"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                    checked={formData.is_hot || false}
+                                    disabled={!canSetHotJob}
+                                    onChange={e => setFormData({ ...formData, is_hot: e.target.checked })}
+                                />
+                            </div>
+                        </label>
+
+                        {/* Tooltip báo lỗi nếu không có quyền */}
+                        {!canSetHotJob && (
+                            <div className="absolute -bottom-10 right-0 w-max px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                Tính năng chỉ dành cho gói {unlockHotPlanName.replace('HR ', '')}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="dark:text-slate-900 relative z-50">
+                <div className="dark:text-slate-900 relative z-10">
                     <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Ngành nghề (Industry)</label>
                     <Select
                         options={GROUPED_INDUSTRIES}
@@ -59,7 +107,7 @@ export default function Step1Basic({ formData, setFormData }: Step1Props) {
                     />
                 </div>
 
-                <div className="dark:text-slate-900 relative z-40">
+                <div className="dark:text-slate-900 relative z-10">
                     <label className="block text-sm font-bold mb-2 text-slate-700 dark:text-slate-300">Cấp bậc (Level)</label>
                     <Select
                         options={JOB_LEVELS}

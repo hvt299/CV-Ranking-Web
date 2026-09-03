@@ -37,5 +37,8 @@ export function useCredits() {
     // Trích xuất thông tin gói để khóa UI (ProFeatureLock)
     const isPro = subscription?.current_plan_code && subscription.current_plan_code !== 'hr_free' && subscription.current_plan_code !== 'app_free';
 
-    return { subscription, isLoading, checkCredits, invalidateCredits, isPro };
+    // Feature flag cụ thể cho AI Mentor
+    const canUseAiCvReview = subscription?.features?.can_use_ai_cv_review === true;
+
+    return { subscription, isLoading, checkCredits, invalidateCredits, isPro, canUseAiCvReview };
 }

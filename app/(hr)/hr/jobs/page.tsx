@@ -5,11 +5,13 @@ import Link from 'next/link';
 import {
     Plus, Search, Edit2, Trash2, Briefcase, Calendar,
     MapPin, Filter, Clock, Users, ArrowUpRight, Flame,
-    CheckSquare, X, ChevronLeft, ChevronRight, Check
+    CheckSquare, X, ChevronLeft, ChevronRight, Check, Activity
 } from 'lucide-react';
 import { useJobList, useJobRanking } from '@/features/job/useJob';
 import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
 import { ROUTES } from '@/constants/routes';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 
 function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any, deleteJob: (id: string) => void, isSelected: boolean, onToggleSelect: (id: string) => void }) {
     const { candidates, isLoading: isRankingLoading } = useJobRanking(job.id);
@@ -104,6 +106,16 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
 export default function JobsListPage() {
     const { jobs, isLoading, deleteJob } = useJobList();
 
+    // Lấy thông tin gói cước của HR để tính toán số lượng Job đang mở / Tối đa
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const maxActiveJobs = currentPlan?.features?.max_active_jobs || 1;
+
+    // Đếm số lượng Job đang ở trạng thái OPEN
+    const activeJobsCount = jobs.filter(job => job.status === 'open' && (!job.deadline || new Date(job.deadline).getTime() > new Date().getTime())).length;
+
     const [searchTerm, setSearchTerm] = useState('');
     const [filterLevel, setFilterLevel] = useState('');
     const [filterType, setFilterType] = useState('');
@@ -149,17 +161,49 @@ export default function JobsListPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             {/* KHỐI 1: HEADER & ACTIONS */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex-1">
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Chiến dịch Tuyển dụng</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các Job Description và phễu ứng viên của doanh nghiệp.</p>
                 </div>
-                <Link
-                    href={ROUTES.HR_JOB_CREATE}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20"
-                >
-                    <Plus className="w-4 h-4" /> Tạo chiến dịch mới
-                </Link>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
+                    {/* Hiển thị hạn mức Số lượng Chiến dịch */}
+                    <div className="bg-info-50 dark:bg-info-500/10 border border-info-100 dark:border-info-500/20 p-2.5 pr-4 rounded-2xl flex items-center gap-3 transition-colors">
+                        <div className="w-10 h-10 bg-info-100 dark:bg-info-500/20 text-info-600 dark:text-info-500 flex items-center justify-center rounded-xl shrink-0">
+                            <Activity className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-info-600 dark:text-info-500 uppercase tracking-wider mb-0.5">Chiến dịch đang mở</p>
+                            <p className="text-sm font-black text-info-700 dark:text-info-100">
+                                <span className={activeJobsCount >= maxActiveJobs ? "text-error-600 dark:text-error-500" : ""}>{activeJobsCount}</span> / {maxActiveJobs} chiến dịch
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Nút Tạo chiến dịch bị vô hiệu hóa nếu quá hạn mức */}
+                    {activeJobsCount >= maxActiveJobs ? (
+                        <div className="relative group cursor-not-allowed">
+                            <button
+                                disabled
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-sm font-bold rounded-xl transition-all shadow-sm"
+                            >
+                                <Plus className="w-4 h-4" /> Tạo chiến dịch mới
+                            </button>
+                            {/* Tooltip báo lỗi */}
+                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                Đã đạt giới hạn gói cước
+                            </div>
+                        </div>
+                    ) : (
+                        <Link
+                            href={ROUTES.HR_JOB_CREATE}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20 shrink-0"
+                        >
+                            <Plus className="w-4 h-4" /> Tạo chiến dịch mới
+                        </Link>
+                    )}
+                </div>
             </div>
 
             {/* KHỐI 2: FILTER & SEARCH */}

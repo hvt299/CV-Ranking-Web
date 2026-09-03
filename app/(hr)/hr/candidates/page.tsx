@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
     Search, GraduationCap, Briefcase, UploadCloud, FolderOutput,
-    LayoutList, LayoutGrid, X, Trash2, CheckSquare, ChevronLeft, ChevronRight
+    LayoutList, LayoutGrid, X, Trash2, CheckSquare, ChevronLeft, ChevronRight, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
@@ -17,6 +17,8 @@ import DocumentViewer from '@/components/shared/DocumentViewer';
 import { CV } from '@/types';
 import { useTalentPool } from '@/features/candidate/useCandidate';
 import { EDUCATION_LEVELS, EXPERIENCE_RANGES } from '@/constants/job.constants';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 
 export default function TalentPoolPage() {
     const { theme } = useTheme();
@@ -42,6 +44,13 @@ export default function TalentPoolPage() {
         candidates, jobs, isLoading, isUploading, uploadProgress, isMapping,
         uploadFiles, deleteCV, mapCvToJob, mapMultipleCvsToJob
     } = useTalentPool();
+
+    // Lấy thông tin gói cước của HR để hiển thị hạn mức Parse CV
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const maxCvParses = currentPlan?.features?.max_cv_parses_per_month || 20;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEducation, setFilterEducation] = useState('');
@@ -171,25 +180,41 @@ export default function TalentPoolPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             {/* HEADER & VIEW TOGGLE */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex-1">
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Kho hồ sơ</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Lưu trữ tập trung. Phân tích 1 lần, ứng tuyển nhiều dự án.</p>
                 </div>
 
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0 self-start md:self-auto border border-slate-200 dark:border-slate-700">
-                    <button
-                        onClick={() => toggleViewMode('list')}
-                        className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        <LayoutList className="w-4 h-4" /> <span className="hidden sm:inline">Danh sách</span>
-                    </button>
-                    <button
-                        onClick={() => toggleViewMode('grid')}
-                        className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        <LayoutGrid className="w-4 h-4" /> <span className="hidden sm:inline">Lưới</span>
-                    </button>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
+                    {/* Hiển thị hạn mức Parse CV theo chuẩn UI/UX */}
+                    <div className="bg-info-50 dark:bg-info-500/10 border border-info-100 dark:border-info-500/20 p-2.5 pr-4 rounded-2xl flex items-center gap-3 transition-colors">
+                        <div className="w-10 h-10 bg-info-100 dark:bg-info-500/20 text-info-600 dark:text-info-500 flex items-center justify-center rounded-xl shrink-0">
+                            <Activity className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-info-600 dark:text-info-500 uppercase tracking-wider mb-0.5">Hạn mức Parse CV</p>
+                            <p className="text-sm font-black text-info-700 dark:text-info-100">
+                                Tối đa {maxCvParses} CV / tháng
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* View Toggle */}
+                    <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl shrink-0 border border-slate-200 dark:border-slate-700/50">
+                        <button
+                            onClick={() => toggleViewMode('list')}
+                            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <LayoutList className="w-4 h-4" /> <span className="hidden sm:inline">Danh sách</span>
+                        </button>
+                        <button
+                            onClick={() => toggleViewMode('grid')}
+                            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <LayoutGrid className="w-4 h-4" /> <span className="hidden sm:inline">Lưới</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

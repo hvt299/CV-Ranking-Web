@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 import { UserRole } from "@/types";
 import { cn } from "@/utils/utils";
+import { getTierBadgeConfig } from "@/utils/tier-colors";
 import { useEffect, useState } from "react";
 import { ROUTES } from "@/constants/routes";
 
@@ -98,13 +99,20 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const showText = !isCollapsed || isMobileOpen;
 
-            // Xử lý màu sắc riêng biệt cho tính năng cao cấp (Level 2: Warning/Gold, Level 1: Primary/Blue)
-            const isGold = (item.requiredTierLevel || 0) >= 2;
-            const activeBgClass = isGold
+            const tierLevel = item.requiredTierLevel || 0;
+            const tierConfig = getTierBadgeConfig(tierLevel);
+
+            const activeBgClass = tierLevel === 3
                 ? "bg-warning-50 dark:bg-warning-500/10 text-warning-600 dark:text-warning-500"
                 : "bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400";
-            const indicatorClass = isGold ? "bg-warning-500" : "bg-primary-600";
-            const iconActiveClass = isGold ? "text-warning-600 dark:text-warning-500" : "text-primary-600 dark:text-primary-400";
+
+            const indicatorClass = tierLevel === 3
+                ? "bg-warning-500"
+                : "bg-primary-600";
+
+            const iconActiveClass = tierLevel === 3
+                ? "text-warning-600 dark:text-warning-500"
+                : "text-primary-600 dark:text-primary-400";
 
             return (
                 <Link
@@ -130,7 +138,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                     {showText && <span className="whitespace-nowrap flex-1">{item.name}</span>}
 
                     {showText && item.badge && (
-                        <span className="bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                        <span className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border",
+                            tierConfig.bg,
+                            tierConfig.text,
+                            tierConfig.border
+                        )}>
                             {item.badge}
                         </span>
                     )}

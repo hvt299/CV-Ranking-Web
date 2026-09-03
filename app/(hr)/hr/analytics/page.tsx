@@ -10,12 +10,23 @@ import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import { ROUTES } from '@/constants/routes';
 import { useCredits } from '@/hooks/useCredits';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
 
 export default function AnalyticsPage() {
     const { hrViewMode } = useHRViewStore();
     const { user } = useAuthStore();
     const router = useRouter();
     const { isPro, isLoading: isCreditsLoading } = useCredits();
+
+    const { data: plansRes } = useSubscriptionPlans('hr');
+
+    const unlockPlan = plansRes?.data?.find(
+        (p: any) => p.features?.can_export_analytics
+    );
+
+    const unlockPlanName = unlockPlan?.name || 'Pro';
+    const unlockTierConfig = getTierBadgeConfig(unlockPlan?.tier_level || 3);
 
     const [data, setData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -75,8 +86,10 @@ export default function AnalyticsPage() {
                         <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
                             Phân tích Hiệu suất
                         </h1>
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-warning-500 to-warning-600 text-white uppercase tracking-widest shadow-sm">
-                            Enterprise
+                        <span
+                            className={`ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm border ${unlockTierConfig.bg} ${unlockTierConfig.text} ${unlockTierConfig.border}`}
+                        >
+                            {unlockPlanName.replace('HR ', '')}
                         </span>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -94,7 +107,14 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="relative space-y-6">
-                {!isPro && <ProFeatureLock description="Báo cáo chuyên sâu về phễu chuyển đổi và chất lượng ứng viên chỉ dành cho gói HR Enterprise." requiredTierName="Enterprise" title="Phân tích Tuyển dụng" />}
+                {!isPro && (
+                    <ProFeatureLock
+                        description={`Báo cáo chuyên sâu về phễu chuyển đổi và chất lượng ứng viên chỉ dành cho gói HR ${unlockPlanName.replace('HR ', '')}.`}
+                        requiredTierName={unlockPlanName.replace('HR ', '')}
+                        requiredTierLevel={unlockPlan?.tier_level || 2}
+                        title="Phân tích Tuyển dụng"
+                    />
+                )}
 
                 {/* BIỂU ĐỒ 3: LƯU LƯỢNG ỨNG TUYỂN FULL WIDTH */}
                 <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>

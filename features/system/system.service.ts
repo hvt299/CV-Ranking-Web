@@ -28,5 +28,10 @@ export const systemService = {
     async getStatistics(): Promise<any> {
         const response = await apiClient.get('/system/statistics');
         return response.data;
-    }
+    },
+
+    async getIndustryWeights(): Promise<any> {
+        const response = await apiClient.get('/system/config/industry-weights');
+        return response.data;
+    },
 };

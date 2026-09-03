@@ -109,4 +109,7 @@ export interface Job {
     created_by_user_id?: string;
     created_at: string;
     updated_at?: string;
+
+    edit_count?: number;
+    rescore_count?: number;
 }

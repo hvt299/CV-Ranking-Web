@@ -15,7 +15,8 @@ import { ROUTES } from '@/constants/routes';
 
 export default function SelfScorePage() {
     const { jobs, cvLibrary: cvs, isLoading: isLoadingData } = useExploreJobs();
-    const { isPro } = useCredits();
+    // Thay isPro bằng cờ feature và lấy thêm các hàm check/trừ credit
+    const { canUseAiCvReview, checkCredits, invalidateCredits } = useCredits();
 
     // Lấy thông tin gói cước để hiển thị chính xác hạn mức
     const { data: myPlanRes } = useSubscription();
@@ -23,6 +24,10 @@ export default function SelfScorePage() {
     const currentPlanCode = myPlanRes?.data?.current_plan_code || 'app_free';
     const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
     const maxScoresPerDay = currentPlan?.features?.max_self_scores_per_day || 3;
+
+    // Tìm gói cước linh hoạt để mở khóa AI Mentor (Không fix cứng tên gói)
+    const unlockPlan = plansRes?.data?.find((p: any) => p.features?.can_use_ai_cv_review);
+    const unlockPlanName = unlockPlan?.name ? unlockPlan.name.replace('App ', '') : 'Plus';
 
     const [selectedJob, setSelectedJob] = useState('');
     const [selectedCv, setSelectedCv] = useState('');
@@ -315,21 +320,38 @@ export default function SelfScorePage() {
                                     </div>
                                 )}
 
-                                {/* Khu vực AI Mentor (Mồi nhử bị làm mờ nếu ở gói Free) */}
+                                {/* Khu vực AI Mentor (Mồi nhử bị làm mờ nếu không có cờ canUseAiCvReview) */}
                                 <div className="relative mt-8">
-                                    {!isPro && (
+                                    {!canUseAiCvReview && (
                                         <ProFeatureLock
                                             title="Mở khóa AI Mentor"
-                                            description="Biết điểm yếu là chưa đủ. Nâng cấp gói Plus để AI hướng dẫn bạn cách viết lại từng câu chữ, chèn keyword chuẩn ATS và tăng 80% tỷ lệ trúng tuyển."
-                                            requiredTierName="PLUS"
-                                            requiredTierLevel={1}
+                                            description={`Biết điểm yếu là chưa đủ. Nâng cấp gói ${unlockPlanName} để AI hướng dẫn bạn cách viết lại từng câu chữ, chèn keyword chuẩn ATS và tăng 80% tỷ lệ trúng tuyển.`}
+                                            requiredTierName={unlockPlanName}
+                                            requiredTierLevel={unlockPlan?.tier_level || 1}
                                         />
                                     )}
 
-                                    <div className={`bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 ${!isPro ? 'filter blur-[6px] pointer-events-none select-none opacity-40' : ''}`}>
-                                        <h4 className="text-lg font-black flex items-center gap-2 mb-4 text-primary-600 dark:text-primary-400">
-                                            <Bot className="w-6 h-6" /> AI Mentor: Hướng dẫn khắc phục chi tiết
-                                        </h4>
+                                    <div className={`bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 ${!canUseAiCvReview ? 'filter blur-[6px] pointer-events-none select-none opacity-40' : ''}`}>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-lg font-black flex items-center gap-2 text-primary-600 dark:text-primary-400">
+                                                <Bot className="w-6 h-6" /> AI Mentor: Hướng dẫn khắc phục chi tiết
+                                            </h4>
+                                            {/* Nút chuẩn bị cho luồng API thực tế (Trừ Credit) */}
+                                            {canUseAiCvReview && (
+                                                <button
+                                                    onClick={() => {
+                                                        // Tạm thời mô phỏng check credit, giả sử cost = 1
+                                                        if (checkCredits(1, 'AI Mentor - Sửa lỗi CV')) {
+                                                            toast.success('Hợp lệ! Chức năng gọi API AI Mentor đang được tích hợp.');
+                                                            // Sau này gọi API xong nhớ gọi: invalidateCredits();
+                                                        }
+                                                    }}
+                                                    className="px-4 py-1.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+                                                >
+                                                    <Sparkles className="w-3.5 h-3.5" /> Nhận phân tích chuyên sâu (1 Credit)
+                                                </button>
+                                            )}
+                                        </div>
 
                                         <div className="space-y-4">
                                             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -357,8 +379,8 @@ export default function SelfScorePage() {
                 </div>
             </div>
 
-            {/* BANNER MỒI NHỬ GLOBAL (Chỉ hiển thị khi người dùng là gói Free, xuất hiện kể cả khi chưa chấm điểm) */}
-            {!isPro && (
+            {/* BANNER MỒI NHỬ GLOBAL (Chỉ hiển thị khi người dùng không có cờ canUseAiCvReview, xuất hiện kể cả khi chưa chấm điểm) */}
+            {!canUseAiCvReview && (
                 <div className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-8 border border-primary-200 dark:border-primary-800/50 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 transition-colors">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                     <div className="relative z-10">
@@ -366,7 +388,7 @@ export default function SelfScorePage() {
                             <Sparkles className="w-6 h-6 text-warning-500" /> Mở khóa AI Mentor: Sửa CV theo thời gian thực
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 text-sm max-w-2xl">
-                            Khám phá tiềm năng trúng tuyển của bạn. Nâng cấp gói <strong className="text-slate-800 dark:text-slate-200">Plus</strong> để AI phân tích chuyên sâu từng câu chữ, gợi ý cách viết lại và chèn keyword chuẩn ATS giúp tăng 80% cơ hội qua vòng hồ sơ.
+                            Khám phá tiềm năng trúng tuyển của bạn. Nâng cấp gói <strong className="text-slate-800 dark:text-slate-200">{unlockPlanName}</strong> để AI phân tích chuyên sâu từng câu chữ, gợi ý cách viết lại và chèn keyword chuẩn ATS giúp tăng 80% cơ hội qua vòng hồ sơ.
                         </p>
                     </div>
                     <Link href={ROUTES.APPLICANT_BILLING} className="relative z-10 shrink-0 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md shadow-primary-500/20 transition-all">

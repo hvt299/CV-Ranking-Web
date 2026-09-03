@@ -11,6 +11,10 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/useAuthStore';
 import { jobService } from '@/features/job/job.service';
 import { LocationDetail } from '@/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
+import { useJobList } from '@/features/job/useJob';
 
 import Step1Basic from '@/components/jobs/form/Step1Basic';
 import Step2LocationSalary from '@/components/jobs/form/Step2LocationSalary';
@@ -23,6 +27,22 @@ export default function CreateEnterpriseJobPage() {
     const router = useRouter();
     const { user } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
+
+    // Logic kiểm soát Hạn mức Tạo Job
+    const { jobs } = useJobList();
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+
+    // Động: Tìm gói cước thấp nhất có hỗ trợ Tinh chỉnh AI để hiển thị Badge
+    const unlockPlan = plansRes?.data?.find((p: any) => p.features?.can_customize_ai_weights);
+    const unlockPlanName = unlockPlan?.name || 'Enterprise';
+    const unlockBadgeConfig = getTierBadgeConfig(unlockPlan?.tier_level || 3);
+    const maxActiveJobs = currentPlan?.features?.max_active_jobs || 1;
+    const activeJobsCount = jobs.filter(job => job.status === 'open' && (!job.deadline || new Date(job.deadline).getTime() > new Date().getTime())).length;
+    const isQuotaExceeded = activeJobsCount >= maxActiveJobs;
 
     const [currentStep, setCurrentStep] = useState(1);
 
@@ -70,6 +90,10 @@ export default function CreateEnterpriseJobPage() {
         const validReqSkills = requiredSkills.filter(s => s.name.trim() !== '').map(s => ({ ...s, weight: Number(s.weight), min_years: Number(s.min_years) }));
         if (validReqSkills.length === 0) return toast.error('Cần ít nhất 1 Kỹ năng bắt buộc để AI chấm điểm!');
 
+        if (isQuotaExceeded) {
+            return toast.error(`Đã đạt giới hạn ${maxActiveJobs} chiến dịch. Vui lòng đóng chiến dịch cũ hoặc nâng cấp gói cước!`);
+        }
+
         setIsLoading(true);
         try {
             const payload = {
@@ -99,7 +123,7 @@ export default function CreateEnterpriseJobPage() {
         { id: 2, title: 'Đãi ngộ & Vị trí', icon: MapPin },
         { id: 3, title: 'Nội dung JD', icon: FileText },
         { id: 4, title: 'Tiêu chí', icon: GraduationCap },
-        { id: 5, title: 'Kỹ năng & AI', icon: BrainCircuit, isPro: true }
+        { id: 5, title: 'Kỹ năng & AI', icon: BrainCircuit }
     ];
 
     return (
@@ -133,25 +157,47 @@ export default function CreateEnterpriseJobPage() {
                         const Icon = step.icon;
                         const isActive = currentStep === step.id;
                         const isCompleted = currentStep > step.id;
+
                         return (
                             <div key={step.id} className="flex flex-col items-center relative group">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4 ${isActive ? 'bg-primary-600 text-white border-primary-100 dark:border-primary-900 shadow-lg scale-110' : isCompleted ? 'bg-emerald-500 text-white border-emerald-100 dark:border-emerald-900' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-600'}`}>
-                                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
-                                </div>
-                                <span className={`absolute -bottom-8 w-32 flex items-center justify-center text-center text-xs font-bold transition-colors ${isActive ? 'text-primary-600 dark:text-primary-400' : isCompleted ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}>
-                                    {step.title}
-                                    {/* BADGE PRO */}
-                                    {step.isPro && (
-                                        <span className="ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm">
-                                            Pro
-                                        </span>
+                                <div
+                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-4 ${isActive
+                                        ? 'bg-primary-600 text-white border-primary-100 dark:border-primary-900 shadow-lg scale-110'
+                                        : isCompleted
+                                            ? 'bg-emerald-500 text-white border-emerald-100 dark:border-emerald-900'
+                                            : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-600'
+                                        }`}
+                                >
+                                    {isCompleted ? (
+                                        <CheckCircle2 className="w-6 h-6" />
+                                    ) : (
+                                        <Icon className="w-5 h-5" />
                                     )}
-                                </span>
+                                </div>
+
+                                <div
+                                    className={`absolute top-15 left-1/2 -translate-x-1/2 w-40 text-center text-xs font-bold ${isActive
+                                        ? 'text-primary-600 dark:text-primary-400'
+                                        : isCompleted
+                                            ? 'text-emerald-600 dark:text-emerald-500'
+                                            : 'text-slate-400 dark:text-slate-500'
+                                        }`}
+                                >
+                                    <div>{step.title}</div>
+
+                                    {step.id === 5 && (
+                                        <div
+                                            className={`w-fit mx-auto mt-1.5 px-2 py-0.5 rounded-md text-[9px] font-black border uppercase tracking-widest shadow-sm ${unlockBadgeConfig.bg} ${unlockBadgeConfig.text} ${unlockBadgeConfig.border}`}
+                                        >
+                                            {unlockPlanName.replace('HR ', '')}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )
+                        );
                     })}
                 </div>
-                <div className="h-8"></div>
+                <div className="h-12"></div>
             </div>
 
             {/* CONTENT RENDER 5 BƯỚC */}
@@ -181,9 +227,16 @@ export default function CreateEnterpriseJobPage() {
                         Tiếp tục <ChevronRight className="w-4 h-4" />
                     </button>
                 ) : (
-                    <button type="submit" disabled={isLoading} className="px-8 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-colors">
-                        <Save className="w-5 h-5" /> {isLoading ? 'Đang xuất bản...' : 'Hoàn tất & Xuất bản Job'}
-                    </button>
+                    <div className="relative group">
+                        <button type="submit" disabled={isLoading || isQuotaExceeded} className="px-8 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/30 disabled:shadow-none flex items-center gap-2 transition-colors">
+                            <Save className="w-5 h-5" /> {isLoading ? 'Đang xuất bản...' : 'Hoàn tất & Xuất bản Job'}
+                        </button>
+                        {isQuotaExceeded && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                Đã đạt giới hạn gói cước ({maxActiveJobs} Job)
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </form>
