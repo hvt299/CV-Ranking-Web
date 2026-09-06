@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
-import { Toaster } from 'react-hot-toast';
 import { Providers } from "./providers";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
         </Providers>
-        <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>
   );

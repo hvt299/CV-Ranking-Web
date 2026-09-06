@@ -5,6 +5,7 @@ import { Award, Search, LayoutList, Kanban } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { ApplicationStatus } from '@/types';
+import { useCredits } from '@/hooks/useCredits';
 import { APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
 
 import CandidateListView from './CandidateListView';
@@ -19,6 +20,7 @@ interface TabCandidatesProps {
 
 export default function TabCandidates({ candidates, setCandidates, jobTitle }: TabCandidatesProps) {
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+    const { checkCredits, invalidateCredits } = useCredits();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [suitabilityFilter, setSuitabilityFilter] = useState('All');
@@ -129,11 +131,19 @@ export default function TabCandidates({ candidates, setCandidates, jobTitle }: T
             setInterviewQuestions({ appId: cv.id, questions: cv.ai_interview_questions });
             return;
         }
+
+        // Bật trạm kiểm soát: Chặn ngay nếu không đủ 2 Credit
+        if (!checkCredits(2, 'Sinh câu hỏi phỏng vấn bằng AI')) return;
+
         setIsGeneratingInterview(cv.id);
         try {
             const res = await apiClient.get(`/cv/applications/${cv.id}/ai-interview`);
             setInterviewQuestions({ appId: cv.id, questions: res.data.data });
             toast.success("AI đã sinh câu hỏi thành công!");
+
+            // Cập nhật lại UI sau khi backend trừ tiền thành công
+            invalidateCredits();
+
             setCandidates((prev: any[]) => prev.map(c => c.id === cv.id ? { ...c, ai_interview_questions: res.data.data } : c));
         } catch (error: any) {
             toast.error(error.response?.data?.detail || "Lỗi khi sinh câu hỏi phỏng vấn");

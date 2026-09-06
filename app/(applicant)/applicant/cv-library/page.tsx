@@ -1,13 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, ChevronRight, Zap, Search, ChevronLeft } from 'lucide-react';
+import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, ChevronRight, Zap, Search, ChevronLeft, Activity, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import DocumentViewer from '@/components/shared/DocumentViewer';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
 import { useMyCvLibrary } from '@/features/application/useApplication';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 
 export default function CVLibraryPage() {
     const { cvs, isLoading, isUploading, uploadProgress, uploadFiles, deleteCV } = useMyCvLibrary();
+
+    // Lấy thông tin sức chứa CV theo gói
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('applicant');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'app_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const maxCvUploads = currentPlan?.features?.max_cv_uploads || 2;
+    const isQuotaExceeded = cvs.length >= maxCvUploads;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +32,11 @@ export default function CVLibraryPage() {
     const [selectedCandidateForSkills, setSelectedCandidateForSkills] = useState<any | null>(null);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (isQuotaExceeded) {
+            toast.error(`Đã đạt giới hạn lưu trữ (${maxCvUploads} CV). Vui lòng xóa CV cũ hoặc nâng cấp gói!`);
+            e.target.value = '';
+            return;
+        }
         await uploadFiles(e.target.files);
         e.target.value = '';
     };
@@ -42,14 +58,24 @@ export default function CVLibraryPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
             {/* Tiêu đề & Thống kê */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="flex-1">
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Thư viện CV của tôi</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các bản CV của bạn. Tải lên 1 lần, ứng tuyển "1 chạm" cho nhiều công việc.</p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2 shrink-0">
-                    <FileText className="w-4 h-4 text-primary-500" />
-                    Đã lưu: <span className="text-primary-600 dark:text-primary-400">{cvs.length}</span> CV
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
+                    <div className="bg-info-50 dark:bg-info-500/10 border border-info-100 dark:border-info-500/20 p-2.5 pr-4 rounded-2xl flex items-center gap-3 transition-colors">
+                        <div className="w-10 h-10 bg-info-100 dark:bg-info-500/20 text-info-600 dark:text-info-500 flex items-center justify-center rounded-xl shrink-0">
+                            <Activity className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-info-600 dark:text-info-500 uppercase tracking-wider mb-0.5">Sức chứa Thư viện</p>
+                            <p className="text-sm font-black text-info-700 dark:text-info-100">
+                                <span className={isQuotaExceeded ? "text-error-600 dark:text-error-500" : ""}>{cvs.length}</span> / {maxCvUploads} CV
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -70,8 +96,8 @@ export default function CVLibraryPage() {
             )}
 
             {/* KHU VỰC UPLOAD CHUNG */}
-            <div className="relative bg-primary-50/50 dark:bg-primary-900/10 border-2 border-dashed border-primary-200 dark:border-primary-800 rounded-3xl p-10 text-center hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all group overflow-hidden">
-                <input type="file" multiple accept=".pdf,.docx" onChange={handleUpload} disabled={isUploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-5" />
+            <div className={`relative ${isQuotaExceeded ? 'bg-error-50/50 dark:bg-error-900/10 border-error-200 dark:border-error-800/50' : 'bg-primary-50/50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800 hover:bg-primary-50 dark:hover:bg-primary-900/20'} border-2 border-dashed rounded-3xl p-10 text-center transition-all group overflow-hidden`}>
+                <input type="file" multiple accept=".pdf,.docx" onChange={handleUpload} disabled={isUploading || isQuotaExceeded} className={`absolute inset-0 w-full h-full opacity-0 z-5 ${isQuotaExceeded ? 'cursor-not-allowed' : 'cursor-pointer disabled:cursor-not-allowed'}`} />
                 {isUploading ? (
                     <div className="flex flex-col items-center justify-center space-y-4">
                         <div className="relative w-14 h-14">
@@ -82,6 +108,14 @@ export default function CVLibraryPage() {
                             <h3 className="font-bold text-slate-800 dark:text-white text-lg">Đang tải và Bóc tách AI...</h3>
                             <p className="text-sm text-primary-600 font-medium mt-1">Tiến độ: {uploadProgress.current} / {uploadProgress.total} file</p>
                         </div>
+                    </div>
+                ) : isQuotaExceeded ? (
+                    <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none relative z-0">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm">
+                            <AlertTriangle className="w-8 h-8 text-error-500" />
+                        </div>
+                        <h3 className="font-bold text-slate-800 dark:text-white text-lg mt-2">Đã đạt giới hạn sức chứa ({maxCvUploads} CV)</h3>
+                        <p className="text-error-500 text-sm font-medium">Vui lòng xóa bớt CV cũ hoặc nâng cấp gói cước để tải thêm.</p>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none relative z-0">

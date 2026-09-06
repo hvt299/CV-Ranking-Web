@@ -37,3 +37,46 @@ export const getTierBadgeConfig = (tierLevel: number) => {
             };
     }
 };
+
+export const JOB_BADGE_CONFIG = {
+    active: {
+        bg: "bg-emerald-100 dark:bg-emerald-500/10",
+        text: "text-emerald-700 dark:text-emerald-400",
+        border: "border-emerald-200 dark:border-emerald-500/20",
+        dot: "bg-emerald-500 animate-pulse",
+        label: "Đang mở",
+    },
+
+    closed: {
+        bg: "bg-rose-100 dark:bg-rose-500/10",
+        text: "text-rose-700 dark:text-rose-400",
+        border: "border-rose-200 dark:border-rose-500/20",
+        dot: "bg-rose-500",
+        label: "Đã đóng",
+    },
+
+    expired: {
+        bg: "bg-amber-100 dark:bg-amber-500/10",
+        text: "text-amber-700 dark:text-amber-400",
+        border: "border-amber-200 dark:border-amber-500/20",
+        dot: "bg-amber-500",
+        label: "Hết hạn",
+    },
+
+    hot: {
+        bg: "bg-orange-50 dark:bg-orange-500/10",
+        text: "text-orange-600 dark:text-orange-400",
+        border: "border-orange-200 dark:border-orange-500/20",
+        glow: "shadow-sm",
+        label: "Hot",
+    },
+} as const;
+
+export const getJobBadgeConfig = (
+    isActive: boolean,
+    isClosed: boolean
+) => {
+    if (isActive) return JOB_BADGE_CONFIG.active;
+    if (isClosed) return JOB_BADGE_CONFIG.closed;
+    return JOB_BADGE_CONFIG.expired;
+};

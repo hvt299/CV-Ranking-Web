@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Briefcase, FileText, Sparkles, Users, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Briefcase, FileText, Sparkles, Users, TrendingUp, TrendingDown, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { APPLICATION_STATUS_CONFIG } from '@/constants/application.constants';
 import { ROUTES } from '@/constants/routes';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { useJobList } from '@/features/job/useJob';
 
 export default function OwnerDashboard({
     currentTime
@@ -14,6 +17,19 @@ export default function OwnerDashboard({
 }) {
     const [data, setData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const { jobs } = useJobList();
+
+    // Lấy thông tin gói cước để kiểm tra giới hạn số Job đang mở
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find(
+        (p: any) => p.plan_code === currentPlanCode
+    );
+
+    const maxActiveJobs = currentPlan?.features?.max_active_jobs || 1;
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -42,6 +58,15 @@ export default function OwnerDashboard({
     const pipelines = data?.active_pipelines || [];
     const recentApps = data?.recent_applicants || [];
 
+    // Đếm đúng số Job đang OPEN và chưa hết hạn
+    const activeJobsCount = jobs.filter(job =>
+        job.status === 'open' &&
+        (!job.deadline ||
+            new Date(job.deadline).getTime() > new Date().getTime())
+    ).length;
+
+    const isJobLimitReached = activeJobsCount >= maxActiveJobs;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -55,12 +80,30 @@ export default function OwnerDashboard({
                     </p>
                 </div>
 
-                <Link
-                    href={ROUTES.HR_JOB_CREATE}
-                    className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all"
-                >
-                    + Tạo chiến dịch mới
-                </Link>
+                {isJobLimitReached ? (
+                    <div className="relative group cursor-not-allowed">
+                        <button
+                            type="button"
+                            disabled
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold rounded-xl shadow-sm cursor-not-allowed"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Tạo chiến dịch mới
+                        </button>
+
+                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                            Đã đạt giới hạn gói cước
+                        </div>
+                    </div>
+                ) : (
+                    <Link
+                        href={ROUTES.HR_JOB_CREATE}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Tạo chiến dịch mới
+                    </Link>
+                )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

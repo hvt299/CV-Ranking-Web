@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Job } from '@/types';
 import { jobService } from '@/features/job/job.service';
 import { systemService } from '@/features/system/system.service';
+import { companyService } from '@/features/company/company.service';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -50,26 +51,50 @@ export default function LandingClient() {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [data, locationsRes] = await Promise.all([
+                const [data, locationsRes, companiesRes] = await Promise.all([
                     jobService.getPublicJobs(),
-                    systemService.getLocations()
+                    systemService.getLocations(),
+                    companyService.getPublicCompanies(),
                 ]);
 
-                setJobs(data);
-
-                const locations = locationsRes;
-                const industries = [...new Set(data.map((job: any) => job.industry).filter(Boolean))] as string[];
-
-                const uniqueCompsMap = new Map();
-                data.forEach((job: any) => {
-                    if (job.company_name && job.company_id && !uniqueCompsMap.has(job.company_id)) {
-                        uniqueCompsMap.set(job.company_id, { id: job.company_id, name: job.company_name });
-                    }
+                // Ánh xạ logo từ danh sách công ty vào danh sách job
+                const jobsWithLogos = data.map((job: Job) => {
+                    const matchedCompany = companiesRes.find((c: any) => c.id === job.company_id);
+                    return {
+                        ...job,
+                        company_logo: matchedCompany?.logo_url || null,
+                        company_name: matchedCompany?.name || job.company_name
+                    };
                 });
 
-                setFilterOptions({ locations, workModes: [], jobLevels: [], employmentTypes: [], skills: [], companies: [], industries, educations: [] });
-                setUniqueCompanies(Array.from(uniqueCompsMap.values()));
+                setJobs(jobsWithLogos);
+
+                const locations = locationsRes;
+
+                const industries = [
+                    ...new Set(
+                        data
+                            .map((job: any) => job.industry)
+                            .filter(Boolean)
+                    ),
+                ] as string[];
+
+                // Lấy trực tiếp company từ API public
+                // API đã có logo_url
+                setUniqueCompanies(companiesRes);
+
+                setFilterOptions({
+                    locations,
+                    workModes: [],
+                    jobLevels: [],
+                    employmentTypes: [],
+                    skills: [],
+                    companies: [],
+                    industries,
+                    educations: [],
+                });
             } catch (error) {
+                console.error('Landing initial data error:', error);
                 toast.error('Không thể tải dữ liệu hệ thống');
             } finally {
                 setIsLoading(false);

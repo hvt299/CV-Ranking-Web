@@ -4,6 +4,8 @@ import { Mail, Phone, Clock, Lightbulb, AlertTriangle, Sparkles, MailOpen, Eye, 
 import { ApplicationStatus } from '@/types';
 import { APPLICATION_STATUS_CONFIG } from "@/constants/application.constants";
 import { getPenaltyReasons, getScoreTheme, getSubScoreClass } from '@/utils/score';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
 
 interface CandidateListViewProps {
     candidates: any[];
@@ -24,6 +26,13 @@ export default function CandidateListView({
     onStatusChange, onToggleView, onViewCV, onAddNote, onRemoveFromJob,
     onToggleInsightExpand, onViewSkills, onGenerateQuestions
 }: CandidateListViewProps) {
+
+    // Kéo thông tin Plan để lấy linh hoạt tên gói mở khóa tính năng (Pro/Enterprise)
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const unlockInterviewPlan = plansRes?.data?.find((p: any) => p.tier_level >= 2); // Ví dụ: Gói Pro
+    const unlockInterviewPlanName = unlockInterviewPlan?.name || 'Pro';
+    const badgeConfig = getTierBadgeConfig(unlockInterviewPlan?.tier_level || 2);
+
     return (
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 space-y-4 animate-in fade-in">
             {candidates.map((cv) => {
@@ -88,7 +97,7 @@ export default function CandidateListView({
                                         <div className="flex flex-wrap gap-2 text-[10px] font-bold">
                                             <span className={`px-2 py-1 rounded-md ${getSubScoreClass(breakdown.skills_score || 0)}`}>Kỹ năng: {breakdown.skills_score?.toFixed(0)}</span>
                                             <span className={`px-2 py-1 rounded-md ${getSubScoreClass(breakdown.nlp_score || 0)}`}>Ngữ nghĩa: {breakdown.nlp_score?.toFixed(0)}</span>
-                                            <span className={`px-2 py-1 rounded-md ${getSubScoreClass(breakdown.experience_score || 0)}`}>K.Nghiệm: {breakdown.experience_score?.toFixed(0)}</span>
+                                            <span className={`px-2 py-1 rounded-md ${getSubScoreClass(breakdown.experience_score || 0)}`}>Kinh nghiệm: {breakdown.experience_score?.toFixed(0)}</span>
                                             <span className={`px-2 py-1 rounded-md ${getSubScoreClass(breakdown.education_score || 0)}`}>Học vấn: {breakdown.education_score?.toFixed(0)}</span>
                                         </div>
                                         <button onClick={() => onViewSkills(cv)} className="text-[10px] text-primary-600 dark:text-primary-400 font-bold hover:underline shrink-0 ml-2">Chi tiết</button>
@@ -98,8 +107,8 @@ export default function CandidateListView({
                                         <div className="bg-amber-50/70 dark:bg-slate-900/50 p-3 rounded-lg border border-amber-100 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2 relative">
                                             <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
 
-                                            <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm shrink-0 mt-0.5">
-                                                Pro
+                                            <span className={`px-1.5 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm shrink-0 mt-0.5 border ${badgeConfig.bg} ${badgeConfig.text} ${badgeConfig.border}`}>
+                                                {unlockInterviewPlanName.replace('HR ', '')}
                                             </span>
 
                                             <div className="flex-1">
@@ -139,15 +148,14 @@ export default function CandidateListView({
                                         <button
                                             onClick={() => onGenerateQuestions(cv)}
                                             disabled={isGeneratingInterview === cv.id}
-                                            className="flex items-center gap-1.5 text-[11px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                            className="flex items-center gap-1.5 text-[11px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
                                         >
                                             {isGeneratingInterview === cv.id ? (
                                                 <><span className="animate-spin w-3 h-3 border-2 border-primary-600 border-t-transparent rounded-full"></span> Đang phân tích...</>
                                             ) : (
                                                 <>
                                                     <Sparkles className="w-3.5 h-3.5" />
-                                                    {cv.ai_interview_questions ? 'Xem lại bộ câu hỏi AI' : 'Sinh bộ câu hỏi phỏng vấn AI'}
-                                                    <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm ml-1.5">Pro</span>
+                                                    {cv.ai_interview_questions ? 'Xem lại bộ câu hỏi phỏng vấn bằng AI' : 'Sinh câu hỏi AI phỏng vấn bằng (2 Credits)'}
                                                 </>
                                             )}
                                         </button>

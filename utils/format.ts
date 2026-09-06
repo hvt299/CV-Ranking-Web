@@ -113,23 +113,6 @@ export const getPasswordStrength = (pass: string) => {
     return { score, color: 'bg-success-500', label: 'Mạnh' };
 };
 
-export const getCountdownParts = (deadline?: string | Date) => {
-    if (!deadline) return null;
-
-    const diff = new Date(deadline).getTime() - Date.now();
-
-    if (diff <= 0)
-        return { d: 0, h: 0, m: 0, s: 0, isExpired: true };
-
-    return {
-        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        s: Math.floor((diff % (1000 * 60)) / 1000),
-        isExpired: false,
-    };
-};
-
 export const getDeadlineCountdown = (deadline?: string | Date): string => {
     if (!deadline) return 'Không thời hạn';
 
@@ -138,4 +121,10 @@ export const getDeadlineCountdown = (deadline?: string | Date): string => {
 
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     return days === 0 ? 'Hết hạn hôm nay' : `Còn ${days} ngày`;
+};
+
+export const formatSubscriptionDate = (date?: string) => {
+    if (!date) return 'Không giới hạn';
+
+    return new Date(date).toLocaleDateString('vi-VN');
 };

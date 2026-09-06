@@ -75,10 +75,14 @@ export default function PublicJobDetailPage() {
     }, [params.id]);
 
     const handleApplyClick = () => {
+        if (user && user.role !== 'applicant') {
+            toast.error('Tài khoản Nhà tuyển dụng không thể ứng tuyển. Vui lòng đổi tài khoản!', { id: 'role_error' });
+            return;
+        }
         if (job?.id && job?.title) {
             openApplyModal(job.id, job.title);
         } else {
-            toast.error('Dữ liệu công việc chưa sẵn sàng, vui lòng thử lại!');
+            toast.error('Dữ liệu công việc chưa sẵn sàng, vui lòng thử lại!', { id: 'data_error' });
         }
     };
 
@@ -95,7 +99,7 @@ export default function PublicJobDetailPage() {
         return (
             <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#050505] transition-colors">
                 <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
-                <div className="flex-1 flex flex-col items-center justify-center text-blue-500">
+                <div className="flex-1 flex flex-col items-center justify-center text-primary-500">
                     <Loader2 className="w-12 h-12 animate-spin mb-4" />
                     <p className="text-slate-500 font-medium">Đang tải thông tin việc làm...</p>
                 </div>
@@ -132,14 +136,14 @@ export default function PublicJobDetailPage() {
 
                 <button
                     onClick={() => router.push(ROUTES.PUBLIC_JOBS)}
-                    className="flex items-center gap-2 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold mb-6 transition-colors w-fit"
+                    className="flex items-center gap-2 text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 font-bold mb-6 transition-colors w-fit"
                 >
                     <ChevronLeft className="w-4 h-4" /> Quay lại danh sách
                 </button>
 
                 {/* KHỐI HERO: TIÊU ĐỀ & HÀNH ĐỘNG */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-10 shadow-sm mb-8 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 dark:bg-blue-500/10 blur-[80px] pointer-events-none rounded-full" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 dark:bg-blue-500/10 blur-[80px] pointer-events-none rounded-full" />
 
                     <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start gap-8">
                         <div className="flex-1">
@@ -154,7 +158,7 @@ export default function PublicJobDetailPage() {
                                         Đã hết hạn
                                     </span>
                                 )}
-                                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+                                <span className="text-sm font-semibold text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-blue-900/30 px-3 py-1 rounded-full">
                                     Đăng ngày: {new Date(job.created_at || Date.now()).toLocaleDateString('vi-VN')}
                                 </span>
                             </div>
@@ -195,7 +199,7 @@ export default function PublicJobDetailPage() {
                                 <button className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-500 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors">
                                     <Heart className="w-4 h-4" /> Lưu
                                 </button>
-                                <button onClick={handleShare} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors hover:text-blue-500">
+                                <button onClick={handleShare} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors hover:text-primary-500">
                                     <Share2 className="w-4 h-4" /> Chia sẻ
                                 </button>
                             </div>
@@ -213,7 +217,7 @@ export default function PublicJobDetailPage() {
                             {job.description && (
                                 <div>
                                     <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                        <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-lg"><FileText className="w-5 h-5" /></div>
+                                        <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-primary-500 rounded-lg"><FileText className="w-5 h-5" /></div>
                                         Mô tả công việc
                                     </h3>
                                     <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-loose" dangerouslySetInnerHTML={{ __html: job.description }} />
@@ -253,7 +257,7 @@ export default function PublicJobDetailPage() {
                             {/* Địa điểm & Thời gian */}
                             <div>
                                 <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                    <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-lg"><MapPin className="w-5 h-5" /></div>
+                                    <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 text-primary-500 rounded-lg"><MapPin className="w-5 h-5" /></div>
                                     Địa điểm và Thời gian
                                 </h3>
                                 <div className="space-y-4">
@@ -277,12 +281,16 @@ export default function PublicJobDetailPage() {
                         {relatedJobs.length > 0 && (
                             <div className="pt-6">
                                 <div className="flex items-center gap-2 mb-6">
-                                    <Briefcase className="w-6 h-6 text-blue-500" />
+                                    <Briefcase className="w-6 h-6 text-primary-500" />
                                     <h2 className="text-2xl font-black text-slate-800 dark:text-white">Việc làm liên quan</h2>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {relatedJobs.map(relatedJob => (
-                                        <JobCard key={relatedJob.id} job={relatedJob} />
+                                        <JobCard
+                                            key={relatedJob.id}
+                                            job={relatedJob}
+                                            viewMode="grid"
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -293,46 +301,69 @@ export default function PublicJobDetailPage() {
                     <aside className="w-full lg:w-[30%] shrink-0 space-y-6 lg:sticky lg:top-24">
 
                         {/* Company Widget */}
-                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <div className="flex items-center gap-4 mb-5">
-                                <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="w-16 h-16 rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center p-1 shrink-0 hover:scale-105 transition-transform">
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                            {/* Nền banner mờ */}
+                            {company?.banner_url && (
+                                <div className="absolute top-0 left-0 w-full h-20 opacity-20 pointer-events-none">
+                                    <div className="absolute inset-0 bg-linear-to-b from-transparent to-white dark:to-slate-900 z-10" />
+                                    <img src={company.banner_url} className="w-full h-full object-cover" alt="" />
+                                </div>
+                            )}
+
+                            <div className="flex items-start gap-4 mb-5 relative z-10 mt-2">
+                                <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="w-16 h-16 rounded-2xl border-2 border-white dark:border-slate-800 bg-white dark:bg-slate-800 flex items-center justify-center p-1 shrink-0 hover:scale-105 transition-transform shadow-md">
                                     {company?.logo_url ? (
                                         <img src={company.logo_url} alt={company.name} className="w-full h-full object-contain" />
                                     ) : (
                                         <Building2 className="w-8 h-8 text-slate-300" />
                                     )}
                                 </Link>
-                                <div>
-                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="font-bold text-slate-900 dark:text-white hover:text-blue-600 line-clamp-2 transition-colors">
+                                <div className="flex-1 min-w-0 pt-1">
+                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="font-black text-lg text-slate-900 dark:text-white hover:text-primary-600 line-clamp-2 transition-colors leading-tight">
                                         {company?.name || job.company_name || 'Đang cập nhật'}
-                                    </Link>
-                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1 hover:underline">
-                                        Xem trang công ty <ExternalLink className="w-3 h-3" />
                                     </Link>
                                 </div>
                             </div>
 
                             <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                {/* Quy mô */}
                                 <div className="flex items-center gap-3 text-sm">
-                                    <Users className="w-4 h-4 text-slate-400 shrink-0" />
-                                    <span className="text-slate-600 dark:text-slate-300">
-                                        Quy mô: <span className="font-bold">
-                                            {COMPANY_SIZES.find(size => size.value === company?.size)?.label || 'Đang cập nhật'}
-                                        </span>
+                                    <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400"><Users className="w-4 h-4" /></div>
+                                    <span className="text-slate-600 dark:text-slate-300 font-bold">
+                                        {COMPANY_SIZES.find(size => size.value === company?.size)?.label || 'Đang cập nhật'}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                    <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-                                    <span className="text-slate-600 dark:text-slate-300">Ngành nghề: <span className="font-bold line-clamp-1">
-                                        {INDUSTRIES.find(i => i.value === company?.industry)?.label || 'Đang cập nhật'}
-                                    </span></span>
-                                </div>
-                                {company?.website && (
+
+                                {/* Lĩnh vực hoạt động (Đa ngành) */}
+                                {(company?.industries && company.industries.length > 0) ? (
+                                    <div className="flex items-start gap-3 text-sm">
+                                        <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400 mt-0.5"><Briefcase className="w-4 h-4" /></div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {company.industries.map((ind: string, idx: number) => (
+                                                <span key={idx} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-700">
+                                                    {INDUSTRIES.find(i => i.value === ind)?.label || ind}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
                                     <div className="flex items-center gap-3 text-sm">
-                                        <Globe className="w-4 h-4 text-slate-400 shrink-0" />
-                                        <a href={company.website} target="_blank" rel="noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline line-clamp-1">Website công ty</a>
+                                        <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400"><Briefcase className="w-4 h-4" /></div>
+                                        <span className="text-slate-600 dark:text-slate-300 font-bold">Đang cập nhật ngành nghề</span>
                                     </div>
                                 )}
+
+                                {/* Website & Liên kết */}
+                                <div className="flex items-center justify-between pt-2">
+                                    {company?.website && (
+                                        <a href={company.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-primary-600 transition-colors">
+                                            <Globe className="w-3.5 h-3.5" /> Website
+                                        </a>
+                                    )}
+                                    <Link href={ROUTES.PUBLIC_COMPANY_DETAIL(job.company_id)} className="flex items-center gap-1.5 text-xs font-black text-blue-600 dark:text-blue-400 hover:underline ml-auto bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg">
+                                        Hồ sơ công ty <ExternalLink className="w-3.5 h-3.5" />
+                                    </Link>
+                                </div>
                             </div>
                         </div>
 
@@ -403,7 +434,7 @@ export default function PublicJobDetailPage() {
                                     <div className="flex flex-wrap gap-2">
                                         {job.required_skills.map((skill: any, idx: number) => (
                                             <span key={idx} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700">
-                                                {typeof skill === 'string' ? skill : skill.name} {(skill.min_years ?? 0) > 0 && <span className="text-blue-500 ml-1">({skill.min_years}y)</span>}
+                                                {typeof skill === 'string' ? skill : skill.name} {(skill.min_years ?? 0) > 0 && <span className="text-primary-500 ml-1">({skill.min_years}y)</span>}
                                             </span>
                                         ))}
                                     </div>
@@ -462,7 +493,7 @@ export default function PublicJobDetailPage() {
                 <button
                     onClick={handleApplyClick}
                     disabled={isExpired}
-                    className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all"
+                    className="flex-1 py-3.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25 transition-all"
                 >
                     <Send className="w-5 h-5" /> {isExpired ? 'Đã hết hạn' : 'Ứng tuyển ngay'}
                 </button>

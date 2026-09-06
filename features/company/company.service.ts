@@ -21,6 +21,11 @@ export const companyService = {
         return response.data;
     },
 
+    getPublicCompanies: async () => {
+        const response = await apiClient.get('/companies/public/list');
+        return response.data;
+    },
+
     inviteMember: async (email: string) => {
         const response = await apiClient.post('/companies/invite', { email });
         return response.data;
@@ -41,13 +46,25 @@ export const companyService = {
         return response.data;
     },
 
-    verifyCompany: async (companyId: string, payload: { approve: boolean, rejection_reason: string | null }) => {
-        const response = await apiClient.patch(`/admin/companies/${companyId}/verify`, payload);
+    verifyCompany: async (
+        companyId: string,
+        payload: {
+            approve: boolean;
+            rejection_reason: string | null;
+        }
+    ) => {
+        const response = await apiClient.patch(
+            `/admin/companies/${companyId}/verify`,
+            payload
+        );
         return response.data;
     },
 
     updateCompanyByAdmin: async (companyId: string, payload: any) => {
-        const response = await apiClient.patch(`/admin/companies/${companyId}`, payload);
+        const response = await apiClient.patch(
+            `/admin/companies/${companyId}`,
+            payload
+        );
         return response.data;
     },
 
@@ -57,12 +74,18 @@ export const companyService = {
     },
 
     updateUserRole: async (userId: string, newRole: string) => {
-        const response = await apiClient.patch(`/admin/users/${userId}/role`, { role: newRole });
+        const response = await apiClient.patch(
+            `/admin/users/${userId}/role`,
+            { role: newRole }
+        );
         return response.data;
     },
 
     updateUserStatus: async (userId: string, isActive: boolean) => {
-        const response = await apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive });
+        const response = await apiClient.patch(
+            `/admin/users/${userId}/status`,
+            { is_active: isActive }
+        );
         return response.data;
     },
 
@@ -73,8 +96,10 @@ export const companyService = {
 
     uploadFile: async (formData: FormData) => {
         const response = await apiClient.post('/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
         });
         return response.data;
-    }
+    },
 };

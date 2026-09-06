@@ -4,7 +4,7 @@
 
 @theme {
   /* =========================
-     Brand Color (Primary)
+     Brand Color
      ========================= */
 
   --color-primary-50: #eff6ff;
@@ -18,12 +18,10 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
 
-  /* Backward compatibility */
   --color-primary: #2563eb;
 
-
   /* =========================
-     Accent Color (Hot / Featured)
+     Accent
      ========================= */
 
   --color-hot-50: #fff1f2;
@@ -35,42 +33,36 @@
   --color-hot-600: #e11d48;
   --color-hot-700: #be123c;
 
-
   /* =========================
-     Semantic Colors
+     Semantic
      ========================= */
 
-  /* Success */
   --color-success-50: #ecfdf5;
   --color-success-100: #d1fae5;
   --color-success-500: #10b981;
   --color-success-600: #059669;
   --color-success-700: #047857;
 
-  /* Warning */
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
   --color-warning-700: #b45309;
 
-  /* Error */
   --color-error-50: #fef2f2;
   --color-error-100: #fee2e2;
   --color-error-500: #ef4444;
   --color-error-600: #dc2626;
   --color-error-700: #b91c1c;
 
-  /* Info */
   --color-info-50: #f0f9ff;
   --color-info-100: #e0f2fe;
   --color-info-500: #0ea5e9;
   --color-info-600: #0284c7;
   --color-info-700: #0369a1;
 
-
   /* =========================
-     Surface / Neutral Tokens
+     Surface / Neutral
      ========================= */
 
   --color-surface: #ffffff;
@@ -85,22 +77,18 @@
   --color-text-muted: #64748b;
   --color-text-subtle: #94a3b8;
 
-
   /* =========================
-     Component Tokens
+     Component
      ========================= */
 
-  /* Card */
   --color-card-bg: #ffffff;
   --color-card-border: #e2e8f0;
   --color-card-hover: #cbd5e1;
 
-  /* Button Primary */
   --color-button-primary-bg: #2563eb;
   --color-button-primary-hover: #1d4ed8;
   --color-button-primary-text: #ffffff;
 
-  /* Badge */
   --color-badge-hot-bg: #f43f5e;
   --color-badge-hot-text: #ffffff;
 
@@ -113,15 +101,12 @@
   --color-badge-error-bg: #fee2e2;
   --color-badge-error-text: #b91c1c;
 
-
-  /* Input */
   --color-input-bg: #ffffff;
   --color-input-border: #cbd5e1;
   --color-input-focus: #2563eb;
 
-
   /* =========================
-     Shadow System
+     Shadow
      ========================= */
 
   --shadow-card: 0 1px 3px 0 rgb(15 23 42 / 0.08);
@@ -130,9 +115,8 @@
   --shadow-modal: 0 25px 50px -12px rgb(15 23 42 / 0.25);
   --shadow-dropdown: 0 10px 25px -5px rgb(15 23 42 / 0.15);
 
-
   /* =========================
-     Radius System
+     Radius
      ========================= */
 
   --radius-button: 0.75rem;
@@ -140,32 +124,55 @@
   --radius-modal: 1.5rem;
   --radius-pill: 9999px;
 
-
-  /* =========================
-     Transition System
-     ========================= */
-
-  --transition-fast: 150ms ease;
-  --transition-normal: 300ms ease;
-  --transition-slow: 500ms ease;
-
-
-  /* =========================
-     Z-index System
-     ========================= */
-
-  --z-header: 50;
-  --z-dropdown: 100;
-  --z-modal: 200;
-  --z-toast: 300;
-
-
   /* =========================
      Typography
      ========================= */
 
   --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 }
+
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+.dark {
+  --color-surface: #111827;
+  --color-surface-hover: #1e293b;
+
+  --color-background: #090b10;
+
+  --color-border: #1e293b;
+  --color-border-hover: #334155;
+
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-text-subtle: #64748b;
+
+  --color-card-bg: #111827;
+  --color-card-border: #1e293b;
+  --color-card-hover: #334155;
+
+  --color-input-bg: #0f172a;
+  --color-input-border: #334155;
+  --color-input-focus: #3b82f6;
+}
+
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+body {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+
+/* =========================================================
+   FLOATING BUTTON
+   ========================================================= */
 
 .floating-btn {
   width: 44px;
@@ -175,8 +182,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, .12);
-  transition: .25s ease;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transition: 0.25s ease;
   animation: floating-bounce 3s ease-in-out infinite;
 }
 
@@ -194,7 +201,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(255, 255, 255, .4);
+  background: rgba(255, 255, 255, 0.4);
   animation: pulse-ring 1.8s infinite;
 }
 
@@ -213,7 +220,7 @@
 @keyframes pulse-ring {
   from {
     transform: scale(1);
-    opacity: .6;
+    opacity: 0.6;
   }
 
   to {
@@ -222,6 +229,10 @@
   }
 }
 
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
 
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
@@ -243,16 +254,9 @@
 }
 
 
-body {
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
-
-
-/* =========================
-   CKEditor 5 Dark Mode
-   ========================= */
+/* =========================================================
+   CKEDITOR 5
+   ========================================================= */
 
 .dark .ck-editor__editable_inline {
   background-color: #0f172a !important;
@@ -264,14 +268,12 @@ body {
   border-bottom-right-radius: 0.75rem !important;
 }
 
-
 .ck-editor__editable_inline {
   min-height: 150px;
 
   border-bottom-left-radius: 0.75rem !important;
   border-bottom-right-radius: 0.75rem !important;
 }
-
 
 .dark .ck.ck-toolbar {
   background-color: #1e293b !important;
@@ -281,16 +283,13 @@ body {
   border-top-right-radius: 0.75rem !important;
 }
 
-
 .dark .ck.ck-button {
   color: #cbd5e1 !important;
 }
 
-
 .dark .ck.ck-button:hover {
   background-color: #334155 !important;
 }
-
 
 .dark .ck.ck-button.ck-on {
   background-color: #475569 !important;

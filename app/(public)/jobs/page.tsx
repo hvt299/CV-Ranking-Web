@@ -4,10 +4,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { jobService } from '@/features/job/job.service';
 import { systemService } from '@/features/system/system.service';
-import { Job } from '@/types';
+import { Company, Job } from '@/types';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import JobCard from '@/components/jobs/JobCard';
-import { Briefcase, Loader2, LayoutGrid, List, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, Loader2, LayoutGrid, List, XCircle, ChevronLeft, ChevronRight, Flame, Link, Clock3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -16,6 +16,9 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { HotJobItem } from '@/components/landing/HotJobsSection';
 import { LatestJobItem } from '@/components/landing/LatestJobsSection';
 import { ROUTES } from '@/constants/routes';
+import apiClient from '@/lib/api-client';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function PublicJobsPage() {
     const router = useRouter();
@@ -57,12 +60,22 @@ export default function PublicJobsPage() {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [jobsData, locationsRes] = await Promise.all([
+                const [jobsData, companiesData, locationsRes] = await Promise.all([
                     jobService.getPublicJobs(),
+                    apiClient.get('/companies/public/list').then(res => res.data), // Fetch danh sách công ty để lấy logo
                     systemService.getLocations()
                 ]);
 
-                setJobs(jobsData);
+                // Map logo công ty vào danh sách job
+                const jobsWithLogos = jobsData.map((job: Job) => {
+                    const matchedCompany = companiesData.find((c: Company) => c.id === job.company_id);
+                    return {
+                        ...job,
+                        company_logo: matchedCompany?.logo_url || null
+                    };
+                });
+
+                setJobs(jobsWithLogos);
 
                 const workModes = [...new Set(jobsData.map((job: any) => job.work_mode).filter(Boolean))] as string[];
                 const jobLevels = [...new Set(jobsData.map((job: any) => job.job_level).filter(Boolean))] as string[];
@@ -173,8 +186,51 @@ export default function PublicJobsPage() {
 
             {/* Khối Hero Banner Tích hợp Pattern */}
             <div className="relative pt-32 pb-16 md:pt-40 md:pb-20 border-b border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-[#0a0a0a]">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+                {/* Background image - giống HeroSection */}
+                <div className="absolute inset-0">
+                    <Image
+                        src="/images/hero-bg.jpg"
+                        alt=""
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-center opacity-[0.22] dark:opacity-[0.22]"
+                    />
+
+                    {/* Light mode overlay */}
+                    <div className="absolute inset-0 bg-linear-to-b from-background/45 via-background/70 to-background/95 dark:hidden" />
+
+                    {/* Dark mode overlay */}
+                    <div className="absolute inset-0 hidden bg-linear-to-b from-[#020617]/55 dark:block" />
+
+                    {/* Dark mode color tint */}
+                    <div className="absolute inset-0 hidden bg-blue-950/20 mix-blend-multiply dark:block" />
+                </div>
+
+                {/* Grid vuông - giống HeroSection */}
+                <div
+                    className="absolute inset-0 opacity-[0.065] dark:opacity-[0.055]"
+                    style={{
+                        backgroundImage:
+                            'linear-gradient(#64748b 1px, transparent 1px), linear-gradient(90deg, #64748b 1px, transparent 1px)',
+                        backgroundSize: '4rem 4rem',
+                        maskImage:
+                            'radial-gradient(ellipse 80% 75% at 50% 25%, black 30%, transparent 90%)',
+                        WebkitMaskImage:
+                            'radial-gradient(ellipse 80% 75% at 50% 25%, black 30%, transparent 90%)',
+                    }}
+                />
+
+                {/* Primary glow */}
+                <div className="absolute left-1/2 top-[-12%] h-130 w-205 -translate-x-1/2 rounded-full bg-primary-500/10 blur-[140px] dark:bg-primary-500/10" />
+
+                {/* Soft side glows */}
+                <div className="absolute left-[-15%] top-[20%] h-105 w-105 rounded-full bg-primary-400/4.5 blur-[120px] dark:bg-primary-500/6" />
+
+                <div className="absolute right-[-15%] top-[30%] h-105 w-105 rounded-full bg-blue-300/4 blur-[120px] dark:bg-blue-500/5" />
+
+                {/* Bottom fade */}
+                <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-background via-background/65 to-transparent" />
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
                     <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-200 dark:border-blue-800/50">
@@ -258,10 +314,21 @@ export default function PublicJobsPage() {
                         ) : (
                             <>
                                 {/* Grid kết quả lọc */}
-                                <div className={`grid gap-5 ${viewMode === 'grid' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
-                                    {filteredJobs.slice((currentPage - 1) * 10, currentPage * 10).map(job => (
-                                        <JobCard key={job.id} job={job} />
-                                    ))}
+                                <div
+                                    className={`grid gap-5 ${viewMode === 'grid'
+                                        ? 'grid-cols-1 xl:grid-cols-2'
+                                        : 'grid-cols-1'
+                                        }`}
+                                >
+                                    {filteredJobs
+                                        .slice((currentPage - 1) * 10, currentPage * 10)
+                                        .map(job => (
+                                            <JobCard
+                                                key={job.id}
+                                                job={job}
+                                                viewMode={viewMode}
+                                            />
+                                        ))}
                                 </div>
 
                                 {/* Phân trang Kết quả lọc */}
@@ -283,101 +350,302 @@ export default function PublicJobsPage() {
                     </div>
                 </div>
 
-                {/* ================= PHẦN 2: VIỆC LÀM HOT (Full Width 100%) ================= */}
+                {/* ================= PHẦN 2: VIỆC LÀM HOT ================= */}
                 {jobs.filter(j => j.is_hot).length > 0 && (
-                    <div className="space-y-6 w-full border-t border-slate-200 dark:border-slate-800 pt-16">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                            <div>
-                                <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
-                                    Cơ hội{' '}
-                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-rose-500">
-                                        Việc Làm Hot
+                    <div className="w-full border-t border-slate-200 pt-16 dark:border-slate-800">
+                        <div className="group/shop relative overflow-hidden rounded-2xl border border-orange-200/70 bg-linear-to-br from-orange-50/40 via-white to-rose-50/30 shadow-sm transition-all duration-500 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/10 dark:border-orange-500/20 dark:bg-linear-to-br dark:from-slate-900 dark:via-slate-900 dark:to-orange-950/20 dark:hover:border-orange-500/40">
+
+                            {/* Background animation */}
+                            <motion.div
+                                className="pointer-events-none absolute -left-32 top-0 h-40 w-72 rounded-full bg-orange-400/10 blur-3xl"
+                                animate={{
+                                    x: [0, 100, 0],
+                                    opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{
+                                    duration: 7,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut'
+                                }}
+                            />
+
+                            <motion.div
+                                className="pointer-events-none absolute -right-32 bottom-0 h-40 w-72 rounded-full bg-rose-400/10 blur-3xl"
+                                animate={{
+                                    x: [0, -100, 0],
+                                    opacity: [0.2, 0.5, 0.2]
+                                }}
+                                transition={{
+                                    duration: 8,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut'
+                                }}
+                            />
+
+                            {/* Header */}
+                            <div className="relative z-10 border-b border-orange-100/70 px-5 py-5 dark:border-slate-800 md:px-6">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <motion.div
+                                            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-400 to-rose-500 text-white shadow-lg shadow-orange-500/25"
+                                            animate={{
+                                                scale: [1, 1.05, 0.98, 1.04, 1],
+                                                rotate: [0, -2, 2, -1, 0]
+                                            }}
+                                            transition={{
+                                                duration: 1.8,
+                                                repeat: Infinity,
+                                                ease: 'easeInOut'
+                                            }}
+                                        >
+                                            <motion.div
+                                                className="absolute inset-0 rounded-xl bg-orange-400/40 blur-md"
+                                                animate={{
+                                                    opacity: [0.3, 0.7, 0.35, 0.65, 0.3],
+                                                    scale: [0.9, 1.15, 0.95, 1.1, 0.9]
+                                                }}
+                                                transition={{
+                                                    duration: 1.5,
+                                                    repeat: Infinity,
+                                                    ease: 'easeInOut'
+                                                }}
+                                            />
+
+                                            <Flame className="relative z-10 h-6 w-6 fill-current" />
+                                        </motion.div>
+
+                                        <div className="min-w-0">
+                                            <h2 className="truncate text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white md:text-2xl">
+                                                Việc Làm{' '}
+                                                <span className="bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                                                    Hot
+                                                </span>
+                                            </h2>
+
+                                            <p className="mt-0.5 hidden text-sm text-slate-400 sm:block">
+                                                Những vị trí có mức đãi ngộ tốt nhất đang chờ đón bạn.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        href={`${ROUTES.PUBLIC_JOBS}?is_hot=true`}
+                                        className="flex shrink-0 items-center gap-1 text-sm font-bold text-orange-600 transition-colors hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400"
+                                    >
+                                        Xem tất cả
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Link>
+                                </div>
+
+                                {/* Filter */}
+                                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-orange-50/60 px-4 py-2.5 dark:bg-orange-500/5">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className="hidden shrink-0 text-sm font-medium text-slate-500 sm:inline dark:text-slate-400">
+                                            Sắp xếp theo:
+                                        </span>
+
+                                        <select className="h-9 cursor-pointer rounded-lg border border-orange-100 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-orange-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                            <option value="default">Mặc định</option>
+                                            <option value="salary_desc">Lương cao nhất</option>
+                                            <option value="latest">Mới cập nhật</option>
+                                        </select>
+                                    </div>
+
+                                    <span className="shrink-0 text-sm font-medium text-slate-400">
+                                        {jobs.filter(j => j.is_hot).length} việc làm
                                     </span>
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-                                    Những vị trí có mức đãi ngộ tốt nhất đang chờ đón bạn.
-                                </p>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                                    <span>Sắp xếp theo:</span>
-                                    <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-orange-500">
-                                        <option value="default">Mặc định</option>
-                                        <option value="salary_desc">Lương cao nhất</option>
-                                        <option value="latest">Mới cập nhật</option>
-                                    </select>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                            {jobs.filter(j => j.is_hot).slice((hotPage - 1) * 9, hotPage * 9).map(job => (
-                                <HotJobItem key={job.id} job={job} />
-                            ))}
-                        </div>
+                            {/* Jobs */}
+                            <div className="relative z-10 bg-linear-to-b from-transparent via-orange-50/10 to-orange-50/20 p-5 dark:via-orange-950/5 dark:to-orange-950/10 md:p-6">
+                                <motion.div
+                                    key={hotPage}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                                >
+                                    {jobs
+                                        .filter(j => j.is_hot)
+                                        .slice((hotPage - 1) * 9, hotPage * 9)
+                                        .map(job => (
+                                            <HotJobItem key={job.id} job={job} />
+                                        ))}
+                                </motion.div>
 
-                        {Math.ceil(jobs.filter(j => j.is_hot).length / 9) > 1 && (
-                            <div className="mt-10 flex items-center justify-center gap-4">
-                                <button disabled={hotPage === 1} onClick={() => setHotPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                    <span className="text-orange-600 dark:text-orange-500">{hotPage}</span> / {Math.ceil(jobs.filter(j => j.is_hot).length / 9)} trang
-                                </div>
-                                <button disabled={hotPage === Math.ceil(jobs.filter(j => j.is_hot).length / 9)} onClick={() => setHotPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
+                                {/* Pagination */}
+                                {Math.ceil(jobs.filter(j => j.is_hot).length / 9) > 1 && (
+                                    <div className="mt-6 flex justify-center">
+                                        <div className="flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50/60 p-1 dark:border-slate-800 dark:bg-slate-800/70">
+                                            <button
+                                                disabled={hotPage === 1}
+                                                onClick={() => setHotPage(p => p - 1)}
+                                                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+
+                                            <div className="min-w-16 px-2 text-center text-sm font-bold text-slate-500 dark:text-slate-400">
+                                                <span className="text-orange-600 dark:text-orange-500">{hotPage}</span>
+                                                <span className="mx-1">/</span>
+                                                {Math.ceil(jobs.filter(j => j.is_hot).length / 9)}
+                                            </div>
+
+                                            <button
+                                                disabled={hotPage === Math.ceil(jobs.filter(j => j.is_hot).length / 9)}
+                                                onClick={() => setHotPage(p => p + 1)}
+                                                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700"
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 )}
 
-                {/* ================= PHẦN 3: VIỆC LÀM MỚI NHẤT (Full Width 100%) ================= */}
-                <div className="space-y-6 w-full border-t border-slate-200 dark:border-slate-800 pt-16">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                        <div>
-                            <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
-                                Khám phá{' '}
-                                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-500">
-                                    Việc Làm Mới Nhất
+                {/* ================= PHẦN 3: VIỆC LÀM MỚI NHẤT ================= */}
+                <div className="w-full border-t border-slate-200 pt-16 dark:border-slate-800">
+                    <div className="group/shop relative overflow-hidden rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50/40 via-white to-cyan-50/30 shadow-sm transition-all duration-500 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5 dark:border-blue-500/15 dark:bg-linear-to-br dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/10">
+
+                        {/* Background animation nhẹ */}
+                        <motion.div
+                            className="pointer-events-none absolute -left-32 top-0 h-36 w-72 rounded-full bg-blue-400/5 blur-3xl"
+                            animate={{
+                                x: [0, 80, 0],
+                                opacity: [0.3, 0.5, 0.3]
+                            }}
+                            transition={{
+                                duration: 8,
+                                repeat: Infinity,
+                                ease: 'easeInOut'
+                            }}
+                        />
+
+                        <motion.div
+                            className="pointer-events-none absolute -right-32 bottom-0 h-36 w-72 rounded-full bg-cyan-400/5 blur-3xl"
+                            animate={{
+                                x: [0, -70, 0],
+                                opacity: [0.2, 0.4, 0.2]
+                            }}
+                            transition={{
+                                duration: 9,
+                                repeat: Infinity,
+                                ease: 'easeInOut'
+                            }}
+                        />
+
+                        {/* Header */}
+                        <div className="relative z-10 border-b border-blue-100/70 px-5 py-5 dark:border-slate-800 md:px-6">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <motion.div
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+                                        animate={{
+                                            y: [0, -2, 0],
+                                            scale: [1, 1.02, 1]
+                                        }}
+                                        transition={{
+                                            duration: 3,
+                                            repeat: Infinity,
+                                            ease: 'easeInOut'
+                                        }}
+                                    >
+                                        <Clock3 className="h-5 w-5" />
+                                    </motion.div>
+
+                                    <div className="min-w-0">
+                                        <h2 className="truncate text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white md:text-2xl">
+                                            Việc Làm{' '}
+                                            <span className="bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                                                Mới Nhất
+                                            </span>
+                                        </h2>
+
+                                        <p className="mt-0.5 hidden text-sm text-slate-400 sm:block">
+                                            Cập nhật liên tục hàng ngàn cơ hội từ các doanh nghiệp hàng đầu.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <Link
+                                    href={ROUTES.PUBLIC_JOBS}
+                                    className="flex shrink-0 items-center gap-1 text-sm font-bold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Xem tất cả
+                                    <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            </div>
+
+                            {/* Filter */}
+                            <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-blue-50/60 px-4 py-2.5 dark:bg-blue-500/5">
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <span className="hidden shrink-0 text-sm font-medium text-slate-500 sm:inline dark:text-slate-400">
+                                        Sắp xếp theo:
+                                    </span>
+
+                                    <select className="h-9 cursor-pointer rounded-lg border border-blue-100 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                        <option value="latest">Mới nhất</option>
+                                        <option value="salary_desc">Lương cao nhất</option>
+                                    </select>
+                                </div>
+
+                                <span className="shrink-0 text-sm font-medium text-slate-400">
+                                    {jobs.length} việc làm
                                 </span>
-                            </h2>
-                            <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-                                Cập nhật liên tục hàng ngàn cơ hội từ các doanh nghiệp hàng đầu.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                                <span>Sắp xếp theo:</span>
-                                <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-blue-500">
-                                    <option value="latest">Mới nhất</option>
-                                    <option value="salary_desc">Lương cao nhất</option>
-                                </select>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {[...jobs].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice((latestPage - 1) * 9, latestPage * 9).map(job => (
-                            <LatestJobItem key={job.id} job={job} />
-                        ))}
-                    </div>
+                        {/* Jobs */}
+                        <div className="relative z-10 bg-linear-to-b from-transparent via-blue-50/10 to-blue-50/20 p-5 dark:via-blue-950/5 dark:to-blue-950/10 md:p-6">
+                            <motion.div
+                                key={latestPage}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                                className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            >
+                                {[...jobs]
+                                    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+                                    .slice((latestPage - 1) * 9, latestPage * 9)
+                                    .map(job => (
+                                        <LatestJobItem key={job.id} job={job} />
+                                    ))}
+                            </motion.div>
 
-                    {Math.ceil(jobs.length / 9) > 1 && (
-                        <div className="mt-10 flex items-center justify-center gap-4">
-                            <button disabled={latestPage === 1} onClick={() => setLatestPage(p => p - 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <div className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                <span className="text-blue-600 dark:text-blue-400">{latestPage}</span> / {Math.ceil(jobs.length / 9)} trang
-                            </div>
-                            <button disabled={latestPage === Math.ceil(jobs.length / 9)} onClick={() => setLatestPage(p => p + 1)} className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                            {/* Pagination */}
+                            {Math.ceil(jobs.length / 9) > 1 && (
+                                <div className="mt-6 flex justify-center">
+                                    <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50/60 p-1 dark:border-slate-800 dark:bg-slate-800/70">
+                                        <button
+                                            disabled={latestPage === 1}
+                                            onClick={() => setLatestPage(p => p - 1)}
+                                            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </button>
+
+                                        <div className="min-w-16 px-2 text-center text-sm font-bold text-slate-500 dark:text-slate-400">
+                                            <span className="text-blue-600 dark:text-blue-400">{latestPage}</span>
+                                            <span className="mx-1">/</span>
+                                            {Math.ceil(jobs.length / 9)}
+                                        </div>
+
+                                        <button
+                                            disabled={latestPage === Math.ceil(jobs.length / 9)}
+                                            onClick={() => setLatestPage(p => p + 1)}
+                                            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
 
             </main>

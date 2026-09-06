@@ -12,6 +12,7 @@ import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.consta
 import { ROUTES } from '@/constants/routes';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getJobBadgeConfig, JOB_BADGE_CONFIG } from '@/utils/tier-colors';
 
 function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any, deleteJob: (id: string) => void, isSelected: boolean, onToggleSelect: (id: string) => void }) {
     const { candidates, isLoading: isRankingLoading } = useJobRanking(job.id);
@@ -20,6 +21,9 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
     const isClosed = job.status === 'closed';
     const isExpired = job.deadline && new Date(job.deadline).getTime() < new Date().getTime();
     const isActive = !isClosed && !isExpired;
+
+    const statusBadge = getJobBadgeConfig(isActive, isClosed);
+    const hotBadge = JOB_BADGE_CONFIG.hot;
 
     return (
         <div className={`bg-white dark:bg-slate-900 p-5 rounded-3xl border transition-all flex flex-col group relative overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary-500/10 ${isSelected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-slate-200 dark:border-slate-800 hover:border-primary-400 dark:hover:border-primary-600'}`}>
@@ -36,17 +40,22 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
                         {isSelected && <Check className="w-3.5 h-3.5" />}
                     </button>
                     <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isClosed ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                        <span className={`text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-emerald-600' : isClosed ? 'text-rose-600' : 'text-amber-600'}`}>
-                            {isActive ? 'Đang mở' : isClosed ? 'Đã đóng' : 'Hết hạn'}
+                        <span
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}
+                        >
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
+                            {statusBadge.label}
                         </span>
-                    </div>
 
-                    {job.is_hot && (
-                        <div className="flex items-center gap-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-sm">
-                            <Flame className="w-3 h-3" /> Hot
-                        </div>
-                    )}
+                        {job.is_hot && (
+                            <span
+                                className={`flex items-center gap-1 ${hotBadge.bg} ${hotBadge.text} ${hotBadge.border} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${hotBadge.glow}`}
+                            >
+                                <Flame className="w-3 h-3" />
+                                {hotBadge.label}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

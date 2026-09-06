@@ -1,13 +1,32 @@
 'use client';
 
-import { BrainCircuit, GraduationCap, Zap, CheckCircle2, User, Star } from 'lucide-react';
+import { BrainCircuit, GraduationCap, Zap, CheckCircle2, User, Star, Lock } from 'lucide-react';
 import { Job } from '@/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
+import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
+import ProFeatureLock from '@/components/shared/ProFeatureLock';
 
 interface TabAIConfigProps {
     jobInfo: Job;
 }
 
 export default function TabAIConfig({ jobInfo }: TabAIConfigProps) {
+    // 1. Fetch Subscription Data
+    const { data: myPlanRes } = useSubscription();
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const currentPlanCode = myPlanRes?.data?.current_plan_code || 'hr_free';
+    const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
+    const canCustomizeAI = currentPlan?.features?.can_customize_ai_weights || false;
+
+    // 2. Lấy thông tin Gói mở khóa (Unlock Plan) & Cấu hình Badge
+    const unlockPlan = plansRes?.data?.find((p: any) => p.features?.can_customize_ai_weights);
+    const unlockPlanName = unlockPlan?.name || 'Enterprise';
+    const unlockTierConfig = getTierBadgeConfig(unlockPlan?.tier_level || 3);
+    const userPlanColor = getTierBadgeConfig(currentPlan?.tier_level || 0);
+
     if (!jobInfo) return null;
 
     const aiWeights = {
@@ -18,40 +37,76 @@ export default function TabAIConfig({ jobInfo }: TabAIConfigProps) {
     };
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-6">
 
             {/* KHỐI 1: TRỌNG SỐ AI */}
             <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                    <BrainCircuit className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-base font-black text-slate-800 dark:text-white tracking-wider">
-                        Phân bổ Trọng số Thuật toán AI
-                    </h3>
-                    <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-black bg-linear-to-r from-amber-500 to-orange-500 text-white uppercase tracking-widest shadow-sm ml-2">
-                        Pro
-                    </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <BrainCircuit className="w-5 h-5 text-blue-500" />
+                        <h3 className="text-base font-black text-slate-800 dark:text-white tracking-wider">
+                            Phân bổ Trọng số Thuật toán AI
+                        </h3>
+                        {canCustomizeAI ? (
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest shadow-sm border ml-2 ${userPlanColor.bg} ${userPlanColor.text} ${userPlanColor.border}`}>
+                                {currentPlan?.name || 'Đã mở khóa'}
+                            </span>
+                        ) : (
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest shadow-sm border ml-2 ${unlockTierConfig.bg} ${unlockTierConfig.text} ${unlockTierConfig.border}`}>
+                                {unlockPlanName.replace('HR ', '')}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Teaser Button điều hướng sang màn Chỉnh sửa (Nếu có quyền) hoặc Billing (Nếu chưa) */}
+                    {!canCustomizeAI && (
+                        <Link href={ROUTES.HR_BILLING} className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-500 hover:underline bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800/30 transition-colors w-fit">
+                            <Lock className="w-3.5 h-3.5" /> Mở khóa quyền tùy chỉnh
+                        </Link>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 h-1 bg-primary-500 transition-all" style={{ width: `${aiWeights.skills}%` }}></div>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kỹ năng</p>
-                        <p className="text-3xl font-black text-primary-600 dark:text-primary-400">{aiWeights.skills}%</p>
-                    </div>
-                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all" style={{ width: `${aiWeights.nlp}%` }}></div>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ngữ nghĩa</p>
-                        <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{aiWeights.nlp}%</p>
-                    </div>
-                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 h-1 bg-emerald-500 transition-all" style={{ width: `${aiWeights.experience}%` }}></div>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kinh nghiệm</p>
-                        <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{aiWeights.experience}%</p>
-                    </div>
-                    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all" style={{ width: `${aiWeights.education}%` }}></div>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Học vấn</p>
-                        <p className="text-3xl font-black text-amber-500">{aiWeights.education}%</p>
+                {/* Vùng hiển thị Trọng số AI + Overlay */}
+                <div
+                    className={`relative w-full rounded-3xl overflow-hidden ${!canCustomizeAI
+                            ? 'min-h-90 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm p-6 md:p-10 flex flex-col justify-center'
+                            : ''
+                        }`}
+                >
+                    {!canCustomizeAI && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 sm:p-8 bg-white/60 dark:bg-slate-900/80 backdrop-blur-md">
+                            <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 sm:p-4">
+                                <ProFeatureLock
+                                    title="Mở khóa Tinh chỉnh AI"
+                                    description="Tự do can thiệp vào bộ não của hệ thống để xem tỷ trọng chi tiết và thay đổi linh hoạt theo nhu cầu tuyển dụng."
+                                    requiredTierName={unlockPlanName.replace('HR ', '')}
+                                    requiredTierLevel={unlockPlan?.tier_level || 3}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 transition-all w-full ${!canCustomizeAI ? 'filter blur-[5px] pointer-events-none select-none opacity-40' : ''}`}>
+                        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute bottom-0 left-0 h-1 bg-primary-500 transition-all" style={{ width: `${aiWeights.skills}%` }}></div>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kỹ năng</p>
+                            <p className="text-3xl font-black text-primary-600 dark:text-primary-400">{aiWeights.skills}%</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all" style={{ width: `${aiWeights.nlp}%` }}></div>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ngữ nghĩa</p>
+                            <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{aiWeights.nlp}%</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute bottom-0 left-0 h-1 bg-emerald-500 transition-all" style={{ width: `${aiWeights.experience}%` }}></div>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kinh nghiệm</p>
+                            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{aiWeights.experience}%</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all" style={{ width: `${aiWeights.education}%` }}></div>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Học vấn</p>
+                            <p className="text-3xl font-black text-amber-500">{aiWeights.education}%</p>
+                        </div>
                     </div>
                 </div>
             </div>

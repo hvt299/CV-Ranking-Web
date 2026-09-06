@@ -6,6 +6,7 @@ import { ArrowLeft, Building2, MapPin, Briefcase, Calendar, Edit2, Share2, MoreH
 import { Job } from '@/types';
 import toast from 'react-hot-toast';
 import { ROUTES } from '@/constants/routes';
+import { JOB_BADGE_CONFIG, getJobBadgeConfig } from '@/utils/tier-colors';
 
 interface JobDetailHeaderProps {
     jobInfo: Job;
@@ -18,6 +19,9 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
     const isClosed = jobInfo.status === 'closed';
     const isExpired = jobInfo.deadline && new Date(jobInfo.deadline).getTime() < new Date().getTime();
     const isActive = !isClosed && !isExpired;
+
+    const statusBadge = getJobBadgeConfig(isActive, isClosed);
+    const hotBadge = JOB_BADGE_CONFIG.hot;
 
     const handleShare = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -51,17 +55,18 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
                         </h1>
                         {/* Status Badge + Hot Badge */}
                         <div className="flex items-center gap-2 shrink-0">
-                            <span className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                isClosed ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' :
-                                    'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
-                                }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isClosed ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                                {isActive ? 'Đang mở' : isClosed ? 'Đã đóng' : 'Hết hạn'}
+                            <span
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}
+                            >
+                                <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
+                                {statusBadge.label}
                             </span>
 
                             {jobInfo.is_hot && (
-                                <span className="flex items-center gap-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                    <Flame className="w-3 h-3" /> Hot
+                                <span
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${hotBadge.bg} ${hotBadge.text} ${hotBadge.border} ${hotBadge.glow}`}
+                                >
+                                    <Flame className="w-3 h-3" /> {hotBadge.label}
                                 </span>
                             )}
                         </div>

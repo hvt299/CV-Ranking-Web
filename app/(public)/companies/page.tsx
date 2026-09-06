@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Company } from '@/types';
 import apiClient from '@/lib/api-client';
 import { systemService } from '@/features/system/system.service';
+import Image from 'next/image';
 
 export default function PublicCompaniesPage() {
     const { isAuthenticated, user } = useAuthStore();
@@ -54,7 +55,8 @@ export default function PublicCompaniesPage() {
                 const data = compRes.data;
                 setCompanies(data);
 
-                const industries = [...new Set(data.map((c: Company) => c.industry).filter(Boolean))] as string[];
+                // Cập nhật lấy danh sách ngành nghề từ mảng industries
+                const industries = [...new Set(data.flatMap((c: Company) => c.industries || []).filter(Boolean))] as string[];
                 const sizes = [...new Set(data.map((c: Company) => c.size).filter(Boolean))] as string[];
 
                 setFilterOptions({ industries, locations: locRes, sizes });
@@ -79,7 +81,8 @@ export default function PublicCompaniesPage() {
             );
         }
 
-        if (filters.industry) result = result.filter(c => c.industry === filters.industry);
+        // Cập nhật logic lọc theo mảng industries
+        if (filters.industry) result = result.filter(c => c.industries && c.industries.includes(filters.industry));
         if (filters.size) result = result.filter(c => c.size === filters.size);
 
         const hasLocationFilter = filters.provinceCodes.length > 0 || filters.districtCodes.length > 0 || filters.wardCodes.length > 0 || filters.foreignLocation;
@@ -121,8 +124,51 @@ export default function PublicCompaniesPage() {
 
             {/* Khối Hero Banner Tích hợp Pattern */}
             <div className="relative pt-32 pb-16 md:pt-40 md:pb-20 border-b border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-[#0a0a0a]">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-75 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+                {/* Background image - giống HeroSection */}
+                <div className="absolute inset-0">
+                    <Image
+                        src="/images/hero-bg.jpg"
+                        alt=""
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-center opacity-[0.22] dark:opacity-[0.22]"
+                    />
+
+                    {/* Light mode overlay */}
+                    <div className="absolute inset-0 bg-linear-to-b from-background/45 via-background/70 to-background/95 dark:hidden" />
+
+                    {/* Dark mode overlay */}
+                    <div className="absolute inset-0 hidden bg-linear-to-b from-[#020617]/55 dark:block" />
+
+                    {/* Dark mode color tint */}
+                    <div className="absolute inset-0 hidden bg-blue-950/20 mix-blend-multiply dark:block" />
+                </div>
+
+                {/* Grid vuông - giống HeroSection */}
+                <div
+                    className="absolute inset-0 opacity-[0.065] dark:opacity-[0.055]"
+                    style={{
+                        backgroundImage:
+                            'linear-gradient(#64748b 1px, transparent 1px), linear-gradient(90deg, #64748b 1px, transparent 1px)',
+                        backgroundSize: '4rem 4rem',
+                        maskImage:
+                            'radial-gradient(ellipse 80% 75% at 50% 25%, black 30%, transparent 90%)',
+                        WebkitMaskImage:
+                            'radial-gradient(ellipse 80% 75% at 50% 25%, black 30%, transparent 90%)',
+                    }}
+                />
+
+                {/* Primary glow */}
+                <div className="absolute left-1/2 top-[-12%] h-130 w-205 -translate-x-1/2 rounded-full bg-primary-500/10 blur-[140px] dark:bg-primary-500/10" />
+
+                {/* Soft side glows */}
+                <div className="absolute left-[-15%] top-[20%] h-105 w-105 rounded-full bg-primary-400/4.5 blur-[120px] dark:bg-primary-500/6" />
+
+                <div className="absolute right-[-15%] top-[30%] h-105 w-105 rounded-full bg-blue-300/4 blur-[120px] dark:bg-blue-500/5" />
+
+                {/* Bottom fade */}
+                <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-background via-background/65 to-transparent" />
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
                     <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-200 dark:border-blue-800/50">
@@ -157,7 +203,7 @@ export default function PublicCompaniesPage() {
                     <div className="w-full lg:w-3/4 flex flex-col gap-6">
 
                         {/* Khu vực Điều hướng Lọc Phụ & Chế độ xem */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-text p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
+                        <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
                             <span className="font-bold text-slate-800 dark:text-slate-200">
                                 Tìm thấy <span className="text-blue-600 dark:text-blue-400">{filteredCompanies.length}</span> doanh nghiệp
                             </span>
@@ -194,7 +240,7 @@ export default function PublicCompaniesPage() {
                                 <p className="text-slate-500 font-medium">Đang tải danh sách công ty...</p>
                             </div>
                         ) : filteredCompanies.length === 0 ? (
-                            <div className="text-center py-20 bg-white dark:bg-text rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
+                            <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center">
                                 <XCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
                                 <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">Không tìm thấy công ty phù hợp</h3>
                                 <p className="text-slate-500 font-medium mb-6">Thử thay đổi từ khóa hoặc thiết lập lại bộ lọc.</p>

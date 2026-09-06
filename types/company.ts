@@ -7,6 +7,12 @@ export interface KYCDocument {
     uploaded_at?: string;
 }
 
+export interface SocialLinks {
+    facebook?: string;
+    linkedin?: string;
+    youtube?: string;
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -15,14 +21,20 @@ export interface Company {
     status: CompanyStatus;
     rejection_reason?: string;
 
-    industry?: string;
+    industries?: string[];
     size?: string;
     website?: string;
-    location?: LocationDetail; // Tự động kế thừa LocationDetail chuẩn từ job.ts
+    location?: LocationDetail;
 
     logo_url?: string;
     banner_url?: string;
     description?: string;
+
+    // Các trường mới bổ sung
+    gallery_urls?: string[];
+    social_links?: SocialLinks;
+    benefits?: string[];
+
     legal_representative_name?: string;
     kyc_documents?: KYCDocument[];
 

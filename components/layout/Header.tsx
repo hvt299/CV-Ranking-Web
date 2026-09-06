@@ -1,11 +1,23 @@
 'use client';
 
-import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard, Zap } from 'lucide-react';
+import {
+    Search,
+    Sun,
+    Moon,
+    Menu,
+    LogOut,
+    ChevronDown,
+    Settings,
+    CreditCard,
+    Zap,
+    Globe,
+    CalendarDays,
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import NotificationBell from '@/components/shared/NotificationBell';
 import { UserRole } from '@/types';
 import { ROUTES } from '@/constants/routes';
@@ -13,6 +25,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/utils/utils';
 import { getTierBadgeConfig } from '@/utils/tier-colors';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatSubscriptionDate } from '@/utils/format';
 
 interface HeaderProps {
     setIsMobileOpen: (val: boolean) => void;
@@ -22,181 +35,346 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
     const { data: subscriptionRes } = useSubscription();
     const planInfo = subscriptionRes?.data;
     const planBadgeConfig = getTierBadgeConfig(planInfo?.tier_level || 1);
+
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [language, setLanguage] = useState<'VI' | 'EN'>('VI');
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Lấy thêm isAuthenticated từ store
     const { user, logout, isAuthenticated } = useAuthStore();
-    const pathname = usePathname();
     const router = useRouter();
     const queryClient = useQueryClient();
 
     useEffect(() => setMounted(true), []);
 
-    // Tự động vô hiệu hóa cache cũ và lấy dữ liệu gói cước mới nhất khi đăng nhập thành công
     useEffect(() => {
         if (isAuthenticated) {
-            queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+            queryClient.invalidateQueries({
+                queryKey: ['my-subscription'],
+            });
         } else {
-            queryClient.removeQueries({ queryKey: ['my-subscription'] });
+            queryClient.removeQueries({
+                queryKey: ['my-subscription'],
+            });
         }
     }, [isAuthenticated, queryClient]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setIsDropdownOpen(false);
             }
         }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     const role = user?.role || UserRole.APPLICANT;
 
     const getRoleDisplayName = () => {
-        if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) return 'Nhà tuyển dụng';
-        if (role === UserRole.ADMIN) return 'Quản trị viên';
+        if (
+            role === UserRole.HR_OWNER ||
+            role === UserRole.HR_MEMBER
+        ) {
+            return 'Nhà tuyển dụng';
+        }
+
+        if (role === UserRole.ADMIN) {
+            return 'Quản trị viên';
+        }
+
         return 'Ứng viên';
     };
 
-    return (
-        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-25 transition-colors duration-300">
+    const profileRoute =
+        role === UserRole.ADMIN
+            ? ROUTES.ADMIN_SETTINGS
+            : role === UserRole.APPLICANT
+                ? ROUTES.APPLICANT_PROFILE
+                : ROUTES.HR_SETTINGS;
 
-            {/* ================= TRÁI: MOBILE MENU TONGGLE & TITLE/SEARCH ================= */}
+    const billingRoute =
+        role === UserRole.APPLICANT
+            ? ROUTES.APPLICANT_BILLING
+            : ROUTES.HR_BILLING;
+
+    const getPlanName = () => {
+        if (!planInfo?.current_plan) {
+            return 'Chưa có gói';
+        }
+
+        return planInfo.current_plan
+            .replace('HR ', '')
+            .replace('App ', '');
+    };
+
+    const getSubscriptionEndDate = () => {
+        const info = planInfo as
+            | (typeof planInfo & {
+                end_date?: string;
+                expires_at?: string;
+                expiration_date?: string;
+            })
+            | undefined;
+
+        return (
+            info?.end_date ||
+            info?.expires_at ||
+            info?.expiration_date ||
+            null
+        );
+    };
+
+    const formatDate = (date?: string | Date | null) => {
+        if (!date) return 'Vĩnh viễn';
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return 'Vĩnh viễn';
+        }
+
+        return parsedDate.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+    };
+
+    return (
+        <header className="sticky top-0 z-25 flex h-20 items-center justify-between border-b border-slate-200 bg-white px-4 transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900 md:px-8">
+            {/* LEFT */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => setIsMobileOpen(true)}
-                    className="md:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden"
+                    aria-label="Mở menu"
                 >
-                    <Menu className="w-6 h-6" />
+                    <Menu className="h-6 w-6" />
                 </button>
 
-                <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 dark:focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all w-80">
-                    <Search className="w-5 h-5 text-slate-400" />
+                <div className="hidden w-80 items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 transition-all focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20 dark:border-slate-700/50 dark:bg-slate-800/50 md:flex">
+                    <Search className="h-5 w-5 text-slate-400" />
+
                     <input
                         type="text"
                         placeholder="Tìm kiếm..."
-                        className="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 w-full placeholder:text-slate-400"
+                        className="w-full border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
                     />
                 </div>
             </div>
 
-            {/* ================= PHẢI: TOOLS & PROFILE ================= */}
-            <div className="flex items-center gap-3 md:gap-4">
+            {/* RIGHT */}
+            <div className="flex items-center gap-2 md:gap-4">
+                {/* Language */}
+                <button
+                    type="button"
+                    onClick={() =>
+                        setLanguage((prev) => (prev === 'VI' ? 'EN' : 'VI'))
+                    }
+                    className="flex items-center gap-1.5 rounded-full px-2.5 py-2.5 text-xs font-black text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                    title="Chuyển đổi ngôn ngữ"
+                    aria-label="Chuyển đổi ngôn ngữ"
+                >
+                    <Globe className="h-4 w-4" />
+                    <span>{language}</span>
+                </button>
 
-                {/* 1. Nút Đổi Theme */}
+                {/* Theme */}
                 {mounted && (
                     <button
-                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="p-2.5 text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-xl transition-colors"
+                        onClick={() =>
+                            setTheme(
+                                theme === 'dark'
+                                    ? 'light'
+                                    : 'dark',
+                            )
+                        }
+                        className="rounded-xl p-2.5 text-slate-500 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:text-slate-400 dark:hover:bg-primary-500/10 dark:hover:text-primary-400"
                         title="Chuyển đổi giao diện"
                     >
-                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        {theme === 'dark' ? (
+                            <Sun className="h-5 w-5" />
+                        ) : (
+                            <Moon className="h-5 w-5" />
+                        )}
                     </button>
                 )}
 
-                {/* 2. Chuông Thông Báo */}
+                {/* Notification */}
                 <NotificationBell />
 
-                <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1"></div>
+                <div className="mx-1 hidden h-8 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
 
-                {/* 3. User Avatar & Dropdown */}
-                <div className="relative" ref={dropdownRef}>
+                {/* PROFILE */}
+                <div
+                    className="relative"
+                    ref={dropdownRef}
+                >
                     <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="flex items-center gap-2 md:gap-3 p-1 pr-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        type="button"
+                        onClick={() =>
+                            setIsDropdownOpen(
+                                (prev) => !prev,
+                            )
+                        }
+                        className="flex items-center gap-2 rounded-full p-1 pr-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 md:gap-3"
                     >
                         <img
-                            src={user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'User')}&background=random`}
+                            src={
+                                user?.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                    user?.full_name ||
+                                    'User',
+                                )}&background=random`
+                            }
                             alt="Avatar"
-                            className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                            className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm dark:border-slate-700"
                             referrerPolicy="no-referrer"
                         />
-                        <div className="hidden md:flex flex-col items-start text-left">
-                            <span className="text-sm font-bold text-slate-700 dark:text-white leading-tight line-clamp-1 max-w-30">
+
+                        <div className="hidden flex-col items-start text-left md:flex">
+                            <span className="max-w-30 truncate text-sm font-bold leading-tight text-slate-700 dark:text-white">
                                 {user?.full_name || 'User'}
                             </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight">
+
+                            <div className="mt-0.5 flex items-center gap-1.5">
+                                <span className="text-[10px] font-medium leading-tight text-slate-500 dark:text-slate-400">
                                     {getRoleDisplayName()}
                                 </span>
-                                {planInfo?.current_plan && role !== UserRole.ADMIN && (
-                                    <span
-                                        className={cn(
-                                            "text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider border shadow-sm",
-                                            planBadgeConfig.bg,
-                                            planBadgeConfig.text,
-                                            planBadgeConfig.border
-                                        )}
-                                    >
-                                        {planInfo.current_plan.replace('HR ', '').replace('App ', '')}
-                                    </span>
-                                )}
+
+                                {planInfo?.current_plan &&
+                                    role !== UserRole.ADMIN && (
+                                        <span
+                                            className={cn(
+                                                'rounded-sm border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider shadow-sm',
+                                                planBadgeConfig.bg,
+                                                planBadgeConfig.text,
+                                                planBadgeConfig.border,
+                                            )}
+                                        >
+                                            {getPlanName()}
+                                        </span>
+                                    )}
                             </div>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
+
+                        <ChevronDown
+                            className={cn(
+                                'hidden h-4 w-4 text-slate-400 transition-transform duration-200 md:block',
+                                isDropdownOpen &&
+                                'rotate-180',
+                            )}
+                        />
                     </button>
 
+                    {/* DROPDOWN */}
                     {isDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 animate-in fade-in slide-in-from-top-2">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2 bg-slate-50/50 dark:bg-slate-800/50">
-                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user?.full_name || 'User'}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">{user?.email || 'email@example.com'}</p>
+                        <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl animate-in fade-in slide-in-from-top-2 dark:border-slate-800 dark:bg-slate-900">
+                            {/* Subscription */}
+                            {role !== UserRole.ADMIN && planInfo && (
+                                <div className="mx-2 mb-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <div className="space-y-2">
+                                        {/* Tên gói */}
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                                                Gói hiện tại
+                                            </span>
 
-                                {role !== UserRole.ADMIN && planInfo && (
-                                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg mt-2 gap-3">
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Gói hiện tại</span>
-                                            {/* Bỏ max-w-20, dùng truncate để tự động cắt nếu quá dài, nhưng ưu tiên flex-1 */}
-                                            <span className="text-xs font-black text-primary-600 truncate" title={planInfo.current_plan}>
+                                            <span
+                                                className="min-w-0 truncate text-right text-sm font-black text-blue-600 dark:text-blue-400"
+                                                title={planInfo.current_plan}
+                                            >
                                                 {planInfo.current_plan}
                                             </span>
                                         </div>
-                                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 shrink-0"></div>
-                                        <div className="flex flex-col items-end shrink-0">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Credit</span>
-                                            <div className="flex items-center gap-1">
-                                                <Zap className="w-3.5 h-3.5 text-amber-500" fill="currentColor" />
-                                                <span className="text-xs font-black text-slate-800 dark:text-white">
-                                                    {(planInfo.credits_remaining || 0).toLocaleString('vi-VN')}
+
+                                        {/* Credits */}
+                                        <div className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-700">
+                                            <div className="flex items-center gap-1.5">
+                                                <Zap
+                                                    className="h-3.5 w-3.5 text-amber-500"
+                                                    fill="currentColor"
+                                                />
+
+                                                <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                                                    Credits
                                                 </span>
                                             </div>
+
+                                            <span className="text-xs font-black text-slate-800 dark:text-white">
+                                                {(planInfo.credits_remaining || 0).toLocaleString('vi-VN')}
+                                            </span>
+                                        </div>
+
+                                        {/* Thời hạn */}
+                                        <div className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-700">
+                                            <div className="flex items-center gap-1.5">
+                                                <CalendarDays className="h-3.5 w-3.5 text-blue-500" />
+
+                                                <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                                                    Thời hạn
+                                                </span>
+                                            </div>
+
+                                            <span className="text-xs font-black text-slate-800 dark:text-white">
+                                                {formatSubscriptionDate(planInfo.end_date)}
+                                            </span>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
 
+                            {/* Profile */}
                             <Link
-                                href={role === UserRole.ADMIN ? ROUTES.ADMIN_SETTINGS : (role === UserRole.APPLICANT ? ROUTES.APPLICANT_PROFILE : ROUTES.HR_SETTINGS)}
-                                onClick={() => setIsDropdownOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                href={profileRoute}
+                                onClick={() =>
+                                    setIsDropdownOpen(false)
+                                }
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-primary-600 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-primary-400"
                             >
-                                <Settings className="w-4 h-4" /> Thiết lập thông tin
+                                <Settings className="h-4 w-4" />
+                                Thiết lập thông tin
                             </Link>
 
+                            {/* Billing */}
                             {role !== UserRole.ADMIN && (
                                 <Link
-                                    href={role === UserRole.APPLICANT ? ROUTES.APPLICANT_BILLING : ROUTES.HR_BILLING}
-                                    onClick={() => setIsDropdownOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                    href={billingRoute}
+                                    onClick={() =>
+                                        setIsDropdownOpen(
+                                            false,
+                                        )
+                                    }
+                                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-primary-600 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-primary-400"
                                 >
-                                    <CreditCard className="w-4 h-4" /> Quản lý gói cước
+                                    <CreditCard className="h-4 w-4" />
+                                    Quản lý gói cước
                                 </Link>
                             )}
 
-                            <div className="h-px bg-slate-100 dark:bg-slate-700/50 my-2"></div>
+                            <div className="my-2 h-px bg-slate-100 dark:bg-slate-700/50" />
 
+                            {/* Logout */}
                             <button
+                                type="button"
                                 onClick={() => {
                                     setIsDropdownOpen(false);
                                     logout(router);
                                 }}
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
                             >
-                                <LogOut className="w-4 h-4" /> Đăng xuất
+                                <LogOut className="h-4 w-4" />
+                                Đăng xuất
                             </button>
                         </div>
                     )}
