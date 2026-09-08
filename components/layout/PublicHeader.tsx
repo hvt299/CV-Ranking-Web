@@ -2,30 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-    Hexagon,
-    Search,
-    Building2,
-    Briefcase,
-    LayoutDashboard,
-    CreditCard,
-    Menu,
-    X,
-    ChevronDown,
-    Layers,
-    Sparkles,
-    BookOpen,
-    Info,
-    FileText,
-    HelpCircle,
-    Globe,
-    Sun,
-    Moon,
-    Settings,
-    LogOut,
-    Zap,
-    CalendarDays,
-} from 'lucide-react';
+import { Hexagon, Search, Building2, LayoutDashboard, CreditCard, Menu, X, ChevronDown, Layers, Sparkles, BookOpen, Info, FileText, HelpCircle, Globe, Sun, Moon, Settings, LogOut, Zap, CalendarDays } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 import { UserRole } from '@/types';

@@ -1,19 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {
-    MapPin,
-    Briefcase,
-    Heart,
-    Send,
-    Building2,
-    DollarSign,
-    Share2,
-    Clock,
-    Flame,
-    GraduationCap,
-    Timer,
-} from 'lucide-react';
+import { MapPin, Briefcase, Heart, Send, Building2, DollarSign, Share2, Clock, Flame, GraduationCap, Timer } from 'lucide-react';
 import { Job } from '@/types';
 import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import toast from 'react-hot-toast';

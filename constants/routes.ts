@@ -39,5 +39,6 @@ export const ROUTES = {
     ADMIN_COMPANIES: '/admin/companies',
     ADMIN_ANALYTICS: '/admin/analytics',
     ADMIN_AUDIT_LOGS: '/admin/audit-logs',
+    ADMIN_SUPPORT_TICKETS: '/admin/support-tickets',
     ADMIN_SETTINGS: '/admin/settings',
 };

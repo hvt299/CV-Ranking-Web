@@ -5,19 +5,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
 import { useTheme } from 'next-themes';
-import {
-    Sparkles,
-    Search,
-    MapPin,
-    Briefcase,
-    ChevronDown,
-} from 'lucide-react';
+import { Sparkles, Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 import Typewriter from '@/components/ui/Typewriter';
 import Select from 'react-select';
-import {
-    INDUSTRIES,
-    GROUPED_INDUSTRIES,
-} from '@/constants/job.constants';
+import { INDUSTRIES, GROUPED_INDUSTRIES } from '@/constants/job.constants';
 import { ROUTES } from '@/constants/routes';
 
 const HERO_WORDS = [

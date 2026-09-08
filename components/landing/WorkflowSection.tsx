@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-    BriefcaseBusiness,
-    BrainCircuit,
-    CalendarCheck,
-    CheckCircle2,
-    ArrowRight,
-} from 'lucide-react';
+import { BriefcaseBusiness, BrainCircuit, CalendarCheck, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const WORKFLOW_STEPS = [
     {

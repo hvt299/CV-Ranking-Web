@@ -172,14 +172,6 @@ export default function PublicJobsPage() {
         setSortBy('newest');
     };
 
-    const handleCardClick = (e: React.MouseEvent, jobId: string) => {
-        if ((e.target as Element).closest('button')) return;
-        router.push(ROUTES.PUBLIC_JOB_DETAIL(jobId));
-    };
-
-    const hotJobs = filteredJobs.filter(j => j.is_hot);
-    const regularJobs = filteredJobs.filter(j => !j.is_hot);
-
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex flex-col transition-colors duration-300">
             <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
@@ -189,7 +181,7 @@ export default function PublicJobsPage() {
                 {/* Background image - giống HeroSection */}
                 <div className="absolute inset-0">
                     <Image
-                        src="/images/hero-bg.jpg"
+                        src="/images/job-bg.jpg"
                         alt=""
                         fill
                         priority

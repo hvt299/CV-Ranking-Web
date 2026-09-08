@@ -2,22 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-    Users,
-    Building2,
-    BriefcaseBusiness,
-    TrendingUp,
-} from 'lucide-react';
+import { Users, Building2, BriefcaseBusiness, TrendingUp } from 'lucide-react';
 
 import Counter from '@/components/ui/Counter';
 import { systemService } from '@/features/system/system.service';
 
-const STAT_ICONS = [
-    Users,
-    Building2,
-    BriefcaseBusiness,
-    TrendingUp,
-];
+const STAT_ICONS = [ Users, Building2, BriefcaseBusiness, TrendingUp ];
 
 export default function StatsSection() {
     const [stats, setStats] = useState([
@@ -38,7 +28,7 @@ export default function StatsSection() {
         },
         {
             label: 'Tỷ lệ kết nối thành công',
-            value: 98,
+            value: 0,
             suffix: '%',
         },
     ]);
@@ -77,19 +67,7 @@ export default function StatsSection() {
     }, []);
 
     return (
-        <section
-            className="
-                border-y
-                border-slate-200
-                bg-blue-50
-                py-8
-                transition-colors
-                dark:border-slate-800
-                dark:bg-slate-900
-                sm:py-9
-                md:py-10
-            "
-        >
+        <section className="border-y border-slate-200 bg-blue-50 py-8 transition-colors dark:border-slate-800 dark:bg-slate-900 sm:py-9 md:py-10">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-2 md:grid-cols-4">
                     {stats.map((stat, index) => {

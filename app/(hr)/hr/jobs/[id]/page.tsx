@@ -26,7 +26,7 @@ export default function JobLeaderboardPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
 
             {/* PHASE 1: HEADER */}
             <JobDetailHeader jobInfo={jobInfo} companyInfo={companyInfo} />

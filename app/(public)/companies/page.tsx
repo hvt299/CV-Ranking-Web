@@ -127,7 +127,7 @@ export default function PublicCompaniesPage() {
                 {/* Background image - giống HeroSection */}
                 <div className="absolute inset-0">
                     <Image
-                        src="/images/hero-bg.jpg"
+                        src="/images/company-bg.jpg"
                         alt=""
                         fill
                         priority

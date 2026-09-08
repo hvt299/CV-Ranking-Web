@@ -48,56 +48,22 @@ export default function CompanyMarquee({
                                         onSelectCompany(companyName);
                                     }
                                 }}
-                                className="
-                                    group
-                                    w-32 h-20
-                                    md:w-40 md:h-24
-                                    flex items-center justify-center
-                                    rounded-xl
-                                    opacity-60
-                                    hover:opacity-100
-                                    transition-all duration-300
-                                    hover:scale-105
-                                "
-                            >
+                                className="group w-32 h-20 md:w-40 md:h-24 flex items-center justify-center rounded-xl opacity-60 hover:opacity-100 transition-all duration-300 hover:scale-105">
                                 {logoUrl ? (
                                     <img
                                         src={logoUrl}
                                         alt={companyName}
                                         title={companyName}
-                                        className="
-                                            max-w-full
-                                            max-h-full
-                                            w-auto
-                                            h-auto
-                                            object-contain
-                                            grayscale
-                                            group-hover:grayscale-0
-                                            transition-all
-                                            duration-300
-                                        "
+                                        className="max-w-full max-h-full w-auto h-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
                                         onError={(e) => {
-                                            console.error(
-                                                'Không thể tải logo:',
-                                                logoUrl
-                                            );
-
+                                            console.error('Không thể tải logo:',logoUrl);
                                             e.currentTarget.style.display = 'none';
                                         }}
                                     />
                                 ) : (
                                     <div
                                         title={companyName}
-                                        className="
-                                            w-14 h-14
-                                            rounded-xl
-                                            bg-slate-100
-                                            dark:bg-slate-800
-                                            flex items-center justify-center
-                                            text-slate-400
-                                            dark:text-slate-500
-                                        "
-                                    >
+                                        className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                         <Building2 className="w-7 h-7" />
                                     </div>
                                 )}

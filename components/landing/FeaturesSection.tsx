@@ -2,18 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import {
-    BrainCircuit,
-    FileSearch,
-    Zap,
-    ShieldCheck,
-    Sparkles,
-    CheckCircle2,
-    Search,
-    Cpu,
-    LockKeyhole,
-    ScanText,
-} from 'lucide-react';
+import { BrainCircuit, FileSearch, Zap, ShieldCheck, CheckCircle2, Search, Cpu, LockKeyhole, ScanText } from 'lucide-react';
 
 const FEATURES = [
     {

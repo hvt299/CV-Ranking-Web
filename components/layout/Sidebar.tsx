@@ -6,7 +6,7 @@ import {
     LayoutDashboard, Briefcase, Users, FolderOpen, FileText, ClipboardCheck, Home,
     BarChart2, Settings, HelpCircle, ChevronLeft,
     ChevronRight, Hexagon, X, Building2, ShieldCheck, ArrowRightLeft,
-    Sparkles
+    Sparkles, MessageSquare
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { UserRole } from "@/types";
@@ -70,6 +70,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const adminMenu: MenuItem[] = [
         { name: "Tổng quan", icon: LayoutDashboard, href: ROUTES.ADMIN_DASHBOARD },
         { name: "Quản lý công ty", icon: Building2, href: ROUTES.ADMIN_COMPANIES },
+        { name: "Hỗ trợ người dùng", icon: MessageSquare, href: ROUTES.ADMIN_SUPPORT_TICKETS },
         { name: "Phân tích hệ thống", icon: BarChart2, href: ROUTES.ADMIN_ANALYTICS },
         { name: "Nhật ký hệ thống", icon: ShieldCheck, href: ROUTES.ADMIN_AUDIT_LOGS },
     ];

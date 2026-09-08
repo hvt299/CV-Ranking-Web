@@ -1,18 +1,6 @@
 'use client';
 
-import {
-    Search,
-    Sun,
-    Moon,
-    Menu,
-    LogOut,
-    ChevronDown,
-    Settings,
-    CreditCard,
-    Zap,
-    Globe,
-    CalendarDays,
-} from 'lucide-react';
+import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard, Zap, Globe, CalendarDays } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
@@ -115,39 +103,6 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
         return planInfo.current_plan
             .replace('HR ', '')
             .replace('App ', '');
-    };
-
-    const getSubscriptionEndDate = () => {
-        const info = planInfo as
-            | (typeof planInfo & {
-                end_date?: string;
-                expires_at?: string;
-                expiration_date?: string;
-            })
-            | undefined;
-
-        return (
-            info?.end_date ||
-            info?.expires_at ||
-            info?.expiration_date ||
-            null
-        );
-    };
-
-    const formatDate = (date?: string | Date | null) => {
-        if (!date) return 'Vĩnh viễn';
-
-        const parsedDate = new Date(date);
-
-        if (Number.isNaN(parsedDate.getTime())) {
-            return 'Vĩnh viễn';
-        }
-
-        return parsedDate.toLocaleDateString('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
     };
 
     return (

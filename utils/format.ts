@@ -124,7 +124,7 @@ export const getDeadlineCountdown = (deadline?: string | Date): string => {
 };
 
 export const formatSubscriptionDate = (date?: string) => {
-    if (!date) return 'Không giới hạn';
+    if (!date) return 'Vĩnh viễn';
 
     return new Date(date).toLocaleDateString('vi-VN');
 };
