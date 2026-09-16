@@ -624,6 +624,7 @@ export default function FeaturesSection() {
                                             <motion.div
                                                 layoutId="active-feature"
                                                 className={`absolute bottom-0 left-0 top-0 hidden w-1 rounded-full lg:block ${itemStyles.glow}`}
+                                                transition={{ backgroundColor: { duration: 0 } }}
                                             />
                                         )}
                                     </button>

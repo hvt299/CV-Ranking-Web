@@ -145,7 +145,7 @@ export default function RegisterPage() {
     });
 
     return (
-        <div className="min-h-screen bg-background dark:bg-text flex items-center justify-center p-4 py-10 transition-colors duration-300 relative overflow-hidden">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 py-10 transition-colors duration-300 relative overflow-hidden">
             {/* Background Grid */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-50 dark:opacity-20 pointer-events-none" />
 
@@ -210,14 +210,14 @@ export default function RegisterPage() {
                             <label className="block text-sm font-semibold text-text dark:text-slate-300 mb-1.5">Họ và tên</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
-                                <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} className="w-full pl-9 pr-3 py-2.5 bg-input-bg dark:bg-text border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="Nguyễn Văn A" />
+                                <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} className="w-full pl-9 pr-3 py-2.5 bg-input-bg border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="Nguyễn Văn A" />
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text dark:text-slate-300 mb-1.5">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
-                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={!!inviteToken} className="w-full pl-9 pr-3 py-2.5 bg-input-bg dark:bg-text border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 disabled:opacity-50 transition-all" placeholder="name@company.com" />
+                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={!!inviteToken} className="w-full pl-9 pr-3 py-2.5 bg-input-bg border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 disabled:opacity-50 transition-all" placeholder="name@company.com" />
                             </div>
                         </div>
                     </div>
@@ -236,7 +236,7 @@ export default function RegisterPage() {
                             <label className="block text-sm font-semibold text-text dark:text-slate-300 mb-1.5">Mật khẩu</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
-                                <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-input-bg dark:bg-text border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="••••••••" />
+                                <input type={showPassword ? "text" : "password"} required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-input-bg border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="••••••••" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text dark:hover:text-white transition-colors">
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -258,7 +258,7 @@ export default function RegisterPage() {
                             <label className="block text-sm font-semibold text-text dark:text-slate-300 mb-1.5">Xác nhận mật khẩu</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
-                                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-input-bg dark:bg-text border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="••••••••" />
+                                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full pl-9 pr-10 py-2.5 bg-input-bg border border-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-sm text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 transition-all" placeholder="••••••••" />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text dark:hover:text-white transition-colors">
                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>

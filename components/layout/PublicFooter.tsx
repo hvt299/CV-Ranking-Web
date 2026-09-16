@@ -1,20 +1,49 @@
 'use client';
 
-import { ROUTES } from '@/constants/routes';
-import { Globe, Hexagon, Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Check, ChevronDown, Globe, Hexagon, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { ROUTES } from '@/constants/routes';
+import { LANGUAGES } from './PublicHeader';
 
 export default function PublicFooter() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [language, setLanguage] = useState<'VI' | 'EN'>('VI');
+    const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+
+    const languageRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => setMounted(true), []);
 
-    const toggleLanguage = () => {
-        setLanguage((prev) => (prev === 'VI' ? 'EN' : 'VI'));
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as Node;
+
+            if (
+                languageRef.current &&
+                !languageRef.current.contains(target)
+            ) {
+                setIsLanguageOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const selectedLanguage =
+        LANGUAGES.find((item) => item.code === language) || LANGUAGES[0];
+
+    const handleLanguageChange = (code: 'VI' | 'EN') => {
+        setLanguage(code);
+        setIsLanguageOpen(false);
     };
 
     return (
@@ -24,19 +53,33 @@ export default function PublicFooter() {
                 <div className="sm:col-span-2 lg:col-span-2">
                     <button
                         type="button"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        onClick={() =>
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth',
+                            })
+                        }
                         className="group mb-6 flex w-fit items-center gap-2"
                         aria-label="Về đầu trang"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-800 shadow-md shadow-blue-500/20 transition-transform group-hover:scale-105">
-                            <Hexagon
-                                className="h-6 w-6 text-white"
-                                fill="currentColor"
-                            />
+                        <div className="relative flex h-10 w-10 items-center justify-center">
+                            <div className="absolute inset-0 rounded-xl bg-blue-500/20 blur-md transition-all duration-500 group-hover:bg-blue-500/35 group-hover:blur-lg" />
+
+                            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-blue-600 to-blue-800 shadow-md shadow-blue-500/20 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-xl group-hover:shadow-blue-600/30">
+                                <span className="absolute inset-y-0 -left-full w-1/2 skew-x-[-20deg] bg-linear-to-r from-transparent via-white/25 to-transparent transition-all duration-700 group-hover:left-[130%]" />
+
+                                <Hexagon
+                                    className="relative z-10 h-6 w-6 text-white transition-transform duration-300 group-hover:scale-110"
+                                    fill="currentColor"
+                                />
+                            </div>
                         </div>
 
                         <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-                            ATS<span className="text-blue-600 dark:text-blue-400">SYSTEM</span>
+                            ATS
+                            <span className="text-blue-600 transition-colors duration-300 group-hover:text-blue-500 dark:text-blue-400 dark:group-hover:text-blue-300">
+                                SYSTEM
+                            </span>
                         </span>
                     </button>
 
@@ -194,33 +237,90 @@ export default function PublicFooter() {
 
                     <div className="hidden h-5 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
 
-                    {/* Language */}
-                    <button
-                        type="button"
-                        onClick={toggleLanguage}
-                        className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-xs font-black text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
-                        aria-label="Chuyển đổi ngôn ngữ"
-                        title="Chuyển đổi ngôn ngữ"
-                    >
-                        <Globe className="h-4 w-4" />
-                        <span>{language}</span>
-                    </button>
+                    {/* Language - đồng bộ Header */}
+                    <div className="relative" ref={languageRef}>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setIsLanguageOpen((prev) => !prev)
+                            }
+                            className={`flex h-10 items-center gap-1.5 rounded-full px-2.5 text-xs font-bold transition-colors ${isLanguageOpen
+                                    ? 'bg-slate-100 text-blue-600 dark:bg-slate-800 dark:text-blue-400'
+                                    : 'text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400'
+                                }`}
+                            title="Chọn ngôn ngữ"
+                            aria-label="Chọn ngôn ngữ"
+                            aria-expanded={isLanguageOpen}
+                        >
+                            <img
+                                src={selectedLanguage.flag}
+                                alt={selectedLanguage.name}
+                                className="h-4 w-6 rounded-sm object-cover shadow-sm"
+                            />
 
-                    {/* Theme */}
+                            <span>{selectedLanguage.code}</span>
+
+                            <ChevronDown
+                                className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${isLanguageOpen ? 'rotate-180' : ''
+                                    }`}
+                            />
+                        </button>
+
+                        {isLanguageOpen && (
+                            <div className="absolute bottom-full right-0 mb-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-in fade-in slide-in-from-bottom-2 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20">
+                                {LANGUAGES.map((item) => {
+                                    const isSelected =
+                                        language === item.code;
+
+                                    return (
+                                        <button
+                                            key={item.code}
+                                            type="button"
+                                            onClick={() =>
+                                                handleLanguageChange(item.code)
+                                            }
+                                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${isSelected
+                                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                                                }`}
+                                        >
+                                            <img
+                                                src={item.flag}
+                                                alt={item.name}
+                                                className="h-4 w-6 rounded-sm object-cover shadow-sm"
+                                            />
+
+                                            <span className="flex-1">
+                                                {item.name}
+                                            </span>
+
+                                            {isSelected && (
+                                                <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Theme - đồng bộ Header */}
                     {mounted && (
                         <button
                             type="button"
                             onClick={() =>
-                                setTheme(theme === 'dark' ? 'light' : 'dark')
+                                setTheme(
+                                    theme === 'dark' ? 'light' : 'dark'
+                                )
                             }
-                            className="rounded-full p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
                             aria-label="Chuyển đổi giao diện"
                             title="Chuyển đổi giao diện"
                         >
                             {theme === 'dark' ? (
-                                <Sun className="h-4 w-4" />
+                                <Sun className="h-4.5 w-4.5" />
                             ) : (
-                                <Moon className="h-4 w-4" />
+                                <Moon className="h-4.5 w-4.5" />
                             )}
                         </button>
                     )}

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { UserRole } from '@/types';
 import { cn } from '@/utils/utils';
 import { getTierBadgeConfig } from '@/utils/tier-colors';
+import { ROUTES } from '@/constants/routes';
 
 interface ProFeatureLockProps {
     title?: string;
@@ -27,8 +28,8 @@ export default function ProFeatureLock({
         user?.role === UserRole.HR_MEMBER;
 
     const billingRoute = isHR
-        ? '/hr/billing'
-        : '/applicant/billing';
+        ? ROUTES.HR_BILLING
+        : ROUTES.APPLICANT_BILLING;
 
     const tierConfig = getTierBadgeConfig(requiredTierLevel);
 

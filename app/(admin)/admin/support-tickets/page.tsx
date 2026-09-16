@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, MessageSquare, ExternalLink, Send, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Search, Filter, MessageSquare, ExternalLink, Send, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 
@@ -11,6 +11,15 @@ export default function AdminSupportTicketsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [categoryFilter, setCategoryFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+    
+    const getVisiblePages = (current: number, total: number) => {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        if (current <= 3) return [1, 2, 3, 4, '...', total];
+        if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
+        return [1, '...', current - 1, current, current + 1, '...', total];
+    };
 
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [isResolving, setIsResolving] = useState(false);
@@ -101,12 +110,18 @@ export default function AdminSupportTicketsPage() {
         return matchSearch && matchStatus && matchCategory;
     });
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, categoryFilter]);
+
+    const totalPages = Math.ceil(filteredTickets.length / pageSize);
+    const paginatedTickets = filteredTickets.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
-                        <MessageSquare className="w-6 h-6 text-primary-500" />
                         Hỗ trợ Người dùng
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý và phản hồi yêu cầu từ người dùng.</p>
@@ -174,32 +189,42 @@ export default function AdminSupportTicketsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                                {filteredTickets.length > 0 ? filteredTickets.map((t) => (
+                                {paginatedTickets.length > 0 ? paginatedTickets.map((t, index) => (
                                     <tr key={t.id || t._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => openTicketModal(t)}>
                                         <td className="p-5 pl-6">
-                                            <p className="font-bold text-sm text-primary-600 dark:text-primary-400">#{t.ticket_number}</p>
+                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                                <p className="font-bold text-sm text-primary-600 dark:text-primary-400">#{t.ticket_number}</p>
                                             <p className="text-xs text-slate-800 dark:text-white font-medium mt-1">{t.full_name}</p>
                                             <p className="text-[11px] text-slate-500">{t.email}</p>
+                                            </div>
                                         </td>
                                         <td className="p-5 max-w-75">
-                                            <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded mb-1">
+                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                                <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded mb-1">
                                                 {getCategoryLabel(t.category)}
                                             </span>
                                             <p className="text-sm font-bold text-slate-800 dark:text-white truncate" title={t.subject}>{t.subject}</p>
+                                            </div>
                                         </td>
                                         <td className="p-5 text-sm font-medium text-slate-500">
-                                            {new Date(t.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                                {new Date(t.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                            </div>
                                         </td>
                                         <td className="p-5">
-                                            {getStatusBadge(t.status)}
+                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                                {getStatusBadge(t.status)}
+                                            </div>
                                         </td>
                                         <td className="p-5 pr-6 text-right">
-                                            <button
+                                            <div className="flex justify-end animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                                <button
                                                 className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors"
                                                 onClick={(e) => { e.stopPropagation(); openTicketModal(t); }}
                                             >
                                                 Xem & Phản hồi
-                                            </button>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )) : (
@@ -212,6 +237,34 @@ export default function AdminSupportTicketsPage() {
                             </tbody>
                         </table>
                     </div>
+                
+                    {/* THÀNH PHẦN PHÂN TRANG */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 mt-auto">
+                            <p className="text-sm font-medium text-slate-500">
+                                Hiển thị <span className="font-bold text-slate-800 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> đến <span className="font-bold text-slate-800 dark:text-white">{Math.min(currentPage * pageSize, filteredTickets.length)}</span> kết quả
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-sm">
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <div className="flex items-center gap-1">
+                                    {getVisiblePages(currentPage, totalPages).map((page, idx) => (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => typeof page === 'number' && setCurrentPage(page)} 
+                                        disabled={page === '...'}
+                                        className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${page !== '...' ? 'shadow-sm' : ''} ${currentPage === page ? 'bg-primary-600 text-white' : page === '...' ? 'text-slate-400 bg-transparent cursor-default' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                                        {page}
+                                    </button>
+                                ))}
+                                </div>
+                                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-sm">
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

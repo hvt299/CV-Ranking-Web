@@ -74,31 +74,31 @@ export default function AnalyticsPage() {
         );
     }
 
-    const funnelData = data?.funnel_chart || [{ name: 'Lượt xem', value: 1200 }, { name: 'Ứng tuyển', value: 300 }, { name: 'Phỏng vấn', value: 45 }];
-    const aiScoreData = data?.ai_score_distribution || [{ name: 'Tốt', value: 40, color: '#10b981' }, { name: 'Khá', value: 35, color: '#3b82f6' }];
-    const trendData = data?.applications_trend || [{ date: '01/09', cv_count: 12 }, { date: '02/09', cv_count: 19 }];
+    const skillsData = data?.charts?.skills_word_cloud || [];
+    const rejectionData = data?.charts?.rejection_reasons || [];
+    const heatmapData = data?.charts?.apply_time_heatmap || [];
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8 min-h-[calc(100vh-100px)]">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-card-bg p-8 rounded-2xl border border-border shadow-sm">
                 <div>
                     <div className="flex items-center">
-                        <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
-                            Phân tích Hiệu suất
+                        <h1 className="text-3xl font-black text-text tracking-tight flex items-center gap-3">
+                            Phân tích Tuyển dụng Chuyên sâu
                         </h1>
                         <span
-                            className={`ml-1.5 px-1.5 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm border ${unlockTierConfig.bg} ${unlockTierConfig.text} ${unlockTierConfig.border}`}
+                            className={`ml-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm border ${unlockTierConfig.bg} ${unlockTierConfig.text} ${unlockTierConfig.border}`}
                         >
                             {unlockPlanName.replace('HR ', '')}
                         </span>
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                        Báo cáo chuyên sâu về chất lượng ứng viên và phễu chuyển đổi.
+                    <p className="text-sm text-text-muted mt-2 font-medium">
+                        Insight độc quyền từ AI về kỹ năng, lý do từ chối và thói quen ứng viên.
                     </p>
                 </div>
 
                 <div className="flex gap-2">
-                    <select className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl px-4 py-2.5 outline-none focus:border-primary-500 shadow-sm cursor-pointer disabled:opacity-50" disabled={!isPro}>
+                    <select className="bg-background border border-border text-text font-bold rounded-xl px-4 py-2.5 outline-none focus:border-primary-500 shadow-sm cursor-pointer disabled:opacity-50" disabled={!isPro}>
                         <option value="30">30 ngày qua</option>
                         <option value="90">3 tháng qua</option>
                         <option value="all">Toàn thời gian</option>
@@ -116,87 +116,81 @@ export default function AnalyticsPage() {
                     />
                 )}
 
-                {/* BIỂU ĐỒ 3: LƯU LƯỢNG ỨNG TUYỂN FULL WIDTH */}
-                <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="font-black text-slate-800 dark:text-white text-lg">Lưu lượng Ứng tuyển (14 ngày)</h3>
-                            <p className="text-xs font-medium text-slate-500 mt-1">Số lượng CV nhận được theo từng ngày</p>
-                        </div>
-                        <div className="w-10 h-10 rounded-xl bg-info-50 dark:bg-info-900/20 flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-info-500" />
-                        </div>
-                    </div>
-
-                    <div className="h-62.5 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorCv" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-info-500)" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="var(--color-info-500)" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
-                                <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
-                                <Area type="monotone" dataKey="cv_count" name="Số lượng CV" stroke="var(--color-info-500)" strokeWidth={3} fillOpacity={1} fill="url(#colorCv)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* BIỂU ĐỒ 1: PHỄU TUYỂN DỤNG */}
-                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                    {/* BIỂU ĐỒ 1: SKILLS WORD CLOUD (Bar Chart giả lập do Recharts k có word cloud) */}
+                    <div className="bg-card-bg rounded-2xl p-6 border border-border shadow-sm flex flex-col h-full">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="font-black text-slate-800 dark:text-white text-lg">Phễu chuyển đổi (Funnel)</h3>
-                                <p className="text-xs font-medium text-slate-500 mt-1">Tỷ lệ rớt hồ sơ qua các vòng</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center">
-                                <TrendingUp className="w-5 h-5 text-primary-500" />
+                                <h3 className="font-bold text-text text-lg">Top Kỹ năng (Word Cloud)</h3>
+                                <p className="text-sm font-medium text-text-muted mt-1">Tần suất kỹ năng xuất hiện trong CV</p>
                             </div>
                         </div>
-
-                        <div className="h-70 w-full mt-auto">
+                        <div className="h-72 w-full mt-auto">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={funnelData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" opacity={0.2} />
+                                <BarChart data={skillsData} layout="vertical" margin={{ top: 0, right: 20, left: 20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} width={90} />
-                                    <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
-                                    <Bar dataKey="value" name="Số lượng" fill="var(--color-primary-500)" radius={[0, 8, 8, 0]} barSize={32}>
-                                        {funnelData.map((entry: any, index: number) => (
-                                            <Cell key={`cell-${index}`} fill={index === funnelData.length - 1 ? 'var(--color-success-500)' : 'var(--color-primary-500)'} />
-                                        ))}
-                                    </Bar>
+                                    <YAxis dataKey="text" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 12, fontWeight: 500 }} width={80} />
+                                    <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
+                                    <Bar dataKey="value" name="Tần suất" radius={[0, 4, 4, 0]} barSize={20} fill="var(--color-primary-500)" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* BIỂU ĐỒ 2: PHÂN BỔ ĐIỂM AI */}
-                    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col ${!isPro ? 'filter blur-[6px] pointer-events-none select-none' : ''}`}>
+                    {/* BIỂU ĐỒ 2: LÝ DO TỪ CHỐI (Pie Chart) */}
+                    <div className="bg-card-bg rounded-2xl p-6 border border-border shadow-sm flex flex-col h-full">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="font-black text-slate-800 dark:text-white text-lg">Chất lượng Nguồn CV (AI)</h3>
-                                <p className="text-xs font-medium text-slate-500 mt-1">Phân bổ theo mức độ phù hợp AI chấm</p>
+                                <h3 className="font-bold text-text text-lg">Lý do Loại CV</h3>
+                                <p className="text-sm font-medium text-text-muted mt-1">Phân tích từ Rejection Feedback</p>
                             </div>
                         </div>
-
-                        <div className="h-70 w-full flex items-center justify-center mt-auto">
+                        <div className="h-72 w-full flex items-center justify-center mt-auto">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie data={aiScoreData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
-                                        {aiScoreData.map((entry: any, index: number) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color || 'var(--color-primary-500)'} />
+                                    <Pie data={rejectionData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value">
+                                        {rejectionData.map((entry: any, index: number) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color || 'var(--color-error-500)'} />
                                         ))}
                                     </Pie>
-                                    <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold' }} />
                                 </PieChart>
                             </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* BIỂU ĐỒ 3: HEATMAP NỘP CV */}
+                    <div className="lg:col-span-2 bg-card-bg rounded-2xl p-6 border border-border shadow-sm flex flex-col">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="font-bold text-text text-lg">Thói quen Nộp CV (Heatmap)</h3>
+                                <p className="text-sm font-medium text-text-muted mt-1">Mật độ ứng viên theo Thứ & Khung giờ</p>
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto pb-4">
+                            <div className="min-w-[600px]">
+                                <div className="grid grid-cols-8 gap-2 mb-2">
+                                    <div className="text-sm font-bold text-text-subtle text-right pr-4 pt-2">Khung giờ</div>
+                                    {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(day => (
+                                        <div key={day} className="text-sm font-bold text-center text-text-subtle">{day}</div>
+                                    ))}
+                                </div>
+                                {['Sáng (6-12h)', 'Chiều (12-18h)', 'Tối (18-24h)', 'Đêm (0-6h)'].map(shift => (
+                                    <div key={shift} className="grid grid-cols-8 gap-2 mb-2 items-center">
+                                        <div className="text-sm font-bold text-text-subtle text-right pr-4">{shift}</div>
+                                        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(day => {
+                                            const heat = heatmapData.find((h: any) => h.day === day && h.shift === shift)?.value || 0;
+                                            const intensity = heat > 20 ? 'bg-info-600' : heat > 10 ? 'bg-info-400' : heat > 0 ? 'bg-info-200 dark:bg-info-800' : 'bg-background';
+                                            return (
+                                                <div key={day} className={`h-12 rounded-xl flex items-center justify-center border border-border ${intensity} transition-colors hover:scale-[1.02] cursor-pointer`} title={`${heat} CV`}>
+                                                    {heat > 0 && <span className="text-xs font-bold text-white drop-shadow-md">{heat}</span>}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

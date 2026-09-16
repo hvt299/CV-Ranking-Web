@@ -36,8 +36,8 @@ export const companyService = {
         return response.data.data;
     },
 
-    getAdminAnalytics: async () => {
-        const response = await apiClient.get('/admin/analytics');
+    getAdminAnalytics: async (days: number = 14) => {
+        const response = await apiClient.get('/admin/analytics', { params: { days } });
         return response.data.data;
     },
 

@@ -34,4 +34,9 @@ export const systemService = {
         const response = await apiClient.get('/system/config/industry-weights');
         return response.data;
     },
+
+    async getSystemHealth(): Promise<Record<string, string>> {
+        const response = await apiClient.get<Record<string, string>>('/admin/system-health');
+        return response.data;
+    },
 };

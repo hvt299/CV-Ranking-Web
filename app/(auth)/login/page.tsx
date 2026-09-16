@@ -75,7 +75,7 @@ export default function LoginPage() {
     });
 
     return (
-        <div className="min-h-screen bg-background dark:bg-text flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
             {/* Background Grid */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-50 dark:opacity-20 pointer-events-none" />
 
@@ -100,7 +100,7 @@ export default function LoginPage() {
                         <label className="block text-sm font-semibold text-text dark:text-slate-300 mb-1.5">Email</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle w-5 h-5" />
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-input-bg dark:bg-text border border-input-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus transition-all text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 placeholder:font-medium" placeholder="name@company.com" />
+                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-input-bg border border-input-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus transition-all text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 placeholder:font-medium" placeholder="name@company.com" />
                         </div>
                     </div>
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 required value={password} onChange={e => setPassword(e.target.value)}
-                                className="w-full pl-12 pr-12 py-3 bg-input-bg dark:bg-text border border-input-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus transition-all text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 placeholder:font-medium"
+                                className="w-full pl-12 pr-12 py-3 bg-input-bg border border-input-border dark:border-slate-700 rounded-button outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus transition-all text-text dark:text-white placeholder-text-subtle dark:placeholder-slate-500 placeholder:font-medium"
                                 placeholder="••••••••"
                             />
                             <button

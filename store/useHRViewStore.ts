@@ -1,26 +1,34 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { UserRole } from '@/types'; // Đảm bảo import đúng
-import { useAuthStore } from './useAuthStore';
+
+type HRViewMode = 'OWNER' | 'MEMBER';
 
 interface HRViewState {
-    hrViewMode: 'OWNER' | 'MEMBER';
-    setHrViewMode: (mode: 'OWNER' | 'MEMBER') => void;
+    hrViewMode: HRViewMode;
+    setHrViewMode: (mode: HRViewMode) => void;
+    toggleHrViewMode: () => void;
 }
 
 export const useHRViewStore = create<HRViewState>()(
     persist(
         (set) => ({
-            hrViewMode: 'OWNER', // Sẽ bị ghi đè bởi localStorage nếu có
+            hrViewMode: 'OWNER',
+
             setHrViewMode: (mode) => {
-                const { user } = useAuthStore.getState();
-                // Không cho phép HR_MEMBER tự ý đổi mode
-                if (user?.role === UserRole.HR_MEMBER) return;
                 set({ hrViewMode: mode });
+            },
+
+            toggleHrViewMode: () => {
+                set((state) => ({
+                    hrViewMode:
+                        state.hrViewMode === 'OWNER'
+                            ? 'MEMBER'
+                            : 'OWNER',
+                }));
             },
         }),
         {
-            name: 'cv_ranking_hr_view', // Tên key lưu trên localStorage
+            name: 'cv_ranking_hr_view',
             storage: createJSONStorage(() => localStorage),
         }
     )

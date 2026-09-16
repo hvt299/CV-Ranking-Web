@@ -313,10 +313,130 @@ export default function HeroSection({
                 {/* Badge */}
                 <motion.div
                     variants={fadeUp}
-                    className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-surface/80 px-3.5 py-1.5 text-xs font-bold text-slate-500 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-surface/65 dark:text-slate-400"
+                    className="group relative mb-7 inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-primary-200/80 bg-white/75 px-3 py-2 shadow-card backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:scale-[1.015] hover:border-primary-300 hover:shadow-[0_12px_35px_rgb(37_99_235/0.16)] dark:border-primary-800/70 dark:bg-slate-900/70 dark:hover:border-primary-600/70 dark:hover:shadow-[0_12px_35px_rgb(37_99_235/0.18)]"
                 >
-                    <Sparkles className="h-3.5 w-3.5 text-primary-500" />
-                    Nền tảng Tuyển dụng AI thế hệ mới
+                    {/* Soft glow */}
+                    <motion.div
+                        animate={{
+                            opacity: [0.15, 0.35, 0.15],
+                        }}
+                        transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                        }}
+                        className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-r from-primary-500/0 via-primary-500/8 to-primary-500/0"
+                    />
+
+                    {/* Icon */}
+                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+                        <motion.span
+                            animate={{
+                                scale: [1, 1.5, 1],
+                                opacity: [0.3, 0, 0.3],
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeOut',
+                            }}
+                            className="absolute inset-0 rounded-full bg-primary-500/30"
+                        />
+
+                        <motion.span
+                            animate={{
+                                scale: [1, 1.08, 1],
+                                boxShadow: [
+                                    '0 4px 12px rgb(37 99 235 / 0.25)',
+                                    '0 6px 18px rgb(37 99 235 / 0.4)',
+                                    '0 4px 12px rgb(37 99 235 / 0.25)',
+                                ],
+                            }}
+                            transition={{
+                                duration: 1.8,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                            }}
+                            className="relative flex h-7 w-7 items-center justify-center rounded-xl bg-linear-to-br from-primary-500 to-primary-700 text-white dark:from-primary-400 dark:to-primary-600"
+                        >
+                            <Sparkles className="h-3.5 w-3.5" />
+                        </motion.span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative flex flex-col items-start pr-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-black uppercase tracking-[0.18em] text-primary-500 dark:text-primary-400">
+                                AI Recruiting
+                            </span>
+
+                            <span className="h-1 w-1 rounded-full bg-primary-400" />
+
+                            <motion.span
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{
+                                    duration: 1.8,
+                                    repeat: Infinity,
+                                }}
+                                className="text-[9px] font-bold uppercase tracking-wider text-success-600 dark:text-success-500"
+                            >
+                                Live
+                            </motion.span>
+                        </div>
+
+                        <motion.span
+                            animate={{ opacity: [0.82, 1, 0.82] }}
+                            transition={{
+                                duration: 2.5,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                            }}
+                            className="text-xs font-black tracking-tight text-slate-700 dark:text-slate-100 sm:text-[13px]"
+                        >
+                            Nền tảng Tuyển dụng AI thế hệ mới
+                        </motion.span>
+                    </div>
+
+                    {/* Shine chạy hết badge */}
+                    <motion.div
+                        animate={{
+                            x: ['-180%', '380%'],
+                        }}
+                        transition={{
+                            duration: 2.4,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                            ease: 'easeInOut',
+                        }}
+                        className="pointer-events-none absolute inset-y-0 left-0 w-16 skew-x-[-20deg] bg-linear-to-r from-transparent via-white/70 to-transparent dark:via-primary-300/15"
+                    />
+
+                    {/* Decorative dots */}
+                    <motion.div
+                        animate={{
+                            y: [0, -3, 0],
+                            opacity: [0.3, 1, 0.3],
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: 0.3,
+                        }}
+                        className="absolute right-2 top-1 h-1 w-1 rounded-full bg-primary-400"
+                    />
+
+                    <motion.div
+                        animate={{
+                            y: [0, 3, 0],
+                            opacity: [0.2, 0.8, 0.2],
+                        }}
+                        transition={{
+                            duration: 2.4,
+                            repeat: Infinity,
+                            delay: 0.8,
+                        }}
+                        className="absolute bottom-1 right-8 h-1 w-1 rounded-full bg-primary-300"
+                    />
                 </motion.div>
 
                 {/* Heading */}

@@ -12,7 +12,9 @@ export default function FloatingActions() {
             setShowScrollTop(window.scrollY > 400);
         };
 
-        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -25,56 +27,42 @@ export default function FloatingActions() {
     };
 
     return (
-        <>
-            <style dangerouslySetInnerHTML={{__html: `
-                @media (prefers-reduced-motion: no-preference) {
-                    @keyframes support-ripple {
-                        0% { transform: scale(1); opacity: 0.45; }
-                        70% { transform: scale(1.8); opacity: 0; }
-                        100% { transform: scale(1.8); opacity: 0; }
-                    }
-                    .animate-support-ripple {
-                        animation: support-ripple 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-                    }
-                    .animate-support-ripple-delayed {
-                        animation: support-ripple 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-                        animation-delay: 1.5s;
-                    }
-                }
-            `}} />
-            <div className="fixed bottom-5 right-4 z-50 flex flex-col items-center gap-3 sm:bottom-6 sm:right-6">
-                {/* Support Button */}
+        <div className="fixed bottom-5 right-1 z-50 sm:bottom-6 sm:right-3">
+            <div className="flex w-14 flex-col items-center overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-xl shadow-slate-900/10 backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/95 dark:shadow-black/20">
+                {/* Scroll To Top */}
+                <button
+                    type="button"
+                    onClick={scrollToTop}
+                    title="Lên đầu trang"
+                    aria-label="Lên đầu trang"
+                    className={`group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400 ${showScrollTop ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-90 opacity-25'}`}
+                >
+                    <ChevronUp className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
+
+                    <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 sm:block">
+                        Lên đầu trang
+                    </span>
+                </button>
+
+                {/* Divider */}
+                <div className="my-1 h-px w-7 bg-slate-200 dark:bg-slate-700" />
+
+                {/* Support */}
                 <Link
                     href="/support"
                     title="Hỗ trợ"
                     aria-label="Hỗ trợ"
-                    className="group relative flex h-13 w-13 items-center justify-center rounded-full border border-blue-400/30 bg-linear-to-br from-blue-500 via-blue-600 to-violet-600 text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                    className="group relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-primary-600 to-primary-800 text-white shadow-md shadow-primary-500/25 transition-all duration-300 hover:scale-[1.04] hover:shadow-lg hover:shadow-primary-500/30"
                 >
-                    {/* Ripple 1 */}
-                    <span className="pointer-events-none absolute inset-0 -z-10 rounded-full border-2 border-blue-500 animate-support-ripple" />
-                    {/* Ripple 2 */}
-                    <span className="pointer-events-none absolute inset-0 -z-10 rounded-full border-2 border-blue-500 animate-support-ripple-delayed" />
+                    <span className="absolute inset-y-0 -left-full w-1/2 skew-x-[-20deg] bg-linear-to-r from-transparent via-white/25 to-transparent transition-all duration-700 group-hover:left-[130%]" />
 
-                    <MessageCircle className="relative h-6 w-6 stroke-[2.2]" />
+                    <MessageCircle className="relative z-10 h-5 w-5 stroke-[2.2]" />
 
-                    <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 sm:block">
+                    <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 sm:block">
                         Hỗ trợ
                     </span>
                 </Link>
-
-                {/* Scroll To Top */}
-                {showScrollTop && (
-                    <button
-                        type="button"
-                        onClick={scrollToTop}
-                        title="Lên đầu trang"
-                        aria-label="Lên đầu trang"
-                        className="group flex h-11 w-11 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-lg shadow-blue-500/15 transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-400 dark:hover:border-blue-500/50 dark:hover:bg-slate-800"
-                    >
-                        <ChevronUp className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
-                    </button>
-                )}
             </div>
-        </>
+        </div>
     );
 }

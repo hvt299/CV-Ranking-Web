@@ -48,7 +48,7 @@ export default function SupportPage() {
         if (isAuthenticated && user) {
             setFormData(prev => ({
                 ...prev,
-                full_name: user.full_name || user.name || '',
+                full_name: user.full_name || (user as any).name || '',
                 email: user.email || ''
             }));
         }
@@ -84,7 +84,7 @@ export default function SupportPage() {
                 setSuccessData({ ticket_number: response.data.data.ticket_number });
                 toast.success('Gửi yêu cầu hỗ trợ thành công!');
                 setFormData({
-                    full_name: user?.full_name || user?.name || '',
+                    full_name: user?.full_name || '',
                     email: user?.email || '',
                     category: '',
                     subject: '',

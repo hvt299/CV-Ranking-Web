@@ -33,12 +33,20 @@ export const ROUTES = {
     HR_ANALYTICS: '/hr/analytics',
     HR_SETTINGS: '/hr/settings',
     HR_BILLING: '/hr/billing',
+    HR_NOTIFICATIONS: '/hr/notifications',
 
     // ADMIN
     ADMIN_DASHBOARD: '/admin/dashboard',
     ADMIN_COMPANIES: '/admin/companies',
+    ADMIN_JOBS: '/admin/jobs',
+    ADMIN_CVS: '/admin/cvs',
     ADMIN_ANALYTICS: '/admin/analytics',
     ADMIN_AUDIT_LOGS: '/admin/audit-logs',
     ADMIN_SUPPORT_TICKETS: '/admin/support-tickets',
     ADMIN_SETTINGS: '/admin/settings',
+    ADMIN_SYSTEM_SETTINGS: '/admin/system-settings',
+    ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
+    ADMIN_SKILLS: '/admin/skills',
+    ADMIN_UNITS: '/admin/units',
+    ADMIN_NOTIFICATIONS: '/admin/notifications',
 };
