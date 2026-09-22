@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Users, FolderOpen, FileText, ClipboardCheck, Home, BarChart2, Settings, HelpCircle, ChevronLeft, ChevronRight, Hexagon, X, Building2, ShieldCheck, ArrowRightLeft, MessageSquare, Sliders, CreditCard, Star, Map, History } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, FolderOpen, FileText, ClipboardCheck, Home, BarChart2, Settings, HelpCircle, ChevronLeft, ChevronRight, Hexagon, X, Building2, ShieldCheck, ArrowRightLeft, MessageSquare, Sliders, CreditCard, Star, Map, History, FileSignature, Bookmark, Heart, Mail, Send } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useHRViewStore } from "@/store/useHRViewStore";
@@ -64,6 +64,11 @@ export default function Sidebar({
             name: "Kho hồ sơ",
             icon: Users,
             href: ROUTES.HR_CANDIDATES
+        },
+        {
+            name: "Hồ sơ đã lưu",
+            icon: Bookmark,
+            href: ROUTES.HR_SAVED_PROFILES
         }
     ];
 
@@ -80,14 +85,15 @@ export default function Sidebar({
 
     const adminManagementMenu: MenuItem[] = [
         { name: "Tổng quan", icon: LayoutDashboard, href: ROUTES.ADMIN_DASHBOARD },
-        { name: "Phân tích hệ thống", icon: BarChart2, href: ROUTES.ADMIN_ANALYTICS },
         { name: "Quản lý công ty", icon: Building2, href: ROUTES.ADMIN_COMPANIES },
         { name: "Quản lý chiến dịch", icon: Briefcase, href: ROUTES.ADMIN_JOBS },
         { name: "Quản lý CV", icon: FileText, href: ROUTES.ADMIN_CVS },
+        { name: "Quản lý thư", icon: FileSignature, href: ROUTES.ADMIN_COVER_LETTERS },
         { name: "Hỗ trợ người dùng", icon: MessageSquare, href: ROUTES.ADMIN_SUPPORT_TICKETS }
     ];
 
     const adminSystemMenu: MenuItem[] = [
+        { name: "Phân tích hệ thống", icon: BarChart2, href: ROUTES.ADMIN_ANALYTICS },
         { name: "Cấu hình hệ thống", icon: Sliders, href: ROUTES.ADMIN_SYSTEM_SETTINGS },
         { name: "Gói cước & Thanh toán", icon: CreditCard, href: ROUTES.ADMIN_SUBSCRIPTIONS },
         { name: "Kỹ năng (Skills)", icon: Star, href: ROUTES.ADMIN_SKILLS },
@@ -107,9 +113,24 @@ export default function Sidebar({
             href: ROUTES.APPLICANT_CV_LIBRARY
         },
         {
+            name: "Thư giới thiệu",
+            icon: FileSignature,
+            href: ROUTES.APPLICANT_COVER_LETTERS
+        },
+        {
             name: "Việc làm đã nộp",
             icon: FileText,
             href: ROUTES.APPLICANT_APPLICATIONS
+        },
+        {
+            name: "Việc làm đã lưu",
+            icon: Bookmark,
+            href: ROUTES.APPLICANT_SAVED_JOBS
+        },
+        {
+            name: "Công ty đã lưu",
+            icon: Heart,
+            href: ROUTES.APPLICANT_SAVED_COMPANIES
         },
         {
             name: "Tự đánh giá AI",

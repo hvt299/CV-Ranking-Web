@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard, Zap, Globe, CalendarDays, Check, Bell, ShieldCheck, Sliders, Star, Map } from 'lucide-react';
+import { Search, Sun, Moon, Menu, LogOut, ChevronDown, Settings, CreditCard, Zap, Globe, CalendarDays, Check, Bell, ShieldCheck, Sliders, Star, Map , History as HistoryIcon, MessageSquare } from "lucide-react";
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
@@ -234,7 +234,23 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
                                 Thiết lập thông tin
                             </Link>
 
-                            {/* Admin Links removed for cleaner dropdown */}
+                                                        {/* Admin Quick Links */}
+                            {role === UserRole.ADMIN && (
+                                <>
+                                    <Link href={ROUTES.ADMIN_SYSTEM_SETTINGS} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-blue-400">
+                                        <Sliders className="h-4 w-4" />
+                                        Cấu hình hệ thống
+                                    </Link>
+                                    <Link href={ROUTES.ADMIN_AUDIT_LOGS} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-blue-400">
+                                        <HistoryIcon className="h-4 w-4" />
+                                        Lịch sử hoạt động
+                                    </Link>
+                                    <Link href={ROUTES.ADMIN_SUPPORT_TICKETS} onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-blue-400">
+                                        <MessageSquare className="h-4 w-4" />
+                                        Hỗ trợ người dùng
+                                    </Link>
+                                </>
+                            )}
 
                             {/* Billing */}
                             {role !== UserRole.ADMIN && (

@@ -16,6 +16,20 @@ export const systemService = {
         return response.data;
     },
 
+    async searchLanguages(query?: string): Promise<any[]> {
+        const params: any = {};
+        if (query) params.q = query;
+        const response = await apiClient.get<any[]>('/system/languages', { params });
+        return response.data;
+    },
+
+    async searchCertifications(query?: string): Promise<any[]> {
+        const params: any = {};
+        if (query) params.q = query;
+        const response = await apiClient.get<any[]>('/system/certifications', { params });
+        return response.data;
+    },
+
     async searchSkills(query?: string, industry?: string): Promise<Skill[]> {
         const params: any = {};
         if (query) params.q = query;

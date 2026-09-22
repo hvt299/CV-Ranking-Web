@@ -65,8 +65,8 @@ export const adminService = {
         const response = await apiClient.patch('/admin/system-settings', data);
         return response.data;
     },
-    async getAdminDashboardMetrics() {
-        const response = await apiClient.get('/admin/dashboard/metrics');
+    async getAdminDashboardMetrics(days?: number) {
+        const response = await apiClient.get('/admin/dashboard/metrics', { params: { days } });
         return response.data.data;
     },
     async getAdminAnalytics(days: number = 14) {
@@ -91,6 +91,14 @@ export const adminService = {
     },
     async deleteSubscription(planId: string) {
         const response = await apiClient.delete(`/admin/subscriptions/plans/${planId}`);
+        return response.data;
+    },
+    async getCoverLetters(params?: any) {
+        const response = await apiClient.get('/admin/cover-letters', { params });
+        return response.data.data || response.data;
+    },
+    async deleteCoverLetter(id: string) {
+        const response = await apiClient.delete(`/admin/cover-letters/${id}`);
         return response.data;
     },
 };

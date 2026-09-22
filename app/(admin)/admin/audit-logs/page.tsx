@@ -42,6 +42,8 @@ export default function AuditLogsPage() {
         setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
     };
 
+    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
             {/* HEADER */}
@@ -53,13 +55,13 @@ export default function AuditLogsPage() {
             </div>
 
             {/* BỘ LỌC TÌM KIẾM SERVER-SIDE */}
-            <div className="flex flex-col lg:flex-row gap-4 bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                     <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <select
                         value={filters.action}
                         onChange={e => handleFilterChange('action', e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-700 dark:text-slate-200 focus:border-primary-500 appearance-none cursor-pointer"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl outline-none text-sm font-bold text-slate-700 dark:text-slate-200 focus:border-primary-500 appearance-none cursor-pointer"
                     >
                         <option value="">Tất cả Hành động</option>
                         {Object.entries(AUDIT_ACTION_CONFIG).map(([actionValue, config]) => (
@@ -72,23 +74,27 @@ export default function AuditLogsPage() {
                         type="date"
                         value={filters.start_date}
                         onChange={e => handleFilterChange('start_date', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 text-slate-700 dark:text-slate-200 cursor-pointer"
+                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl outline-none text-sm font-medium focus:border-primary-500 text-slate-700 dark:text-slate-200 cursor-pointer"
                     />
                     <input
                         type="date"
                         value={filters.end_date}
                         onChange={e => handleFilterChange('end_date', e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 text-slate-700 dark:text-slate-200 cursor-pointer"
+                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl outline-none text-sm font-medium focus:border-primary-500 text-slate-700 dark:text-slate-200 cursor-pointer"
                     />
+                </div>
+            </div>
+
+            {/* ĐẾM SỐ LƯỢNG */}
+            <div className="flex items-center justify-between mt-2 mb-4 px-2">
+                <div className="text-sm font-medium text-slate-500">
+                    Đã tìm thấy <span className="text-primary-600 font-bold">{pagination.total_items}</span> bản ghi
                 </div>
             </div>
 
             {/* BẢNG DỮ LIỆU */}
             <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
-                    {isLoading ? (
-                        <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>
-                    ) : (
                         <table className="w-full text-left">
                             <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 dark:border-slate-700">
                                 <tr>
@@ -139,15 +145,14 @@ export default function AuditLogsPage() {
                                 ))}
                             </tbody>
                         </table>
-                    )}
                 </div>
 
-                {!isLoading && logs.length === 0 && (
+                {logs.length === 0 && (
                     <div className="text-center py-16 text-slate-400 text-sm font-medium">Không tìm thấy bản ghi nào khớp với bộ lọc.</div>
                 )}
 
                 {/* SERVER-SIDE PAGINATION UI */}
-                {!isLoading && pagination.total_pages > 1 && (
+                {pagination.total_pages > 1 && (
                     <div className="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
                         <p className="text-sm font-medium text-slate-500">
                             Hiển thị <span className="font-bold text-slate-800 dark:text-white">{(pagination.current_page - 1) * 15 + 1}</span> đến <span className="font-bold text-slate-800 dark:text-white">{Math.min(pagination.current_page * 15, pagination.total_items)}</span> trong <span className="font-bold text-slate-800 dark:text-white">{pagination.total_items}</span> bản ghi

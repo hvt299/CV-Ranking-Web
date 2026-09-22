@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronUp, GraduationCap, Info, X } from 'lucide-react';
 import { EDUCATION_LEVELS, GENDER_OPTIONS } from '@/constants/job.constants';
 import { JobFormData, FilterRequirement } from '@/types';
+import AsyncSelect from 'react-select/async';
+import { systemService } from '@/features/system/system.service';
 
 interface Step4Props {
     formData: JobFormData;
@@ -17,6 +19,29 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
     const [majorInput, setMajorInput] = useState('');
     const [languageInput, setLanguageInput] = useState('');
     const [showKnockoutInfo, setShowKnockoutInfo] = useState(false);
+
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const asyncSelectStyles = {
+        control: (base: any) => ({ ...base, background: 'transparent', borderColor: 'transparent', boxShadow: 'none', minHeight: '36px', '&:hover': { borderColor: 'transparent' } }),
+        menu: (base: any) => ({ ...base, zIndex: 9999, backgroundColor: isDark ? '#1e293b' : '#ffffff', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}` }),
+        option: (base: any, state: any) => ({ ...base, cursor: 'pointer', fontSize: '13px', backgroundColor: state.isFocused ? (isDark ? '#334155' : '#eff6ff') : 'transparent', color: isDark ? '#f8fafc' : '#1e293b' }),
+        singleValue: (base: any) => ({ ...base, color: isDark ? '#f8fafc' : '#1e293b', fontSize: '13px', fontWeight: 600 }),
+        input: (base: any) => ({ ...base, color: isDark ? '#f8fafc' : '#1e293b', margin: 0, padding: 0 }),
+        placeholder: (base: any) => ({ ...base, fontSize: '13px' })
+    };
+
+    
+    const loadLanguageOptions = async (inputValue: string) => {
+        if (!inputValue.trim()) return [];
+        const data = await systemService.searchLanguages(inputValue);
+        return data.map((item: any) => ({ value: item.id, label: item.canonical_name }));
+    };
+
+    const loadCertOptions = async (inputValue: string) => {
+        if (!inputValue.trim()) return [];
+        const data = await systemService.searchCertifications(inputValue);
+        return data.map((item: any) => ({ value: item.id, label: item.canonical_name }));
+    };
 
     const languages = formData.languages || [];
     const certifications = formData.required_certifications || [];
@@ -135,7 +160,8 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
     const renderRequirementTags = (
         field: RequirementField,
         items: FilterRequirement[],
-        emptyText: string
+        emptyText: string,
+        loadOptions?: any
     ) => (
         <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             {items.length > 0 && (
@@ -179,22 +205,21 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
             )}
 
             <div className={`${items.length > 0 ? 'border-t border-slate-100 dark:border-slate-800' : ''} px-3 py-2.5`}>
-                <input
-                    type="text"
-                    className="w-full bg-transparent p-1 text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+                <AsyncSelect
+                    cacheOptions
+                    defaultOptions={false}
+                    loadOptions={loadOptions}
                     placeholder={emptyText}
-                    onKeyDown={(event) => {
-                        const value = event.currentTarget.value;
-
-                        handleTagInput(
-                            event,
-                            field,
-                            value,
-                            () => {
-                                event.currentTarget.value = '';
-                            }
-                        );
+                    noOptionsMessage={({ inputValue }) => inputValue ? 'Không tìm thấy dữ liệu' : 'Gõ để tìm...'}
+                    onChange={(selected: any) => {
+                        if (selected) {
+                            // Using the existing handleTagInput logic for adding
+                            const fakeEvent = { currentTarget: { value: selected.label }, preventDefault: () => {} } as any;
+                            handleTagInput(fakeEvent, field, selected.label, () => {});
+                        }
                     }}
+                    value={null}
+                    styles={asyncSelectStyles}
                 />
             </div>
         </div>
@@ -260,7 +285,7 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
                         <div className="relative">
                             <input
                                 type="number"
-                                step="0.5"
+                                step="0.1"
                                 min="0"
                                 value={formData.min_yoe ?? 0}
                                 onChange={(e) =>
@@ -459,7 +484,8 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
                         {renderRequirementTags(
                             'languages',
                             languages,
-                            'Nhập ngoại ngữ rồi nhấn Enter...'
+                            'Nhập ngoại ngữ rồi nhấn Enter...',
+                            loadLanguageOptions
                         )}
                     </div>
 
@@ -485,7 +511,8 @@ export default function Step4Criteria({ formData, setFormData }: Step4Props) {
                         {renderRequirementTags(
                             'required_certifications',
                             certifications,
-                            'Nhập chứng chỉ rồi nhấn Enter...'
+                            'Nhập chứng chỉ rồi nhấn Enter...',
+                            loadCertOptions
                         )}
                     </div>
                 </div>

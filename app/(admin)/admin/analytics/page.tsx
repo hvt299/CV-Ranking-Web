@@ -16,7 +16,7 @@ export default function AdminAnalyticsPage() {
         setIsLoading(true);
         Promise.all([
             adminService.getAdminAnalytics(days),
-            adminService.getAdminDashboardMetrics()
+            adminService.getAdminDashboardMetrics(days)
         ])
         .then(([analytics, metrics]) => {
             setDashboardData(analytics);
@@ -64,42 +64,42 @@ export default function AdminAnalyticsPage() {
                     <MetricCard 
                         title="Tổng Người Dùng" 
                         value={metricsData.overview_stats.total_users?.value || 0} 
-                        subtitle={`+${metricsData.overview_stats.total_users?.trend || 0} (30 ngày)`}
+                        subtitle={`+${metricsData.overview_stats.total_users?.trend || 0} (${days} ngày)`}
                         icon={Users} 
                         colorClass="text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20" 
                     />
                     <MetricCard 
                         title="Doanh Nghiệp" 
                         value={metricsData.overview_stats.total_companies?.value || 0} 
-                        subtitle="Trên hệ thống"
+                        subtitle={`(${days} ngày)`}
                         icon={Building2} 
                         colorClass="text-indigo-600 bg-indigo-50 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20" 
                     />
                     <MetricCard 
                         title="DN Đã Duyệt" 
                         value={metricsData.overview_stats.total_companies?.trend || 0} 
-                        subtitle="Hoạt động"
+                        subtitle={`(${days} ngày)`}
                         icon={CheckCircle2} 
                         colorClass="text-green-600 bg-green-50 border-green-100 dark:bg-green-500/10 dark:border-green-500/20" 
                     />
                     <MetricCard 
                         title="DN Chờ Duyệt" 
                         value={metricsData.overview_stats.pending_kyc?.value || 0} 
-                        subtitle="Cần xác thực"
+                        subtitle={`(${days} ngày)`}
                         icon={AlertCircle} 
                         colorClass="text-amber-600 bg-amber-50 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20" 
                     />
                     <MetricCard 
                         title="Tin Tuyển Dụng" 
                         value={metricsData.overview_stats.active_jobs?.value || 0} 
-                        subtitle="Đang mở"
+                        subtitle={`(${days} ngày)`}
                         icon={Briefcase} 
                         colorClass="text-pink-600 bg-pink-50 border-pink-100 dark:bg-pink-500/10 dark:border-pink-500/20" 
                     />
                     <MetricCard 
                         title="Việc Làm Mới" 
                         value={metricsData.overview_stats.active_jobs?.trend || metricsData.overview_stats.active_jobs?.value || 0} 
-                        subtitle="(30 ngày)"
+                        subtitle={`(${days} ngày)`}
                         icon={Activity} 
                         colorClass="text-primary-600 bg-primary-50 border-primary-100 dark:bg-primary-500/10 dark:border-primary-500/20" 
                     />

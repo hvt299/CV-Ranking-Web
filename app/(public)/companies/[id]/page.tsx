@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, notFound } from 'next/navigation';
 import { Building2, MapPin, Users, Star, Eye, Globe, FileText, CheckCircle2, Briefcase, ChevronLeft, Loader2, XCircle, Share2, ShieldCheck, Map, Zap, DollarSign, Calendar, Heart, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -51,7 +51,6 @@ export default function PublicCompanyDetailPage() {
                 setCompanyJobs(jobsRes.filter((job: Job) => String(job.company_id) === String(params.id)));
             } catch (error) {
                 console.error('Failed to fetch company:', error);
-                toast.error('Không tìm thấy thông tin công ty');
             } finally {
                 setIsLoading(false);
             }
@@ -77,27 +76,7 @@ export default function PublicCompanyDetailPage() {
     }
 
     if (!company) {
-        return (
-            <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#05070b] text-slate-900 dark:text-slate-100 transition-colors duration-300">
-                <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
-                <div className="flex-1 flex items-center justify-center px-4 py-20">
-                    <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-2xl dark:shadow-black/20">
-                        <div className="relative h-28 overflow-hidden bg-linear-to-br from-blue-600/10 via-slate-100 to-indigo-600/10 dark:from-blue-500/10 dark:via-slate-900 dark:to-indigo-500/10">
-                            <div className="absolute inset-0 opacity-40 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[18px_18px]" />
-                        </div>
-                        <div className="relative px-8 pb-8 text-center">
-                            <div className="relative -mt-10 mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white dark:border-[#111827] bg-slate-100 dark:bg-slate-800 shadow-lg">
-                                <XCircle className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                            </div>
-                            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Không tìm thấy công ty</h2>
-                            <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 font-medium mb-7">Công ty này không tồn tại hoặc chưa được hệ thống xác thực (KYC).</p>
-                            <button onClick={() => router.push(ROUTES.PUBLIC_COMPANIES)} className="w-full px-6 py-3.5 rounded-xl font-black bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all">Khám phá công ty khác</button>
-                        </div>
-                    </div>
-                </div>
-                <PublicFooter />
-            </div>
-        );
+        notFound();
     }
 
     const companyLocation = company.location ? company.location.country && company.location.country !== 'Việt Nam' ? Array.from(new Set([company.location.street_address, company.location.country].filter(Boolean))).join(', ') : Array.from(new Set([company.location.street_address, company.location.ward_name, company.location.district_name, company.location.province_name].filter(Boolean))).join(', ') : '';

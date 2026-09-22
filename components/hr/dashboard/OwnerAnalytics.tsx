@@ -1,16 +1,16 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Activity, BarChart2, PieChart as PieIcon, Database, Radio } from 'lucide-react';
+import { Activity, Users, BarChart2, PieChart as PieIcon, Database, Radio } from 'lucide-react';
 import { ApplicationStatus } from '@/types/common';
 import { APPLICATION_STATUS_CONFIG } from '@/constants/application.constants';
 
 export default function OwnerAnalytics({ charts }: { charts: any }) {
     if (!charts) return null;
 
-    const { experience_distribution, top_jobs, pipeline_health } = charts;
+    const { top_jobs, pipeline_health, team_workload, hiring_goal } = charts;
 
-    const hasExperienceData = Array.isArray(experience_distribution) && experience_distribution.length > 0;
+    
     const hasTopJobsData = Array.isArray(top_jobs) && top_jobs.length > 0;
 
     const pipelineData = buildPipelineData(pipeline_health);
@@ -41,27 +41,28 @@ export default function OwnerAnalytics({ charts }: { charts: any }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <AnalyticsCard>
-                    <AnalyticsHeader icon={<PieIcon className="w-4 h-4 text-primary-600 dark:text-primary-400" />} iconClassName="bg-primary-50 dark:bg-primary-500/10 border-primary-100 dark:border-primary-500/20" title="Kinh nghiệm Ứng viên" description="Phân bổ số năm kinh nghiệm" />
+                    <AnalyticsHeader icon={<Users className="w-4 h-4 text-primary-600 dark:text-primary-400" />} iconClassName="bg-primary-50 dark:bg-primary-500/10 border-primary-100 dark:border-primary-500/20" title="Hiệu suất Nhân viên" description="Lượng CV đang được phân công" />
 
-                    <div className="relative flex-1 min-h-67.5 w-full flex items-center justify-center p-4">
-                        {hasExperienceData ? (
+                    <div className="relative flex-1 min-h-67.5 w-full p-4">
+                        {team_workload && team_workload.length > 0 ? (
                             <>
-                                <div className="absolute inset-8 rounded-full bg-primary-500/2.5 dark:bg-primary-500/4 blur-2xl pointer-events-none" />
-
+                                {team_workload[0]?.is_mock && <div className="absolute top-0 right-4 z-10 px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</div>}
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie data={experience_distribution} cx="50%" cy="50%" innerRadius={62} outerRadius={92} paddingAngle={4} dataKey="value" stroke="var(--color-card-bg)" strokeWidth={2} isAnimationActive animationBegin={100} animationDuration={900} animationEasing="ease-out">
-                                            {experience_distribution?.map((entry: any, index: number) => (
+                                    <BarChart data={team_workload} margin={{ top: 10, right: 8, left: -20, bottom: 4 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} />
+                                        <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
+                                        <Bar dataKey="cv_count" name="Số CV đang xử lý" radius={[5, 5, 0, 0]} barSize={26}>
+                                            {team_workload.map((entry: any, index: number) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
-                                        </Pie>
-
-                                        <RechartsTooltip contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }} />
-                                    </PieChart>
+                                        </Bar>
+                                    </BarChart>
                                 </ResponsiveContainer>
                             </>
                         ) : (
-                            <ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu kinh nghiệm" description="Dữ liệu sẽ xuất hiện khi hệ thống ghi nhận hồ sơ ứng viên." />
+                            <ChartEmptyState icon={<Users className="w-6 h-6" />} title="Chưa có dữ liệu phân công" description="Dữ liệu sẽ xuất hiện khi có nhân viên được gán xử lý hồ sơ." />
                         )}
                     </div>
                 </AnalyticsCard>
@@ -79,7 +80,7 @@ export default function OwnerAnalytics({ charts }: { charts: any }) {
 
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} />
 
-                                    <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }} />
+                                    <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
 
                                     <Bar dataKey="cv_count" name="Số lượng CV" radius={[5, 5, 0, 0]} barSize={26} isAnimationActive animationBegin={150} animationDuration={900} animationEasing="ease-out">
                                         {top_jobs?.map((entry: any, index: number) => (
@@ -125,7 +126,7 @@ export default function OwnerAnalytics({ charts }: { charts: any }) {
 
                                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text)', fontSize: 11, fontWeight: 700 }} width={125} />
 
-                                <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }} formatter={(value: any, _name: any, props: any) => [`${value} ứng viên`, props?.payload?.name || 'Ứng viên']} />
+                                <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }} formatter={(value: any, _name: any, props: any) => [`${value} ứng viên`, props?.payload?.name || 'Ứng viên']} itemStyle={{ color: 'var(--color-text)', fontWeight: 'bold' }} />
 
                                 <Bar dataKey="value" name="Ứng viên" radius={[0, 6, 6, 0]} barSize={25} isAnimationActive animationBegin={250} animationDuration={900} animationEasing="ease-out">
                                     {pipelineData.map((entry: any, index: number) => (

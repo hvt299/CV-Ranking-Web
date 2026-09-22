@@ -51,9 +51,6 @@ apiClient.interceptors.response.use(
         else if (status === 402) {
             toast.error(errorMessage || 'Tài khoản không đủ Credit hoặc yêu cầu nâng cấp gói cước.');
         }
-        else if (status === 404) {
-            toast.error(errorMessage || 'Không tìm thấy dữ liệu.');
-        }
         else if (status === 429) {
             toast.error('Bạn thao tác quá nhanh. Vui lòng đợi một lát.');
         }

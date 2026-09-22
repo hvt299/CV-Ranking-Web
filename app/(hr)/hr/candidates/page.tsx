@@ -398,7 +398,7 @@ export default function TalentPoolPage() {
             {/* MODAL: GHÉP CV VÀO JOB */}
             {showMapModal && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700">
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-2xl shadow-xl border border-slate-200 dark:border-slate-700">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
                             <FolderOutput className="w-5 h-5 text-primary-500" />
                             {isBatchMapping ? `Ghép ${selectedCvIds.length} CV vào Chiến dịch` : 'Chọn chiến dịch'}

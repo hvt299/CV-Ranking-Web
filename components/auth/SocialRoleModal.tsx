@@ -13,17 +13,8 @@ import toast from 'react-hot-toast';
 interface SocialRoleModalProps {
     isOpen: boolean;
     isLoading: boolean;
-
-    // Role mặc định khi mở modal
     initialRole?: UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT;
-
-    // Các role được phép chọn
-    allowedRoles?: (
-        | UserRole.HR_OWNER
-        | UserRole.HR_MEMBER
-        | UserRole.APPLICANT
-    )[];
-
+    allowedRoles?: (UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT)[];
     onSubmit: (
         role: UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT,
         hrInfo: HrInfoState
@@ -37,40 +28,14 @@ export default function SocialRoleModal({
     allowedRoles = [UserRole.APPLICANT, UserRole.HR_OWNER],
     onSubmit,
 }: SocialRoleModalProps) {
-    const [selectedRole, setSelectedRole] = useState<
-        UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT
-    >(initialRole);
-
-    const [hrInfo, setHrInfo] =
-        useState<HrInfoState>(DEFAULT_HR_INFO);
-
+    const [selectedRole, setSelectedRole] = useState<UserRole.HR_OWNER | UserRole.HR_MEMBER | UserRole.APPLICANT>(initialRole);
+    const [hrInfo, setHrInfo] = useState<HrInfoState>(DEFAULT_HR_INFO);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [agreeConsulting, setAgreeConsulting] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
-            setSelectedRole(initialRole);
-        }
+        if (isOpen) setSelectedRole(initialRole);
     }, [isOpen, initialRole]);
-
-    useEffect(() => {
-        const checkDark = () =>
-            setIsDarkMode(
-                document.documentElement.classList.contains('dark')
-            );
-
-        checkDark();
-
-        const observer = new MutationObserver(checkDark);
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class'],
-        });
-
-        return () => observer.disconnect();
-    }, []);
 
     if (!isOpen) return null;
 
@@ -79,24 +44,12 @@ export default function SocialRoleModal({
     const isHrMember = selectedRole === UserRole.HR_MEMBER;
 
     const handleSubmit = () => {
-        if (!agreeTerms) {
-            return toast.error(
-                'Vui lòng đồng ý với Điều khoản dịch vụ!'
-            );
-        }
-
-        if (
-            selectedRole === UserRole.HR_OWNER &&
-            (
-                !hrInfo.companyName.trim() ||
-                !hrInfo.taxCode.trim() ||
-                !hrInfo.industry ||
-                !hrInfo.size
-            )
-        ) {
-            return toast.error(
-                'Vui lòng điền đầy đủ Tên công ty, MST, Ngành nghề và Quy mô!'
-            );
+        if (!agreeTerms) return toast.error('Vui lòng đồng ý với Điều khoản dịch vụ!');
+        
+        if (selectedRole === UserRole.HR_OWNER && (
+            !hrInfo.companyName.trim() || !hrInfo.taxCode.trim() || hrInfo.industries.length === 0 || !hrInfo.size
+        )) {
+            return toast.error('Vui lòng điền đầy đủ Tên công ty, MST, Ngành nghề và Quy mô!');
         }
 
         onSubmit(selectedRole, hrInfo);
@@ -104,162 +57,83 @@ export default function SocialRoleModal({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] border border-slate-200 dark:border-slate-700 custom-scrollbar">
+            <div className="bg-card-bg p-6 md:p-8 rounded-card w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh] border border-card-border custom-scrollbar">
 
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-2">
-                    Chào mừng người mới!
-                </h3>
+                <h3 className="text-2xl font-bold text-text text-center mb-2">Chào mừng người mới!</h3>
+                <p className="text-text-muted text-sm text-center font-medium mb-6">Vui lòng chọn vai trò để hoàn tất hồ sơ.</p>
 
-                <p className="text-slate-500 dark:text-slate-400 text-center text-sm mb-6 font-medium">
-                    Vui lòng chọn vai trò để hoàn tất hồ sơ.
-                </p>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-
+                <div className="grid grid-cols-2 gap-3 mb-6">
                     {canSelectApplicant && (
                         <button
-                            type="button"
-                            onClick={() =>
-                                setSelectedRole(UserRole.APPLICANT)
-                            }
-                            className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all ${selectedRole === UserRole.APPLICANT
-                                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 shadow-md'
-                                    : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
-                                }`}
+                            type="button" onClick={() => setSelectedRole(UserRole.APPLICANT)}
+                            className={`flex items-center justify-center gap-2 p-3 rounded-button border-2 transition-all ${selectedRole === UserRole.APPLICANT ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/10 text-primary-700 dark:text-primary-400 shadow-sm' : 'border-border bg-input-bg text-text-muted hover:border-primary-300'}`}
                         >
-                            <User className="w-8 h-8 mb-1" />
-                            <span className="font-bold text-sm">
-                                Ứng viên
-                            </span>
+                            <User className={`w-5 h-5 ${selectedRole === UserRole.APPLICANT ? 'text-primary-600 dark:text-primary-400' : 'text-text-subtle'}`} />
+                            <span className="font-bold text-sm">Ứng viên</span>
                         </button>
                     )}
 
                     {canSelectHrOwner && (
                         <button
-                            type="button"
-                            onClick={() =>
-                                setSelectedRole(UserRole.HR_OWNER)
-                            }
-                            className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all ${selectedRole === UserRole.HR_OWNER
-                                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 shadow-md'
-                                    : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
-                                }`}
+                            type="button" onClick={() => setSelectedRole(UserRole.HR_OWNER)}
+                            className={`flex items-center justify-center gap-2 p-3 rounded-button border-2 transition-all ${selectedRole === UserRole.HR_OWNER ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/10 text-primary-700 dark:text-primary-400 shadow-sm' : 'border-border bg-input-bg text-text-muted hover:border-primary-300'}`}
                         >
-                            <Briefcase className="w-8 h-8 mb-1" />
-                            <span className="font-bold text-sm">
-                                Nhà tuyển dụng
-                            </span>
+                            <Briefcase className={`w-5 h-5 ${selectedRole === UserRole.HR_OWNER ? 'text-primary-600 dark:text-primary-400' : 'text-text-subtle'}`} />
+                            <span className="font-bold text-sm">Nhà tuyển dụng</span>
                         </button>
                     )}
 
                     {isHrMember && (
-                        <div className="col-span-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-full">
-                                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <div className="col-span-2 bg-info-50 dark:bg-info-900/20 border border-info-100 dark:border-info-800 p-4 rounded-card flex items-center gap-3">
+                            <div className="p-2 bg-info-100 dark:bg-info-500/20 text-info-600 rounded-full shrink-0">
+                                <Users className="w-5 h-5" />
                             </div>
 
                             <div>
-                                <p className="font-bold text-blue-700 dark:text-blue-400">
-                                    Thành viên doanh nghiệp
-                                </p>
-                                <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
-                                    Bạn sẽ gia nhập doanh nghiệp thông qua thư mời.
-                                </p>
+                                <p className="text-sm font-bold text-info-700 dark:text-info-400">Thành viên doanh nghiệp</p>
+                                <p className="text-xs text-info-600/80 dark:text-info-400/80 mt-0.5">Bạn sẽ gia nhập doanh nghiệp thông qua thư mời.</p>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {selectedRole === UserRole.HR_OWNER && (
-                    <div className="mb-6 p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-700">
-                        <HrEnterpriseForm
-                            hrInfo={hrInfo}
-                            setHrInfo={setHrInfo}
-                            isDarkMode={isDarkMode}
-                        />
+                    <div className="mb-6 p-5 bg-background rounded-card border border-border">
+                        <HrEnterpriseForm hrInfo={hrInfo} setHrInfo={setHrInfo} />
                     </div>
                 )}
 
                 <div className="space-y-3">
-
-                    <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <input
-                            type="checkbox"
-                            id="agreeSocialTerms"
-                            checked={agreeTerms}
-                            onChange={e =>
-                                setAgreeTerms(e.target.checked)
-                            }
-                            className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
-                        />
-
-                        <div>
-                            <label
-                                htmlFor="agreeSocialTerms"
-                                className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer block leading-relaxed font-medium"
-                            >
-                                Tôi đã đọc và đồng ý với{' '}
-                                <Link
-                                    href="/terms"
-                                    className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-                                >
-                                    Điều khoản dịch vụ
-                                </Link>{' '}
-                                và{' '}
-                                <Link
-                                    href="/privacy"
-                                    className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-                                >
-                                    Chính sách Quyền riêng tư
-                                </Link>{' '}
-                                của hệ thống.
-                            </label>
-
-                            <p className="text-xs text-rose-600 dark:text-rose-400 italic mt-1 font-medium">
+                    <label className="flex items-start gap-3 cursor-pointer group bg-background p-4 rounded-card border border-border">
+                        <div className="relative flex items-start mt-0.5">
+                            <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="peer w-4 h-4 rounded border-border-hover text-primary-600 focus:ring-primary-500 cursor-pointer transition-all" />
+                        </div>
+                        <div className="text-sm text-text leading-relaxed font-medium">
+                            Tôi đã đọc và đồng ý với <Link href="/terms" className="text-primary-600 font-semibold hover:underline">Điều khoản dịch vụ</Link> và <Link href="/privacy" className="text-primary-600 font-semibold hover:underline">Chính sách Quyền riêng tư</Link> của hệ thống.
+                            <p className="text-xs text-error-600 dark:text-error-400 mt-1.5 italic font-medium">
                                 * Chúng tôi không thể cung cấp dịch vụ nếu không nhận được sự đồng ý ở mục này.
                             </p>
                         </div>
-                    </div>
+                    </label>
 
                     {selectedRole === UserRole.HR_OWNER && (
-                        <div className="flex items-start gap-2.5 bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <input
-                                type="checkbox"
-                                id="agreeConsulting"
-                                checked={agreeConsulting}
-                                onChange={e =>
-                                    setAgreeConsulting(e.target.checked)
-                                }
-                                className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
-                            />
-
-                            <div>
-                                <label
-                                    htmlFor="agreeConsulting"
-                                    className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer block leading-relaxed font-medium"
-                                >
-                                    Tôi đồng ý nhận thông tin tư vấn để được hỗ trợ đăng tin nhanh, cách tối ưu hiệu quả tin đăng và các giải pháp tuyển dụng phù hợp.
-                                </label>
-
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium italic">
-                                    <b className="text-slate-700 dark:text-slate-300">
-                                        Khuyên dùng:
-                                    </b>{' '}
-                                    Nếu không có sự đồng ý, chuyên viên sẽ không thể liên hệ hỗ trợ xác thực tài khoản nhanh chóng.
-                                </p>
+                        <label className="flex items-start gap-3 cursor-pointer group bg-background p-4 rounded-card border border-border">
+                            <div className="relative flex items-start mt-0.5">
+                                <input type="checkbox" checked={agreeConsulting} onChange={e => setAgreeConsulting(e.target.checked)} className="peer w-4 h-4 rounded border-border-hover text-primary-600 focus:ring-primary-500 cursor-pointer transition-all" />
                             </div>
-                        </div>
+                            <div className="text-sm text-text leading-relaxed font-medium">
+                                Tôi đồng ý nhận thông tin tư vấn để được hỗ trợ đăng tin nhanh, cách tối ưu hiệu quả tin đăng và các giải pháp tuyển dụng phù hợp (Tùy chọn).
+                            </div>
+                        </label>
                     )}
                 </div>
 
                 <button
                     onClick={handleSubmit}
                     disabled={isLoading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white py-3.5 rounded-xl mt-4 font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all active:scale-[0.98]"
+                    className="w-full bg-button-primary-bg hover:bg-button-primary-hover disabled:bg-primary-400 dark:disabled:bg-primary-800 text-button-primary-text py-3.5 rounded-button mt-6 font-bold shadow-sm transition-all"
                 >
-                    {isLoading
-                        ? 'Đang xử lý...'
-                        : 'Hoàn tất & Gia nhập'}
+                    {isLoading ? 'Đang xử lý...' : 'Hoàn tất & Gia nhập'}
                 </button>
             </div>
         </div>

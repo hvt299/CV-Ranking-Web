@@ -268,41 +268,59 @@ export default function SelfScorePage() {
                                     </div>
                                 </div>
 
-                                {/* Missing & Matched Skills (Luôn hiển thị) */}
+                                {/* Chi tiết phân tích kỹ năng (Đồng bộ giao diện chi tiết Job) */}
                                 <div className="space-y-6 mb-8">
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                        <h4 className="text-sm font-black flex items-center gap-2 mb-3 text-success-600 dark:text-success-400">
-                                            <CheckCircle2 className="w-4 h-4" /> Điểm cộng của bạn
+                                    <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                        <Target className="w-5 h-5 text-primary-500" />
+                                        <h4 className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                            Đối chiếu với JD (Yêu cầu công việc)
                                         </h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {result.matched_skills && result.matched_skills.length > 0 ? (
-                                                result.matched_skills.map((s: string, i: number) => (
-                                                    <span key={i} className="px-3 py-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700 shadow-sm">
-                                                        {s}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-xs font-medium text-slate-400 italic">Chưa tìm thấy kỹ năng khớp hoàn toàn.</span>
-                                            )}
-                                        </div>
                                     </div>
-
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                        <h4 className="text-sm font-black flex items-center gap-2 mb-3 text-error-600 dark:text-error-400">
-                                            <XCircle className="w-4 h-4" /> Kỹ năng cần bổ sung
-                                        </h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {result.missing_required_skills && result.missing_required_skills.length > 0 ? (
-                                                result.missing_required_skills.map((s: string, i: number) => (
-                                                    <span key={i} className="px-3 py-1.5 bg-error-50 dark:bg-error-900/20 text-error-700 dark:text-error-400 rounded-lg text-xs font-bold border border-error-200 dark:border-error-800/50">
-                                                        {s}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-xs font-medium text-success-500">Bạn đã đáp ứng đủ các kỹ năng bắt buộc của công việc này!</span>
-                                            )}
+                                    
+                                    {result.skill_details && result.skill_details.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {result.skill_details.map((s: any, idx: number) => (
+                                                <div key={idx} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 shadow-sm ${s.matched ? 'bg-success-50/50 dark:bg-success-500/5 border-success-200 dark:border-success-500/20' : 'bg-error-50/50 dark:bg-error-500/5 border-error-200 dark:border-error-500/20'}`}>
+                                                    <div className="flex items-start sm:items-center gap-3">
+                                                        <div className={`p-2 rounded-lg shrink-0 mt-0.5 sm:mt-0 ${s.matched ? 'bg-success-100 text-success-600 dark:bg-success-500/20 dark:text-success-400' : 'bg-error-100 text-error-600 dark:bg-error-500/20 dark:text-error-400'}`}>
+                                                            {s.matched ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center flex-wrap gap-2">
+                                                                <span className="font-bold text-base text-slate-800 dark:text-white">{s.skill}</span>
+                                                                {s.is_knockout && (
+                                                                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-black bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400">
+                                                                        Bắt buộc
+                                                                    </span>
+                                                                )}
+                                                                {!s.matched && (
+                                                                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-black bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400">
+                                                                        Chưa có
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {s.years_experience > 0 && (
+                                                                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                                                                    Phát hiện KN: {s.years_experience} năm
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {s.matched && s.confidence > 0 && (
+                                                        <div className="shrink-0 text-right sm:text-center px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase">Độ tin cậy</p>
+                                                            <p className="text-sm font-black text-success-600 dark:text-success-400">{Math.round(s.confidence * 100)}%</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 py-12 text-center text-sm font-medium text-slate-500 bg-slate-50 dark:bg-slate-800/50">
+                                            Chưa có đánh giá kỹ năng cho JD này.
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Cảnh báo Penalty (Luôn hiển thị) */}
@@ -314,7 +332,7 @@ export default function SelfScorePage() {
                                                 Cảnh báo rủi ro: Bị trừ {breakdown.penalty_score} điểm.
                                             </p>
                                             <p className="text-xs font-medium text-error-600 dark:text-error-500 leading-relaxed">
-                                                {getPenaltyReasons({}, breakdown) || 'Hệ thống phát hiện dấu hiệu bất thường trong CV của bạn (vd: Font chữ ẩn, màu nền trùng lặp).'}
+                                                {getPenaltyReasons({}, breakdown, result) || 'Hệ thống phát hiện dấu hiệu bất thường trong CV của bạn (vd: Font chữ ẩn, màu nền trùng lặp).'}
                                             </p>
                                         </div>
                                     </div>

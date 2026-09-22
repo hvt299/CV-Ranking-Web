@@ -1,25 +1,24 @@
 'use client';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 import { useState, useEffect } from 'react';
 import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, ChevronRight, Zap, Search, ChevronLeft, Activity, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewer from '@/components/shared/DocumentViewer';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
-import { useMyCvLibrary } from '@/features/application/useApplication';
+import { useCoverLetterLibrary } from '@/features/application/useApplication';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 
-export default function CVLibraryPage() {
-    const { cvs, isLoading, isUploading, uploadProgress, uploadFiles, deleteCV, addCVUrl } = useMyCvLibrary();
+export default function CoverLetterLibraryPage() {
+    const { coverLetters, isLoading, isUploading, uploadProgress, uploadFiles, deleteCoverLetter, addCoverLetterUrl } = useCoverLetterLibrary();
 
-    // Lấy thông tin sức chứa CV theo gói
+    // Lấy thông tin sức chứa Thư giới thiệu theo gói
     const { data: myPlanRes } = useSubscription();
     const { data: plansRes } = useSubscriptionPlans('applicant');
     const currentPlanCode = myPlanRes?.data?.current_plan_code || 'app_free';
     const currentPlan = plansRes?.data?.find((p: any) => p.plan_code === currentPlanCode);
-    const maxCvUploads = currentPlan?.features?.max_cv_uploads || 2;
-    const isQuotaExceeded = cvs.length >= maxCvUploads;
+    const maxCvUploads = currentPlan?.features?.max_cover_letters_uploads || 2;
+    const isQuotaExceeded = coverLetters.length >= maxCvUploads;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +36,7 @@ export default function CVLibraryPage() {
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (isQuotaExceeded) {
-            toast.error(`Đã đạt giới hạn lưu trữ (${maxCvUploads} CV). Vui lòng xóa CV cũ hoặc nâng cấp gói!`);
+            toast.error(`Đã đạt giới hạn lưu trữ (${maxCvUploads} CV). Vui lòng xóa Thư giới thiệu cũ hoặc nâng cấp gói!`);
             e.target.value = '';
             return;
         }
@@ -47,13 +46,13 @@ export default function CVLibraryPage() {
 
     const handleAddUrl = async () => {
         if (isQuotaExceeded) {
-            toast.error(`Đã đạt giới hạn lưu trữ (${maxCvUploads} CV). Vui lòng xóa CV cũ hoặc nâng cấp gói!`);
+            toast.error(`Đã đạt giới hạn lưu trữ (${maxCvUploads} CV). Vui lòng xóa Thư giới thiệu cũ hoặc nâng cấp gói!`);
             return;
         }
         if (!urlInput) return;
         
         // Add URL
-        await addCVUrl(urlInput, urlName || 'CV Của Tôi (Từ URL)');
+        await addCoverLetterUrl(urlInput, urlName || 'Thư giới thiệu của tôi (Từ URL)');
         setUrlInput('');
         setUrlName('');
     };
@@ -64,12 +63,12 @@ export default function CVLibraryPage() {
 
     if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin h-10 w-10 border-b-2 border-primary-600 rounded-full"></div></div>;
 
-    const filtered = cvs.filter(cv =>
-        cv.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cv.filename?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = coverLetters.filter(cl =>
+        cl.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cl.filename?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const paginatedCVs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const paginatedCoverLetters = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const totalPages = Math.ceil(filtered.length / pageSize);
 
     return (
@@ -77,8 +76,8 @@ export default function CVLibraryPage() {
             {/* Tiêu đề & Thống kê */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex-1">
-                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Thư viện CV của tôi</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các bản CV của bạn. Tải lên 1 lần, ứng tuyển "1 chạm" cho nhiều công việc.</p>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Thư viện Thư giới thiệu của tôi</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Quản lý các bản Thư giới thiệu của bạn. Tải lên và đính kèm dễ dàng khi ứng tuyển để ghi điểm với nhà tuyển dụng.</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
@@ -89,7 +88,7 @@ export default function CVLibraryPage() {
                         <div>
                             <p className="text-[10px] font-bold text-info-600 dark:text-info-500 uppercase tracking-wider mb-0.5">Sức chứa Thư viện</p>
                             <p className="text-sm font-black text-info-700 dark:text-info-100">
-                                <span className={isQuotaExceeded ? "text-error-600 dark:text-error-500" : ""}>{cvs.length}</span> / {maxCvUploads} CV
+                                <span className={isQuotaExceeded ? "text-error-600 dark:text-error-500" : ""}>{coverLetters.length}</span> / {maxCvUploads} tài liệu
                             </p>
                         </div>
                     </div>
@@ -97,7 +96,7 @@ export default function CVLibraryPage() {
             </div>
 
             {/* BỘ LỌC TÌM KIẾM */}
-            {cvs.length > 0 && (
+            {coverLetters.length > 0 && (
                 <div className="flex flex-col lg:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -122,7 +121,7 @@ export default function CVLibraryPage() {
                             <div className="absolute inset-0 border-4 border-primary-600 rounded-full border-t-transparent animate-spin"></div>
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800 dark:text-white text-lg">Đang tải và Bóc tách AI...</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white text-lg">Đang tải lên...</h3>
                             <p className="text-sm text-primary-600 font-medium mt-1">Tiến độ: {uploadProgress.current} / {uploadProgress.total} file</p>
                         </div>
                     </div>
@@ -132,15 +131,15 @@ export default function CVLibraryPage() {
                             <AlertTriangle className="w-8 h-8 text-error-500" />
                         </div>
                         <h3 className="font-bold text-slate-800 dark:text-white text-lg mt-2">Đã đạt giới hạn sức chứa ({maxCvUploads} CV)</h3>
-                        <p className="text-error-500 text-sm font-medium">Vui lòng xóa bớt CV cũ hoặc nâng cấp gói cước để tải thêm.</p>
+                        <p className="text-error-500 text-sm font-medium">Vui lòng xóa bớt Thư giới thiệu cũ hoặc nâng cấp gói cước để tải thêm.</p>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none relative z-0">
                         <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
                             <UploadCloud className="w-8 h-8 text-primary-500" />
                         </div>
-                        <h3 className="font-bold text-slate-800 dark:text-white text-lg mt-2">Kéo thả hoặc bấm để thêm CV (Nhiều file cùng lúc)</h3>
-                        <p className="text-slate-500 text-sm font-medium">Hệ thống AI sẽ tự động phân tích kỹ năng và kinh nghiệm. Hỗ trợ .PDF, .DOCX (Max 5MB)</p>
+                        <h3 className="font-bold text-slate-800 dark:text-white text-lg mt-2">Kéo thả hoặc bấm để thêm Thư giới thiệu (Nhiều file cùng lúc)</h3>
+                        <p className="text-slate-500 text-sm font-medium"> Hỗ trợ .PDF, .DOCX (Max 5MB)</p>
                     </div>
                 )}
             </div>
@@ -149,7 +148,7 @@ export default function CVLibraryPage() {
             {!isQuotaExceeded && (
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-4 items-center">
                     <div className="flex-1 w-full">
-                        <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Nhập URL CV (VD: Google Drive, Notion...)" className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 transition-colors shadow-sm" disabled={isUploading} />
+                        <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Nhập URL Thư giới thiệu (VD: Google Drive, Notion...)" className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 transition-colors shadow-sm" disabled={isUploading} />
                     </div>
                     <div className="w-full md:w-1/3">
                         <input type="text" value={urlName} onChange={e => setUrlName(e.target.value)} placeholder="Tên hiển thị" className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-primary-500 transition-colors shadow-sm" disabled={isUploading} />
@@ -161,20 +160,20 @@ export default function CVLibraryPage() {
             )}
 
             {/* DANH SÁCH CV CARD */}
-            {cvs.length > 0 && (
+            {coverLetters.length > 0 && (
                 <>
                     <div className="text-sm font-medium text-slate-500 px-2">
                         Đã tìm thấy <span className="text-primary-600 font-bold">{filtered.length}</span> kết quả
                     </div>
-                    {paginatedCVs.length > 0 ? (
+                    {paginatedCoverLetters.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {paginatedCVs.map(cv => {
-                                const cInfo = cv.candidate_info || {};
-                                const skills = cv.extracted_skills || [];
-                                const displayName = cv.display_name || cv.filename || 'CV Chưa xác định';
+                            {paginatedCoverLetters.map(cl => {
+                                const cInfo = cl.candidate_info || {};
+                                const skills = cl.extracted_skills || [];
+                                const displayName = cl.display_name || cl.filename || 'Thư giới thiệu chưa xác định';
 
                                 return (
-                                    <div key={cv.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all group h-full">
+                                    <div key={cl.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all group h-full">
 
                                         {/* Tiêu đề & Icon */}
                                         <div className="flex items-start gap-4 mb-5">
@@ -185,71 +184,26 @@ export default function CVLibraryPage() {
                                                 <h4 className="font-bold text-slate-900 dark:text-white text-base truncate group-hover:text-primary-600 transition-colors" title={displayName}>
                                                     {displayName}
                                                 </h4>
-                                                <p className="text-xs text-slate-500 font-medium truncate mt-0.5" title={cv.filename}>{cv.filename}</p>
+                                                <p className="text-xs text-slate-500 font-medium truncate mt-0.5" title={cl.filename}>{cl.filename}</p>
                                                 <p className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5 mt-2">
                                                     <Clock className="w-3.5 h-3.5" />
-                                                    {cv.created_at ? new Date(cv.created_at).toLocaleDateString('vi-VN') : (cv.created_at ? new Date(cv.created_at).toLocaleDateString('vi-VN') : 'Không xác định')}
+                                                    {cl.created_at ? new Date(cl.created_at).toLocaleDateString('vi-VN') : (cl.created_at ? new Date(cl.created_at).toLocaleDateString('vi-VN') : 'Không xác định')}
                                                 </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Thông tin phân tích AI */}
-                                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex-1 border border-slate-100 dark:border-slate-800">
-                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                                <Zap className="w-3.5 h-3.5 text-amber-500" /> AI Phân tích dữ liệu:
-                                            </p>
-
-                                            <div className="space-y-2.5 mb-4">
-                                                <div className="flex items-center gap-2.5 text-sm">
-                                                    <GraduationCap className="w-4 h-4 text-slate-400 shrink-0" />
-                                                    <span className="font-semibold text-slate-700 dark:text-slate-200 truncate" title={cInfo.education_level}>
-                                                        {cInfo.education_level || 'Không đề cập'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-2.5 text-sm">
-                                                    <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-                                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                                        {cInfo.years_of_experience || 0} năm kinh nghiệm
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Skills */}
-                                            <div className="flex flex-wrap gap-2">
-                                                {skills.slice(0, 4).map((skill: any, idx: number) => {
-                                                    const skillName = typeof skill === 'string' ? skill : skill.name;
-                                                    return (
-                                                        <span key={idx} className="px-2 py-1 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700 shadow-sm truncate max-w-30">
-                                                            {skillName}
-                                                        </span>
-                                                    );
-                                                })}
-                                                {skills.length > 4 && (
-                                                    <button
-                                                        onClick={() => setSelectedCandidateForSkills(cv)}
-                                                        className="px-2 py-1 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 text-primary-600 dark:text-primary-400 rounded-lg text-xs font-bold border border-primary-200 dark:border-primary-800 transition-colors flex items-center gap-1"
-                                                    >
-                                                        +{skills.length - 4} kỹ năng <ChevronRight className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                                {skills.length === 0 && (
-                                                    <span className="text-xs text-slate-400 italic">Không tìm thấy kỹ năng</span>
-                                                )}
                                             </div>
                                         </div>
 
                                         {/* Footer Hành động */}
                                         <div className="mt-5 flex justify-between items-center px-1">
                                             <button
-                                                onClick={() => setPreviewDocument({ url: cv.file_url || '', filename: displayName })}
+                                                onClick={() => setPreviewDocument({ url: cl.file_url || '', filename: displayName })}
                                                 className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                                             >
                                                 <Eye className="w-4 h-4" /> Xem chi tiết
                                             </button>
                                             <button
-                                                onClick={() => deleteCV(cv.id, displayName)}
+                                                onClick={() => deleteCoverLetter(cl.id, displayName)}
                                                 className="p-2 text-slate-400 hover:text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-xl transition-colors"
-                                                title="Xóa CV"
+                                                title="Xóa Thư giới thiệu"
                                             >
                                                 <Trash2 className="w-4.5 h-4.5" />
                                             </button>
@@ -260,7 +214,7 @@ export default function CVLibraryPage() {
                             })}
                         </div>
                     ) : (
-                        <div className="text-center py-16 text-slate-400 text-sm font-medium">Không có CV nào khớp với từ khóa "{searchTerm}".</div>
+                        <div className="text-center py-16 text-slate-400 text-sm font-medium">Không có Thư giới thiệu nào khớp với từ khóa "{searchTerm}".</div>
                     )}
 
                     {/* UI PHÂN TRANG */}
@@ -289,11 +243,11 @@ export default function CVLibraryPage() {
                 </>
             )}
 
-            {cvs.length === 0 && !isUploading && !isLoading && (
+            {coverLetters.length === 0 && !isUploading && !isLoading && (
                 <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm">
                     <FileText className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Chưa có CV nào</h3>
-                    <p className="text-slate-500 font-medium">Hãy tải lên ít nhất một bản CV để hệ thống AI phân tích và gợi ý việc làm.</p>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Chưa có Thư giới thiệu nào</h3>
+                    <p className="text-slate-500 font-medium">Hãy tải lên ít nhất một bản CV để gửi kèm khi ứng tuyển.</p>
                 </div>
             )}
 

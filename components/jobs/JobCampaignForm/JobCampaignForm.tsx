@@ -49,7 +49,7 @@ export default function JobCampaignForm({
 
     const [currentStep, setCurrentStep] = useState(1);
 
-    const formTopRef = useRef<HTMLDivElement>(null);
+    const formTopRef = useRef<HTMLFormElement>(null);
 
     const [formData, setFormData] = useState<JobFormData>(
         initialData || createInitialJobFormData()
@@ -86,12 +86,12 @@ export default function JobCampaignForm({
     }, [requiredSkills, preferredSkills, aiWeights]);
 
     const scrollToFormTop = () => {
-        requestAnimationFrame(() => {
+        setTimeout(() => {
             formTopRef.current?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
             });
-        });
+        }, 50);
     };
 
     const changeStep = (step: number) => {
@@ -273,14 +273,10 @@ export default function JobCampaignForm({
 
     return (
         <form
+            ref={formTopRef}
             onSubmit={handleFormSubmit}
-            className="pb-8 space-y-8 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500"
+            className="pb-8 space-y-8 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500 scroll-mt-24"
         >
-            <div
-                ref={formTopRef}
-                className="absolute -top-24 left-0 h-0 w-0"
-                aria-hidden="true"
-            />
 
             <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -335,7 +331,7 @@ export default function JobCampaignForm({
                                 }}
                             />
 
-                            <div className="relative flex justify-between">
+                            <div className="relative flex justify-between w-full">
                                 {JOB_FORM_STEPS.map(step => {
                                     const Icon = step.icon;
                                     const isActive = currentStep === step.id;
@@ -348,7 +344,7 @@ export default function JobCampaignForm({
                                             type="button"
                                             disabled={!isClickable}
                                             onClick={() => handleStepClick(step.id)}
-                                            className={`group flex flex-col items-center relative outline-none w-24 sm:w-auto ${isClickable
+                                            className={`group flex-1 flex flex-col items-center relative outline-none ${isClickable
                                                 ? 'cursor-pointer'
                                                 : 'cursor-default'
                                                 }`}
@@ -384,7 +380,7 @@ export default function JobCampaignForm({
                                                     {step.description}
                                                 </div>
 
-                                                {step.id === 5 && mode === 'create' && (
+                                                {step.id === 5 && (
                                                     <div
                                                         className={`w-fit mx-auto mt-1.5 px-2 py-0.5 rounded-md text-[8px] font-black border uppercase tracking-widest shadow-sm ${unlockBadgeConfig.bg} ${unlockBadgeConfig.text} ${unlockBadgeConfig.border}`}
                                                     >

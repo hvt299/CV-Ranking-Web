@@ -53,8 +53,10 @@ function CandidateCardContent({ cv, score, isHigh, isMed, hasPenalty, breakdown,
     onPreviewCV: (url: string, filename: string) => void;
 }) {
     const filename = cv.filename || 'CV Không tên';
-    const email = cv.candidate_info?.email;
-    const phone = cv.candidate_info?.phone;
+    const cInfo = cv.candidate_info || {};
+    const cleanName = cInfo.full_name || filename.split('-TopCV')[0].replace(/-/g, ' ');
+    const email = cInfo.email;
+    const phone = cInfo.phone;
     const skills = cv.ai_score?.matched_skills || [];
 
     return (
@@ -67,9 +69,10 @@ function CandidateCardContent({ cv, score, isHigh, isMed, hasPenalty, breakdown,
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                            <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate leading-tight" title={filename}>
-                                {filename}
+                            <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate leading-tight" title={cleanName}>
+                                {cleanName}
                             </h4>
+                            <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5" title={filename}>{filename}</p>
                             <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                                 <GripVertical className="w-3 h-3" />
                                 Kéo để chuyển
@@ -125,7 +128,7 @@ function CandidateCardContent({ cv, score, isHigh, isMed, hasPenalty, breakdown,
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2">
                 {hasPenalty ? (
-                    <div className="flex items-center gap-1.5 min-w-0 text-[10px] font-bold text-error-500 dark:text-error-400" title={`Bị trừ ${breakdown.penalty_score || 0}đ\nLý do: ${getPenaltyReasons(cv.candidate_info, breakdown)}`}>
+                    <div className="flex items-center gap-1.5 min-w-0 text-[10px] font-bold text-error-500 dark:text-error-400" title={`Bị trừ ${breakdown.penalty_score || 0}đ\nLý do: ${getPenaltyReasons(cv.candidate_info, breakdown, cv.ai_score)}`}>
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">Trừ {breakdown.penalty_score || 0}đ</span>
                     </div>

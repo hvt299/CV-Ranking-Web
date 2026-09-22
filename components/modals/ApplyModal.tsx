@@ -53,7 +53,8 @@ export default function ApplyModal({ jobId, jobTitle, onClose }: ApplyModalProps
     const isQuotaExceeded = todayAppliesCount >= maxAppliesPerDay;
 
     const [selectedCvId, setSelectedCvId] = useState('');
-    const [coverLetter, setCoverLetter] = useState('');
+    const [clList, setClList] = useState<any[]>([]);
+    const [selectedClId, setSelectedClId] = useState('');
     const [agreeRules, setAgreeRules] = useState(false);
 
     useEffect(() => {
@@ -67,7 +68,15 @@ export default function ApplyModal({ jobId, jobTitle, onClose }: ApplyModalProps
                 setIsLoadingCvs(false);
             }
         };
+        const fetchCLs = async () => {
+            try {
+                const res = await apiClient.get('/apply/cover-letters');
+                const clData = res.data?.data || res.data || [];
+                setClList(Array.isArray(clData) ? clData : []);
+            } catch (error) {}
+        };
         fetchCVs();
+        fetchCLs();
     }, []);
 
     const handleSubmit = async () => {
@@ -78,7 +87,7 @@ export default function ApplyModal({ jobId, jobTitle, onClose }: ApplyModalProps
         try {
             const res = await applicationService.applyForJob(jobId, {
                 cv_document_id: selectedCvId,
-                cover_letter: coverLetter
+                cover_letter_id: selectedClId || undefined
             });
             toast.success(res.message || 'Hồ sơ của bạn đã được gửi thành công!');
             onClose();
@@ -181,13 +190,31 @@ export default function ApplyModal({ jobId, jobTitle, onClose }: ApplyModalProps
                             </span>
                             <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Khuyên dùng</span>
                         </label>
-                        <textarea
-                            placeholder="Kính gửi Nhà tuyển dụng, tôi viết thư này để ứng tuyển..."
-                            value={coverLetter}
-                            onChange={(e) => setCoverLetter(e.target.value)}
-                            className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 dark:text-slate-200 resize-none placeholder:text-slate-400 leading-relaxed"
-                            rows={4}
-                        />
+                        
+                        {clList.length > 0 ? (
+                            <div className="relative">
+                                <select
+                                    value={selectedClId}
+                                    onChange={e => setSelectedClId(e.target.value)}
+                                    className="w-full pl-4 pr-10 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-700 dark:text-slate-200 appearance-none cursor-pointer"
+                                >
+                                    <option value="">Không đính kèm Thư giới thiệu</option>
+                                    {clList.map(cl => (
+                                        <option key={cl.id} value={cl.id}>{cl.display_name || cl.filename}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-4 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center justify-center text-center gap-2">
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Bạn chưa có Thư giới thiệu nào.</p>
+                                <a href={ROUTES.APPLICANT_CV_LIBRARY.replace('cv-library', 'cover-letters')} target="_blank" className="text-xs font-bold text-blue-600 hover:underline">
+                                    Mở Thư viện để tải lên
+                                </a>
+                            </div>
+                        )}
                     </div>
 
                     {/* Khối 3: Checkbox Cảnh báo */}

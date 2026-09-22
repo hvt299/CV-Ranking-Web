@@ -85,7 +85,7 @@ export default function PublicJobsPage() {
 
                 setFilterOptions({ locations: locationsRes, workModes, jobLevels, employmentTypes, skills: [], companies, industries, educations: [] });
             } catch (error) {
-                toast.error('Không thể tải danh sách việc làm');
+                console.error('Không thể tải danh sách việc làm:', error);
             } finally {
                 setIsLoading(false);
             }

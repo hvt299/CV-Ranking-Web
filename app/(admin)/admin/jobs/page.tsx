@@ -103,18 +103,16 @@ export default function AdminJobsPage() {
     const totalPages = Math.ceil(filtered.length / pageSize);
     const paginatedJobs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
-                            Quản lý Chiến dịch
-                        </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Giám sát, tìm kiếm và đình chỉ các chiến dịch vi phạm trên nền tảng.
-                        </p>
-                    </div>
+                    <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
+                        Quản lý Chiến dịch
+                    </h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Giám sát, tìm kiếm và đình chỉ các chiến dịch vi phạm trên nền tảng.</p>
                 </div>
             </div>
 
@@ -124,7 +122,7 @@ export default function AdminJobsPage() {
                     <input
                         type="text"
                         placeholder="Tìm kiếm theo tiêu đề hoặc tên công ty..."
-                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm focus:border-primary-500 shadow-sm transition-colors text-slate-700 dark:text-slate-200 font-medium"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-700 dark:text-white text-sm font-medium focus:border-primary-500 shadow-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -134,7 +132,7 @@ export default function AdminJobsPage() {
                     <div className="relative min-w-48 flex-1">
                         <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
-                            className="w-full pl-10 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-primary-500 shadow-sm"
+                            className="w-full pl-10 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none shadow-sm cursor-pointer"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -152,7 +150,9 @@ export default function AdminJobsPage() {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between mt-2 mb-4 px-2">
+
+
+                                    <div className="flex items-center justify-between mt-2 mb-4 px-2">
                 <div className="text-sm font-medium text-slate-500">
                     Đã tìm thấy <span className="text-primary-600 font-bold">{filtered.length}</span> chiến dịch
                 </div>
@@ -171,14 +171,7 @@ export default function AdminJobsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={5} className="p-10 text-center">
-                                        <Loader2 className="w-6 h-6 animate-spin text-primary-500 mx-auto" />
-                                        <p className="text-slate-500 text-sm mt-3 font-medium">Đang tải dữ liệu...</p>
-                                    </td>
-                                </tr>
-                            ) : filtered.length === 0 ? (
+                            {filtered.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="p-10 text-center text-slate-500 font-medium">
                                         Không tìm thấy chiến dịch nào phù hợp.
@@ -242,7 +235,7 @@ export default function AdminJobsPage() {
                 </div>
                 
                 {/* THÀNH PHẦN PHÂN TRANG */}
-                {!isLoading && totalPages > 1 && (
+                {totalPages > 1 && (
                     <div className="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 mt-auto">
                         <p className="text-sm font-medium text-slate-500">
                             Hiển thị <span className="font-bold text-slate-800 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> đến <span className="font-bold text-slate-800 dark:text-white">{Math.min(currentPage * pageSize, filtered.length)}</span> kết quả

@@ -61,7 +61,7 @@ export default function PublicCompaniesPage() {
 
                 setFilterOptions({ industries, locations: locRes, sizes });
             } catch (error) {
-                toast.error('Không thể tải danh sách công ty');
+                console.error('Không thể tải danh sách công ty:', error);
             } finally {
                 setIsLoading(false);
             }

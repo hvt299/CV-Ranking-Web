@@ -32,7 +32,7 @@ export const applicationService = {
     /**
      * Nộp hồ sơ ứng tuyển chính thức
      */
-    async applyForJob(jobId: string, payload: { cv_document_id: string, cover_letter?: string }): Promise<{ message: string }> {
+    async applyForJob(jobId: string, payload: { cv_document_id: string, cover_letter_id?: string }): Promise<{ message: string }> {
         const response = await apiClient.post(`/apply/jobs/${jobId}`, payload);
         return response.data;
     },
@@ -84,10 +84,48 @@ export const applicationService = {
     },
 
     /**
+     * Thêm CV từ URL
+     */
+    async addMyCVViaUrl(payload: { url: string, display_name: string }): Promise<void> {
+        await apiClient.post('/apply/library/url', payload);
+    },
+
+    /**
      * Xóa một CV khỏi thư viện cá nhân
      */
     async deleteMyCV(cvId: string): Promise<void> {
         await apiClient.delete(`/apply/library/${cvId}`);
+    },
+
+    /**
+     * Lấy danh sách Thư giới thiệu
+     */
+    async getMyCoverLetters(): Promise<any[]> {
+        const response = await apiClient.get<any[]>('/apply/cover-letters');
+        return response.data;
+    },
+
+    /**
+     * Tải lên Thư giới thiệu (Cover Letter)
+     */
+    async uploadCoverLetter(formData: FormData): Promise<void> {
+        await apiClient.post('/apply/cover-letters/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
+
+    /**
+     * Thêm Thư giới thiệu từ URL
+     */
+    async addCoverLetterViaUrl(payload: { url: string, display_name: string }): Promise<void> {
+        await apiClient.post('/apply/cover-letters/url', payload);
+    },
+
+    /**
+     * Xóa Thư giới thiệu
+     */
+    async deleteCoverLetter(clId: string): Promise<void> {
+        await apiClient.delete(`/apply/cover-letters/${clId}`);
     },
 
     /**

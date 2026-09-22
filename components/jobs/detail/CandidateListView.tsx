@@ -128,7 +128,7 @@ export default function CandidateListView({ candidates, expandedInsights, isGene
                                             <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                                             <p className="text-[10px] text-rose-600 dark:text-rose-400 leading-relaxed">
                                                 <strong className="block font-bold">Cảnh báo rủi ro: Bị trừ {breakdown.penalty_score || 0}đ</strong>
-                                                {getPenaltyReasons(cInfo, breakdown)}
+                                                {getPenaltyReasons(cInfo, breakdown, cv.ai_score)}
                                             </p>
                                         </div>
                                     )}

@@ -10,6 +10,8 @@ import { JobFormData } from '@/types';
 import JobCampaignForm from '@/components/jobs/JobCampaignForm/JobCampaignForm';
 import { mapJobToFormData, mapFormDataToJobPayload } from '@/components/jobs/JobCampaignForm/job-form.utils';
 import { ROUTES } from '@/constants/routes';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
+import { getTierBadgeConfig } from '@/utils/tier-colors';
 
 export default function EditEnterpriseJobPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: jobId } = use(params);
@@ -17,6 +19,11 @@ export default function EditEnterpriseJobPage({ params }: { params: Promise<{ id
     const { user } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
     const [initialData, setInitialData] = useState<JobFormData | null>(null);
+
+    const { data: plansRes } = useSubscriptionPlans('hr');
+    const unlockPlan = plansRes?.data?.find((p: any) => p.features?.can_customize_ai_weights);
+    const unlockPlanName = unlockPlan?.name || 'Enterprise';
+    const unlockBadgeConfig = getTierBadgeConfig(unlockPlan?.tier_level || 3);
 
     useEffect(() => {
         const fetchJob = async () => {
@@ -61,6 +68,8 @@ export default function EditEnterpriseJobPage({ params }: { params: Promise<{ id
             isSubmitting={isLoading}
             onSubmit={handleUpdate}
             submitLabel="Cập nhật Chiến dịch"
+            unlockBadgeConfig={unlockBadgeConfig}
+            unlockPlanName={unlockPlanName}
         />
     );
 }

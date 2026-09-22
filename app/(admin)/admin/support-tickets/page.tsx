@@ -117,6 +117,8 @@ export default function AdminSupportTicketsPage() {
     const totalPages = Math.ceil(filteredTickets.length / pageSize);
     const paginatedTickets = filteredTickets.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+    if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -128,9 +130,9 @@ export default function AdminSupportTicketsPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                         type="text"
                         placeholder="Tìm theo mã ticket, email, chủ đề..."
@@ -140,8 +142,8 @@ export default function AdminSupportTicketsPage() {
                     />
                 </div>
 
-                <div className="flex gap-3 shrink-0">
-                    <div className="relative min-w-40">
+                <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+                    <div className="relative min-w-48 flex-1">
                         <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
                             className="w-full pl-10 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none shadow-sm cursor-pointer"
@@ -155,7 +157,7 @@ export default function AdminSupportTicketsPage() {
                             <option value="other">Khác</option>
                         </select>
                     </div>
-                    <div className="relative min-w-40">
+                    <div className="relative min-w-48 flex-1">
                         <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <select
                             className="w-full pl-10 pr-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none shadow-sm cursor-pointer"
@@ -173,10 +175,14 @@ export default function AdminSupportTicketsPage() {
                 </div>
             </div>
 
-            {isLoading ? (
-                <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>
-            ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            {/* ĐẾM SỐ LƯỢNG */}
+            <div className="flex items-center justify-between mt-2 mb-4 px-2">
+                <div className="text-sm font-medium text-slate-500">
+                    Đã tìm thấy <span className="text-primary-600 font-bold">{filteredTickets.length}</span> yêu cầu
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200 dark:border-slate-700">
@@ -229,8 +235,8 @@ export default function AdminSupportTicketsPage() {
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-16 text-slate-400 text-sm font-medium">
-                                            Không có yêu cầu hỗ trợ nào.
+                                        <td colSpan={5} className="p-10 text-center text-slate-500 font-medium">
+                                            Không tìm thấy yêu cầu hỗ trợ nào phù hợp.
                                         </td>
                                     </tr>
                                 )}
@@ -266,7 +272,6 @@ export default function AdminSupportTicketsPage() {
                         </div>
                     )}
                 </div>
-            )}
 
             {/* MODAL CHI TIẾT TICKET */}
             {selectedTicket && (

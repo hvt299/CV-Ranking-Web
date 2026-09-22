@@ -15,7 +15,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         licenseKey: 'GPL',
         plugins: [Essentials, Paragraph, Heading, Bold, Italic, Underline, Link, List, Alignment, Indent, IndentBlock, RemoveFormat, PasteFromOffice, Autoformat, Undo],
         toolbar: {
-            shouldNotGroupWhenFull: false,
+            shouldNotGroupWhenFull: true,
             items: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', 'underline', '|', 'bulletedList', 'numberedList', '|', 'alignment', '|', 'link', 'removeFormat']
         },
         heading: {

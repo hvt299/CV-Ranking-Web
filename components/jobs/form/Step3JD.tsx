@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Check, ChevronDown, ChevronUp, FileText, Lightbulb, UploadCloud, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, FileText, Lightbulb, UploadCloud, X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { companyService } from '@/features/company/company.service';
 
 const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
     ssr: false,
@@ -81,6 +82,7 @@ function getFileName(url?: string) {
 export default function Step3JD({ formData, setFormData }: Step3Props) {
     const [activeTab, setActiveTab] = useState<EditorTab>('description');
     const [showTips, setShowTips] = useState(true);
+    const [isUploadingJD, setIsUploadingJD] = useState(false);
 
     const tabStatus = useMemo(() => {
         return EDITOR_TABS.reduce((acc, tab) => {
@@ -110,7 +112,7 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
         setActiveTab(tab);
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
 
         if (!file) return;
@@ -129,12 +131,24 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
             return;
         }
 
-        setFormData({
-            ...formData,
-            jd_file_name: file.name
-        });
+        setIsUploadingJD(true);
+        const uploadData = new FormData();
+        uploadData.append('file', file);
 
-        toast.success('Đã chọn file JD.');
+        try {
+            const res = await companyService.uploadFile(uploadData);
+            setFormData({
+                ...formData,
+                jd_file_url: res.file_url || res.url,
+                jd_file_name: file.name
+            });
+            toast.success('Đã tải file JD lên thành công.');
+        } catch (error) {
+            toast.error('Lỗi khi tải file lên');
+        } finally {
+            setIsUploadingJD(false);
+            event.target.value = '';
+        }
     };
 
     const handleRemoveFile = () => {
@@ -380,28 +394,45 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
                         </div>
 
                         <p className="text-xs text-slate-400 mt-1">
-                            Đính kèm file PDF hoặc Word nếu bạn có JD gốc.
+                            Đính kèm file PDF, Word hoặc nhập URL tài liệu JD.
                         </p>
                     </div>
                 </div>
 
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        value={formData?.jd_file_url || ""}
+                        onChange={(e) => setFormData({ ...formData, jd_file_url: e.target.value })}
+                        placeholder="https://res.cloudinary.com/... hoặc link Google Drive"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-medium outline-none focus:border-primary-500 transition-colors"
+                    />
+                </div>
+
                 {!formData?.jd_file_name && !formData?.jd_file_url ? (
-                    <label className="group flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 transition-all hover:border-blue-400 hover:bg-blue-50/30 dark:border-slate-700 dark:bg-slate-800/30 dark:hover:border-blue-700 dark:hover:bg-blue-900/10">
-                        <UploadCloud className="mb-2 h-7 w-7 text-slate-400 transition-colors group-hover:text-blue-500" />
+                    <label className={`group flex min-h-28 flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 transition-all hover:border-blue-400 hover:bg-blue-50/30 dark:hover:border-blue-700 dark:hover:bg-blue-900/10 ${isUploadingJD ? "opacity-60 cursor-wait" : "cursor-pointer"}`}>
+                        {isUploadingJD ? (
+                            <Loader2 className="mb-2 h-7 w-7 text-blue-500 animate-spin" />
+                        ) : (
+                            <UploadCloud className="mb-2 h-7 w-7 text-slate-400 transition-colors group-hover:text-blue-500" />
+                        )}
 
                         <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                            Chọn file JD
+                            {isUploadingJD ? "Đang tải lên..." : "Chọn file JD"}
                         </span>
 
-                        <span className="mt-1 text-[11px] text-slate-400">
-                            PDF, DOC, DOCX · Tối đa 10MB
-                        </span>
+                        {!isUploadingJD && (
+                            <span className="mt-1 text-[11px] text-slate-400">
+                                PDF, DOC, DOCX · Tối đa 10MB
+                            </span>
+                        )}
 
                         <input
                             type="file"
                             className="hidden"
                             accept=".pdf,.doc,.docx"
                             onChange={handleFileChange}
+                            disabled={isUploadingJD}
                         />
                     </label>
                 ) : (
@@ -416,9 +447,13 @@ export default function Step3JD({ formData, setFormData }: Step3Props) {
                             </p>
 
                             <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-                                Đã chọn file JD
+                                Đã cung cấp JD gốc
                             </p>
                         </div>
+
+                        {formData?.jd_file_url && (
+                            <a href={formData?.jd_file_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline mr-2">Xem file</a>
+                        )}
 
                         <button
                             type="button"

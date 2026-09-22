@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { jobService } from '@/features/job/job.service';
 import apiClient from '@/lib/api-client';
@@ -57,8 +57,9 @@ export default function PublicJobDetailPage() {
                     })
                     .catch(() => console.warn('Không thể tải việc làm liên quan'));
             })
-            .catch(() => {
-                toast.error('Không tìm thấy thông tin công việc');
+            .catch((error: any) => {
+                console.error('Lỗi khi tải chi tiết job:', error);
+                setJob(null);
                 setIsLoading(false);
             });
     }, [params.id]);
@@ -104,22 +105,7 @@ export default function PublicJobDetailPage() {
     }
 
     if (!job) {
-        return (
-            <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#050505]">
-                <PublicHeader isScrolled={isScrolled} isAuthenticated={isAuthenticated} user={user} />
-                <div className="flex-1 flex items-center justify-center py-20 px-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-10 rounded-3xl text-center max-w-lg shadow-xl shadow-slate-200/40 dark:shadow-black/20">
-                        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100 dark:bg-slate-800">
-                            <XCircle className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                        </div>
-                        <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Không tìm thấy công việc</h2>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium mb-8">Công việc này có thể đã hết hạn hoặc chiến dịch tuyển dụng đã bị đóng.</p>
-                        <button onClick={() => router.push(ROUTES.PUBLIC_JOBS)} className="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20">Khám phá cơ hội khác</button>
-                    </div>
-                </div>
-                <PublicFooter />
-            </div>
-        );
+        notFound();
     }
 
     const isExpired = Boolean(job.deadline && new Date(job.deadline).getTime() < Date.now());
