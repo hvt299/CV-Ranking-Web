@@ -7,6 +7,9 @@ import { Company } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
 import { ROUTES } from '@/constants/routes';
+import { useAuthStore } from '@/store/useAuthStore';
+import { applicationService } from '@/features/application/application.service';
+import toast from 'react-hot-toast';
 
 interface CompanyCardProps {
     company: Company;
@@ -14,6 +17,7 @@ interface CompanyCardProps {
 
 export default function CompanyCard({ company }: CompanyCardProps) {
     const router = useRouter();
+    const { user, savedCompanyIds, toggleSavedCompany } = useAuthStore();
 
     /*
      * =========================================================
@@ -89,11 +93,33 @@ export default function CompanyCard({ company }: CompanyCardProps) {
         router.push(ROUTES.PUBLIC_COMPANY_DETAIL(company.id));
     };
 
-    const handleSave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const isSaved = company.id ? savedCompanyIds.includes(company.id) : false;
+
+    const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // TODO: Implement save company
+        if (!user || user.role !== 'applicant') {
+            toast.error('Vui lòng đăng nhập với tư cách ứng viên để lưu công ty!');
+            return;
+        }
+
+        if (!company.id) return;
+
+        toggleSavedCompany(company.id);
+
+        try {
+            if (isSaved) {
+                await applicationService.unsaveCompany(company.id);
+                toast.success('Đã bỏ lưu công ty.');
+            } else {
+                await applicationService.saveCompany(company.id);
+                toast.success('Đã lưu công ty thành công.');
+            }
+        } catch (error) {
+            toggleSavedCompany(company.id);
+            toast.error('Có lỗi xảy ra khi lưu công ty.');
+        }
     };
 
     const handleWebsiteClick = (
@@ -128,11 +154,15 @@ export default function CompanyCard({ company }: CompanyCardProps) {
             <button
                 type="button"
                 onClick={handleSave}
-                className="absolute right-4 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-xl border border-white/80 bg-white/95 text-slate-400 shadow-sm backdrop-blur-md transition-all duration-200 hover:bg-white hover:text-rose-500 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-rose-400"
-                title="Lưu công ty"
-                aria-label="Lưu công ty"
+                className={`absolute right-4 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm backdrop-blur-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-500/30 ${
+                    isSaved
+                        ? 'border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:hover:bg-rose-500/20'
+                        : 'border-white/80 bg-white/95 text-slate-400 hover:bg-white hover:text-rose-500 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-rose-400'
+                }`}
+                title={isSaved ? "Bỏ lưu công ty" : "Lưu công ty"}
+                aria-label={isSaved ? "Bỏ lưu công ty" : "Lưu công ty"}
             >
-                <Heart className="h-4 w-4" />
+                <Heart className={`h-4 w-4 ${isSaved ? 'fill-rose-500' : ''}`} />
             </button>
 
             {/* =====================================================

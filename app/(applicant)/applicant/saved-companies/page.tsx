@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -9,6 +9,7 @@ import { Heart, Building2, MapPin, Globe, Search, ChevronLeft, ChevronRight, Use
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 import { ROUTES } from '@/constants/routes';
+import { COMPANY_SIZES } from '@/constants/company.constants';
 
 export default function SavedCompaniesPage() {
     const [companies, setCompanies] = useState<any[]>([]);
@@ -110,10 +111,10 @@ export default function SavedCompaniesPage() {
                             
                             <div className="space-y-2 mb-6">
                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <MapPin className="w-4 h-4 text-slate-400" /> {company.headquarters || 'Chưa cập nhật'}
+                                    <MapPin className="w-4 h-4 text-slate-400" /> {company.location?.province_name || company.location?.country || 'Chưa cập nhật'}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <Users className="w-4 h-4 text-slate-400" /> {company.company_size || 'Chưa cập nhật'}
+                                    <Users className="w-4 h-4 text-slate-400" /> {COMPANY_SIZES.find(s => s.value === company.size)?.label || company.size || 'Chưa cập nhật'}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 truncate">
                                     <Globe className="w-4 h-4 text-slate-400" /> 

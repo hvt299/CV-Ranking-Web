@@ -9,12 +9,16 @@ import {
 } from 'lucide-react';
 import { useJobList, useJobRanking } from '@/features/job/useJob';
 import { JOB_LEVELS, EMPLOYMENT_TYPES, WORK_MODES } from '@/constants/job.constants';
+import { useAuthStore } from '@/store/useAuthStore';
+import { UserRole } from '@/types';
+import AssignJobModal from '@/components/jobs/AssignJobModal';
+import { UserPlus } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { getJobBadgeConfig, JOB_BADGE_CONFIG } from '@/utils/tier-colors';
 
-function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any, deleteJob: (id: string) => void, isSelected: boolean, onToggleSelect: (id: string) => void }) {
+function JobCardItem({ job, deleteJob, isSelected, onToggleSelect, user, onOpenAssign }: { job: any, deleteJob: (id: string) => void, isSelected: boolean, onToggleSelect: (id: string) => void, user: any, onOpenAssign: (id: string, currentIds: string[]) => void }) {
     const { candidates, isLoading: isRankingLoading } = useJobRanking(job.id);
     const applicantCount = candidates.length;
 
@@ -24,6 +28,9 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
 
     const statusBadge = getJobBadgeConfig(isActive, isClosed);
     const hotBadge = JOB_BADGE_CONFIG.hot;
+
+    const isOwner = user?.role === UserRole.HR_OWNER;
+    const canManage = isOwner || (job.assigned_hr_ids || []).includes(user?.id);
 
     return (
         <div className={`bg-white dark:bg-slate-900 p-5 rounded-3xl border transition-all flex flex-col group relative overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary-500/10 ${isSelected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-slate-200 dark:border-slate-800 hover:border-primary-400 dark:hover:border-primary-600'}`}>
@@ -59,12 +66,21 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
                 </div>
 
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={ROUTES.HR_JOB_EDIT(job.id)} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="Chỉnh sửa">
-                        <Edit2 className="w-4 h-4" />
-                    </Link>
-                    <button onClick={() => deleteJob(job.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Xóa chiến dịch">
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canManage && (
+                        <>
+                            <Link href={ROUTES.HR_JOB_EDIT(job.id)} className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors" title="Chỉnh sửa">
+                                <Edit2 className="w-4 h-4" />
+                            </Link>
+                            <button onClick={() => deleteJob(job.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Xóa chiến dịch">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    )}
+                    {isOwner && (
+                        <button onClick={(e) => { e.preventDefault(); onOpenAssign(job.id, job.assigned_hr_ids || []); }} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors" title="Phân công">
+                            <UserPlus className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -114,6 +130,13 @@ function JobCardItem({ job, deleteJob, isSelected, onToggleSelect }: { job: any,
 
 export default function JobsListPage() {
     const { jobs, isLoading, deleteJob } = useJobList();
+    const { user } = useAuthStore();
+    const [assignModal, setAssignModal] = useState<{isOpen: boolean, jobId: string, currentIds: string[]}>({isOpen: false, jobId: '', currentIds: []});
+    
+    // Auto reload function (simple hack: just triggering a re-render or relying on swr)
+    const handleAssignSuccess = () => {
+        window.location.reload();
+    };
 
     // Lấy thông tin gói cước của HR để tính toán số lượng Job đang mở / Tối đa
     const { data: myPlanRes } = useSubscription();
@@ -169,6 +192,13 @@ export default function JobsListPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
+            <AssignJobModal 
+                isOpen={assignModal.isOpen} 
+                jobId={assignModal.jobId} 
+                initialAssignedIds={assignModal.currentIds}
+                onClose={() => setAssignModal(prev => ({...prev, isOpen: false}))}
+                onSuccess={handleAssignSuccess}
+            />
             {/* KHỐI 1: HEADER & ACTIONS */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex-1">
@@ -312,6 +342,8 @@ export default function JobsListPage() {
                                 deleteJob={deleteJob}
                                 isSelected={selectedJobIds.includes(job.id)}
                                 onToggleSelect={handleToggleSelect}
+                                user={user}
+                                onOpenAssign={(id, currentIds) => setAssignModal({isOpen: true, jobId: id, currentIds})}
                             />
                         ))}
                     </div>

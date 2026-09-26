@@ -2,7 +2,7 @@
 import { EmptyState } from '@/components/ui/EmptyState';
 
 import { useState, useEffect } from 'react';
-import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, ChevronRight, Zap, Search, ChevronLeft, Activity, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileText, Trash2, Eye, Clock, GraduationCap, Briefcase, ChevronRight, Zap, Search, ChevronLeft, Activity, AlertTriangle, Mail, Phone, GitCommitHorizontal, Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewer from '@/components/shared/DocumentViewer';
 import CandidateSkillsModal from '@/components/candidates/CandidateSkillsModal';
@@ -198,6 +198,29 @@ export default function CVLibraryPage() {
                                             <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                                 <Zap className="w-3.5 h-3.5 text-amber-500" /> AI Phân tích dữ liệu:
                                             </p>
+
+                                            <div className="flex items-center gap-2 mb-4">
+                                                {cInfo.email && (
+                                                    <a href={`mailto:${cInfo.email}`} title={cInfo.email} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                                                        <Mail className="w-3.5 h-3.5" />
+                                                    </a>
+                                                )}
+                                                {cInfo.phone && (
+                                                    <a href={`tel:${cInfo.phone}`} title={cInfo.phone} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                                                        <Phone className="w-3.5 h-3.5" />
+                                                    </a>
+                                                )}
+                                                {cInfo.github && (
+                                                    <a href={`https://${cInfo.github.replace('https://', '')}`} target="_blank" rel="noreferrer" title="GitHub" className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+                                                        <GitCommitHorizontal className="w-3.5 h-3.5" />
+                                                    </a>
+                                                )}
+                                                {cInfo.linkedin && (
+                                                    <a href={`https://${cInfo.linkedin.replace('https://', '')}`} target="_blank" rel="noreferrer" title="LinkedIn" className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors">
+                                                        <Globe className="w-3.5 h-3.5" />
+                                                    </a>
+                                                )}
+                                            </div>
 
                                             <div className="space-y-2.5 mb-4">
                                                 <div className="flex items-center gap-2.5 text-sm">

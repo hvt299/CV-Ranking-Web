@@ -138,7 +138,7 @@ export default function TabCandidates({ candidates, setCandidates, jobTitle }: T
         }
 
         // LƯU Ý: CẤM XÓA VĨNH VIỄN ĐOẠN NÀY
-        // if (!checkCredits(2, 'Sinh câu hỏi phỏng vấn bằng AI')) return;
+        if (!checkCredits(2, 'Sinh câu hỏi phỏng vấn bằng AI')) return;
 
         setIsGeneratingInterview(cv.id);
         try {

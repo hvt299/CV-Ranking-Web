@@ -12,6 +12,7 @@ export default function OwnerAnalytics({ charts }: { charts: any }) {
 
     
     const hasTopJobsData = Array.isArray(top_jobs) && top_jobs.length > 0;
+    const hasTeamWorkloadData = Array.isArray(team_workload) && team_workload.length > 0 && team_workload.some((tw: any) => tw.cv_count > 0);
 
     const pipelineData = buildPipelineData(pipeline_health);
     const hasPipelineData = pipelineData.length > 0;
@@ -44,7 +45,7 @@ export default function OwnerAnalytics({ charts }: { charts: any }) {
                     <AnalyticsHeader icon={<Users className="w-4 h-4 text-primary-600 dark:text-primary-400" />} iconClassName="bg-primary-50 dark:bg-primary-500/10 border-primary-100 dark:border-primary-500/20" title="Hiệu suất Nhân viên" description="Lượng CV đang được phân công" />
 
                     <div className="relative flex-1 min-h-67.5 w-full p-4">
-                        {team_workload && team_workload.length > 0 ? (
+                        {hasTeamWorkloadData ? (
                             <>
                                 {team_workload[0]?.is_mock && <div className="absolute top-0 right-4 z-10 px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</div>}
                                 <ResponsiveContainer width="100%" height="100%">

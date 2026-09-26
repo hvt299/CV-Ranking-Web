@@ -10,6 +10,31 @@ export const applicationService = {
         return response.data;
     },
 
+    async getSavedJobs(): Promise<any[]> {
+        const response = await apiClient.get<any[]>('/apply/saved-jobs/list');
+        return response.data;
+    },
+
+    async saveJob(jobId: string): Promise<any> {
+        const response = await apiClient.post(`/apply/saved-jobs/${jobId}`);
+        return response.data;
+    },
+
+    async unsaveJob(jobId: string): Promise<any> {
+        const response = await apiClient.delete(`/apply/saved-jobs/${jobId}`);
+        return response.data;
+    },
+
+    async saveCompany(companyId: string): Promise<any> {
+        const response = await apiClient.post(`/apply/saved-companies/${companyId}`);
+        return response.data;
+    },
+
+    async unsaveCompany(companyId: string): Promise<any> {
+        const response = await apiClient.delete(`/apply/saved-companies/${companyId}`);
+        return response.data;
+    },
+
     /**
      * Lấy danh sách CV cá nhân trong thư viện của ứng viên
      */

@@ -15,6 +15,7 @@ export function useAuthFlow() {
         try {
             const res = await authService.login(payload);
             setAuthToken(res.access_token, router);
+            toast.success('Đăng nhập thành công!');
             return true;
         } catch (err: any) {
             const detail = err.response?.data?.detail;
@@ -48,7 +49,8 @@ export function useAuthFlow() {
 
     const socialLoginFlow = async (
         provider: 'google' | 'linkedin',
-        payload: any
+        payload: any,
+        actionType: 'login' | 'register' = 'login'
     ) => {
         setIsLoading(true);
         try {
@@ -59,7 +61,7 @@ export function useAuthFlow() {
             }
 
             setAuthToken(res.data.access_token, router);
-            toast.success('Đăng nhập/Đăng ký thành công!');
+            toast.success(actionType === 'login' ? 'Đăng nhập thành công!' : 'Đăng ký thành công!');
             return { success: true };
         } catch (err: any) {
             toast.error(

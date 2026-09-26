@@ -31,6 +31,16 @@ export const companyService = {
         return response.data;
     },
 
+    updateMemberRole: async (userId: string, role: string) => {
+        const response = await apiClient.patch(`/companies/members/${userId}/role`, { role });
+        return response.data;
+    },
+
+    removeMember: async (userId: string) => {
+        const response = await apiClient.delete(`/companies/members/${userId}`);
+        return response.data;
+    },
+
     getAdminDashboard: async () => {
         const response = await apiClient.get('/admin/dashboard/metrics');
         return response.data.data;

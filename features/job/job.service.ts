@@ -2,6 +2,11 @@ import apiClient from '@/lib/api-client';
 import { Job, JobPayload } from '@/types';
 
 export const jobService = {
+    async assignJob(jobId: string, hrUserIds: string[]): Promise<{ status: string; message: string }> {
+        const response = await apiClient.put(`/jobs/${jobId}/assign`, { hr_user_ids: hrUserIds });
+        return response.data;
+    },
+
     /**
      * Lấy danh sách tất cả chiến dịch tuyển dụng
      */

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Building2, MapPin, Briefcase, Calendar, Edit2, Share2, MoreHorizontal, Flame, Eye, Users, Bookmark, BookmarkCheck } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Briefcase, Calendar, Edit2, Share2, MoreHorizontal, Flame, Eye, Users, Bookmark, BookmarkCheck, RefreshCw } from 'lucide-react';
 import { Job } from '@/types';
+import apiClient from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { ROUTES } from '@/constants/routes';
 import { JOB_BADGE_CONFIG, getJobBadgeConfig } from '@/utils/tier-colors';
@@ -19,6 +20,21 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isRescoring, setIsRescoring] = useState(false);
+
+    const handleRescore = async () => {
+        if (!jobInfo?.id) return;
+        setIsRescoring(true);
+        try {
+            const res = await apiClient.post(`/jobs/${jobInfo.id}/rescore`);
+            toast.success(res.data?.message || 'Đã gửi yêu cầu chấm điểm lại!');
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || 'Lỗi kết nối Server.');
+        } finally {
+            setIsRescoring(false);
+            setIsMenuOpen(false);
+        }
+    };
 
     const isClosed = jobInfo.status === 'closed';
     const isExpired = jobInfo.deadline && new Date(jobInfo.deadline).getTime() < new Date().getTime();
@@ -89,6 +105,11 @@ export default function JobDetailHeader({ jobInfo, companyInfo }: JobDetailHeade
                                         <Edit2 className="w-4 h-4 text-slate-400" />
                                         <span>Chỉnh sửa</span>
                                     </Link>
+
+                                    <button onClick={handleRescore} disabled={isRescoring} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">
+                                        <RefreshCw className={`w-4 h-4 text-emerald-500 ${isRescoring ? 'animate-spin' : ''}`} />
+                                        <span>{isRescoring ? 'Đang chấm điểm...' : 'Chấm điểm lại toàn bộ CV'}</span>
+                                    </button>
 
                                     <button onClick={handleSave} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                         {isSaved ? <BookmarkCheck className="w-4 h-4 text-primary-500" /> : <Bookmark className="w-4 h-4 text-amber-500" />}

@@ -17,6 +17,17 @@ export default function CandidateSkillsModal({
 
     const info = candidate.candidate_info || candidate.cv_snapshot?.candidate_info || {};
     const skillExp = info.skill_experience || {};
+    const extractedSkills = candidate.extracted_skills || candidate.cv_snapshot?.extracted_skills || [];
+    
+    // Merge extracted_skills array into skillExp dictionary if not present
+    extractedSkills.forEach((s: any) => {
+        const name = typeof s === 'string' ? s : s.name;
+        const years = typeof s === 'string' ? 0 : s.years || 0;
+        if (name && !skillExp[name]) {
+            skillExp[name] = years;
+        }
+    });
+
     const languages = info.languages || [];
     const certifications = info.certifications || [];
     const displayName = candidate.display_name || candidate.filename || info.full_name || 'Ứng viên';

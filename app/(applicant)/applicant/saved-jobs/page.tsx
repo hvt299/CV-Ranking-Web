@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -9,6 +9,7 @@ import { BookmarkX, Bookmark, Building2, Calendar, MapPin, DollarSign, Search, C
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 import { ROUTES } from '@/constants/routes';
+import { formatSalaryRange } from '@/utils/format';
 
 export default function SavedJobsPage() {
     const [jobs, setJobs] = useState<any[]>([]);
@@ -91,27 +92,36 @@ export default function SavedJobsPage() {
                     {paginated.map(job => (
                         <div key={job.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col hover:shadow-md transition-all group">
                             <div className="flex items-start gap-4 mb-5">
-                                <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center font-black text-lg bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-800">
-                                    {job.company_name?.charAt(0).toUpperCase()}
+                                <div className="w-14 h-14 shrink-0 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-white flex items-center justify-center shadow-sm">
+                                    {job.company_logo ? (
+                                        <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain p-2" />
+                                    ) : (
+                                        <span className="font-black text-xl text-slate-300 bg-slate-50 w-full h-full flex items-center justify-center">
+                                            {job.company_name?.charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-bold text-slate-900 dark:text-white text-base truncate group-hover:text-primary-600 transition-colors" title={job.title}>{job.title}</h4>
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-1 truncate">
-                                        <Building2 className="w-3.5 h-3.5" />
+                                    <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1 truncate">
                                         {job.company_name}
                                     </div>
                                 </div>
                             </div>
                             
-                            <div className="space-y-2 mb-6">
-                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <MapPin className="w-4 h-4 text-slate-400" /> {job.location || 'Không xác định'}
+                            <div className="space-y-3 mb-6">
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                        {typeof job.location === 'object' ? (job.location?.country && job.location.country !== 'Việt Nam' ? job.location.country : job.location?.province_name || 'Toàn quốc') : (job.location || 'Không xác định')}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
+                                        <DollarSign className="w-3.5 h-3.5" />
+                                        {formatSalaryRange(job.salary) || 'Thỏa thuận'}
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <DollarSign className="w-4 h-4 text-slate-400" /> {job.salary || 'Thỏa thuận'}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <Calendar className="w-4 h-4 text-slate-400" /> Hạn nộp: {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                                <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    <Calendar className="w-3.5 h-3.5" /> Hạn nộp: {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
                                 </div>
                             </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail, Loader2, UserCog, UserMinus, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { UserRole } from '@/types';
 import { companyService } from '@/features/company/company.service';
@@ -11,8 +11,11 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
     const [inviteEmail, setInviteEmail] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isInviting, setIsInviting] = useState(false);
+    
+    // For actions
+    const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-    useEffect(() => {
+    const loadMembers = () => {
         companyService.getMembers().then(res => {
             const memData = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
             setMembers(memData);
@@ -21,6 +24,10 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
             toast.error("Lỗi khi tải danh sách nhân sự");
             setIsLoading(false);
         });
+    }
+
+    useEffect(() => {
+        loadMembers();
     }, [companyId]);
 
     const handleInviteMember = async () => {
@@ -34,6 +41,37 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
             toast.error(e.response?.data?.detail || "Không thể gửi thư mời");
         } finally {
             setIsInviting(false);
+        }
+    };
+
+    const handleChangeRole = async (memberId: string, currentRole: string) => {
+        const newRole = currentRole === UserRole.HR_OWNER ? UserRole.HR_MEMBER : UserRole.HR_OWNER;
+        if (!window.confirm(`Xác nhận đổi quyền của thành viên này thành ${newRole}?`)) return;
+        
+        setLoadingAction(`role-${memberId}`);
+        try {
+            await companyService.updateMemberRole(memberId, newRole);
+            toast.success("Cập nhật quyền thành công");
+            loadMembers();
+        } catch (e: any) {
+            toast.error(e.response?.data?.detail || "Lỗi khi cập nhật quyền");
+        } finally {
+            setLoadingAction(null);
+        }
+    };
+
+    const handleRemoveMember = async (memberId: string) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi công ty? Họ sẽ không thể truy cập vào dữ liệu công ty nữa.")) return;
+        
+        setLoadingAction(`remove-${memberId}`);
+        try {
+            await companyService.removeMember(memberId);
+            toast.success("Đã xóa thành viên khỏi công ty");
+            loadMembers();
+        } catch (e: any) {
+            toast.error(e.response?.data?.detail || "Lỗi khi xóa thành viên");
+        } finally {
+            setLoadingAction(null);
         }
     };
 
@@ -68,7 +106,12 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
             <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700">
-                        <tr><th className="p-5 pl-6">Thành viên</th><th className="p-5">Quyền hạn</th><th className="p-5">Trạng thái</th></tr>
+                        <tr>
+                            <th className="p-5 pl-6">Thành viên</th>
+                            <th className="p-5">Quyền hạn</th>
+                            <th className="p-5">Trạng thái</th>
+                            {user.role === UserRole.HR_OWNER && <th className="p-5 text-right pr-6">Thao tác</th>}
+                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                         {members.map(m => (
@@ -83,7 +126,7 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
                                             </div>
                                         )}
                                         <div>
-                                            <p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{m.full_name}</p>
+                                            <p className="font-bold text-sm text-slate-800 dark:text-white mb-0.5">{m.full_name} {m.id === user.id && '(Bạn)'}</p>
                                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{m.email}</p>
                                         </div>
                                     </div>
@@ -94,6 +137,30 @@ export default function CompanyMembers({ user, companyId }: { user: any, company
                                 <td className="p-5">
                                     <span className={`px-3 py-1.5 text-[11px] font-black uppercase tracking-wider rounded-lg shadow-sm ${m.is_verified ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'}`}>{m.is_verified ? 'Hoạt động' : 'Chờ xác thực'}</span>
                                 </td>
+                                {user.role === UserRole.HR_OWNER && (
+                                    <td className="p-5 pr-6 text-right">
+                                        {m.id !== user.id && (
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleChangeRole(m.id, m.role)}
+                                                    disabled={loadingAction === `role-${m.id}`}
+                                                    title={m.role === UserRole.HR_OWNER ? 'Giáng quyền xuống Member' : 'Nâng cấp lên Owner'}
+                                                    className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    {loadingAction === `role-${m.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCog className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRemoveMember(m.id)}
+                                                    disabled={loadingAction === `remove-${m.id}`}
+                                                    title="Xóa khỏi công ty"
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    {loadingAction === `remove-${m.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserMinus className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>

@@ -2,9 +2,12 @@
 
 import {
     Mail, Phone, Clock, GraduationCap, Briefcase, FolderOutput, Eye,
-    FileText, Trash2, AlertTriangle, GitCommitHorizontal, Globe, ExternalLink, Check
+    FileText, Trash2, AlertTriangle, GitCommitHorizontal, Globe, ExternalLink, Check, Heart
 } from 'lucide-react';
 import { CV } from '@/types';
+import apiClient from '@/lib/api-client';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface CandidateListViewProps {
     candidates: CV[];
@@ -17,6 +20,31 @@ interface CandidateListViewProps {
 }
 
 export default function CandidateListView({ candidates, selectedIds, onToggleSelect, onMapToJob, onViewSkills, onPreviewCV, onDeleteCV }: CandidateListViewProps) {
+    const { savedProfileIds, toggleSavedProfile } = useAuthStore();
+    
+    const handleBookmark = async (cv: CV) => {
+        const applicantId = cv.owner_user_id || cv.id;
+        const isSaved = savedProfileIds.includes(applicantId);
+        
+        toggleSavedProfile(applicantId);
+        
+        try {
+            if (isSaved) {
+                await apiClient.delete(`/cv/talent-pool/bookmark/${applicantId}`);
+                toast.success('Đã bỏ lưu hồ sơ');
+            } else {
+                await apiClient.post('/cv/talent-pool/bookmark', {
+                    applicant_user_id: applicantId,
+                    notes: `Đã lưu từ CV ${cv.filename}`
+                });
+                toast.success('Đã lưu hồ sơ vào Talent Pool thành công');
+            }
+        } catch (error: any) {
+            toggleSavedProfile(applicantId);
+            toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra khi lưu hồ sơ');
+        }
+    };
+
     return (
         <div className="space-y-4 animate-in fade-in">
             {candidates.map((cv) => {
@@ -138,6 +166,9 @@ export default function CandidateListView({ candidates, selectedIds, onToggleSel
                                 )}
                                 <button onClick={() => onViewSkills(cv)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Xem chi tiết phân tích">
                                     <FileText className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleBookmark(cv)} className={`p-2 rounded-xl transition-colors ${savedProfileIds.includes(cv.owner_user_id || cv.id) ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} title={savedProfileIds.includes(cv.owner_user_id || cv.id) ? "Đã lưu" : "Lưu hồ sơ"}>
+                                    <Heart className={`w-4 h-4 ${savedProfileIds.includes(cv.owner_user_id || cv.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
                                 </button>
                                 <button onClick={() => onDeleteCV(cv.id, cv.filename)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors" title="Xóa vĩnh viễn">
                                     <Trash2 className="w-4 h-4" />

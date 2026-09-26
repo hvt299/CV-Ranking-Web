@@ -57,7 +57,7 @@ export default function LoginPage() {
             payload.location = companyData.location;
         }
 
-        const result = await socialLoginFlow(provider, payload);
+        const result = await socialLoginFlow(provider, payload, 'login');
 
         if (result?.requireRole) {
             setTempSocialToken(accessToken);

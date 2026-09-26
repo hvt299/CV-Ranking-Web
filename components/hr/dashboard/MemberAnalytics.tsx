@@ -8,9 +8,11 @@ export default function MemberAnalytics({ charts }: { charts: any }) {
 
     const { daily_assigned_cvs, ai_score_histogram, status_distribution } = charts;
 
-    const hasVelocityData = Array.isArray(daily_assigned_cvs) && daily_assigned_cvs.length > 0;
-    const hasAiScoreData = Array.isArray(ai_score_histogram) && ai_score_histogram.length > 0;
-    const hasStatusData = Array.isArray(status_distribution) && status_distribution.length > 0;
+    const hasVelocityData = Array.isArray(daily_assigned_cvs) && daily_assigned_cvs.some((d: any) => d.count > 0);
+    const hasAiScoreData = Array.isArray(ai_score_histogram) && ai_score_histogram.some((d: any) => d.value > 0);
+    const hasStatusData = Array.isArray(status_distribution) && status_distribution.some((d: any) => d.value > 0);
+    const hasTimeData = Array.isArray(charts.time_in_stage) && charts.time_in_stage.some((d: any) => d.days > 0);
+    const hasFunnelData = Array.isArray(charts.personal_funnel) && charts.personal_funnel.some((d: any) => d.value > 0);
 
     return (
         <div className="space-y-6">
@@ -177,21 +179,23 @@ export default function MemberAnalytics({ charts }: { charts: any }) {
                 <AnalyticsCard>
                     <AnalyticsHeader icon={<BarChart2 className="w-4 h-4 text-info-600 dark:text-info-400" />} iconClassName="bg-info-50 dark:bg-info-500/10 border-info-100 dark:border-info-500/20" title="Thời gian xử lý" description="Số ngày ngâm CV trung bình" />
                     <div className="relative h-[300px] w-full p-4">
-                        {charts.time_in_stage && charts.time_in_stage.length > 0 ? (
+                        {hasTimeData ? (
                             <>
                                 {charts.time_in_stage[0]?.is_mock && <div className="absolute top-0 right-4 z-10 px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</div>}
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={charts.time_in_stage} layout="vertical" margin={{ top: 10, right: 8, left: 20, bottom: 4 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="var(--color-border)" opacity={0.5} />
-                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} />
-                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} width={80} />
-                                        <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
-                                        <Bar dataKey="days" name="Số ngày" radius={[0, 5, 5, 0]} barSize={26}>
-                                            {charts.time_in_stage.map((entry: any, index: number) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
+                                                                        <AreaChart data={charts.time_in_stage} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="timeGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="var(--color-info-500)" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="var(--color-info-500)" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} />
+                                        <RechartsTooltip cursor={{ stroke: 'var(--color-info-500)', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold', color: 'var(--color-text)' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
+                                        <Area type="monotone" dataKey="days" name="Số ngày" stroke="var(--color-info-500)" strokeWidth={3} fillOpacity={1} fill="url(#timeGradient)" dot={{ r: 4, fill: 'var(--color-info-500)', strokeWidth: 2, stroke: 'var(--color-card-bg)' }} />
+                                    </AreaChart>
                                 </ResponsiveContainer>
                             </>
                         ) : (
@@ -203,7 +207,7 @@ export default function MemberAnalytics({ charts }: { charts: any }) {
                 <AnalyticsCard>
                     <AnalyticsHeader icon={<PieIcon className="w-4 h-4 text-warning-600 dark:text-warning-400" />} iconClassName="bg-warning-50 dark:bg-warning-500/10 border-warning-100 dark:border-warning-500/20" title="Tỷ lệ chuyển đổi cá nhân" description="Phễu lọc ứng viên cá nhân" />
                     <div className="relative h-[300px] w-full p-4">
-                        {charts.personal_funnel && charts.personal_funnel.length > 0 ? (
+                        {hasFunnelData ? (
                             <>
                                 {charts.personal_funnel[0]?.is_mock && <div className="absolute top-0 right-4 z-10 px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</div>}
                                 <ResponsiveContainer width="100%" height="100%">

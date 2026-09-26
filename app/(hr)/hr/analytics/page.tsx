@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useHRViewStore } from '@/store/useHRViewStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { TrendingUp, Filter, Loader2, Activity } from 'lucide-react';
+import { TrendingUp, Filter, Loader2, Activity , Database }  from 'lucide-react';
 import ProFeatureLock from '@/components/shared/ProFeatureLock';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
@@ -19,7 +19,7 @@ export default function AnalyticsPage() {
     const router = useRouter();
     // LƯU Ý: CẤM XÓA VĨNH VIỄN ĐOẠN KIỂM TRA GÓI
     const { isPro: realIsPro, isLoading: isCreditsLoading } = useCredits();
-    const isPro = true; // Tạm thời bypass phần logic gói để xem trước biểu đồ
+    const isPro = realIsPro;
 
     const { data: plansRes } = useSubscriptionPlans('hr');
 
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {funnelData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={funnelData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" hide />
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
                                         ))}
                                     </Bar>
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có ứng viên trong phễu." />)}
                         </div>
                     </div>
 
@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
                         <div className="h-72 w-full flex items-center justify-center mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {scoreData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie data={scoreData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" stroke="var(--color-card-bg)" strokeWidth={2}>
                                         {scoreData.map((entry: any, index: number) => (
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                                     </Pie>
                                     <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold', color: 'var(--color-text)' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
                                 </PieChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có đủ điểm AI để hiển thị." />)}
                         </div>
                     </div>
 
@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {trendData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
@@ -201,7 +201,7 @@ export default function AnalyticsPage() {
                                     <RechartsTooltip cursor={{ stroke: 'var(--color-primary-500)', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold', color: 'var(--color-text)' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
                                     <Area type="monotone" dataKey="cv_count" name="Số lượng CV" stroke="var(--color-primary-500)" strokeWidth={3} fillOpacity={1} fill="url(#trendGradient)" />
                                 </AreaChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa ghi nhận biến động CV." />)}
                         </div>
                     </div>
 
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {expData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={expData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} dy={10} />
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
                                         ))}
                                     </Bar>
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có dữ liệu kinh nghiệm." />)}
                         </div>
                     </div>
 
@@ -240,7 +240,7 @@ export default function AnalyticsPage() {
                             {sourceData[0]?.is_mock && <span className="px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</span>}
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {sourceData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={sourceData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" hide />
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
                                     <Bar dataKey="value" name="Tổng CV" radius={[0, 4, 4, 0]} barSize={15} fill="var(--color-slate-300)" />
                                     <Bar dataKey="hired" name="Đã tuyển" radius={[0, 4, 4, 0]} barSize={15} fill="var(--color-success-500)" />
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có dữ liệu hiệu quả nguồn." />)}
                         </div>
                     </div>
 
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
                             {timeToHireData[0]?.is_mock && <span className="px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</span>}
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {timeToHireData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={timeToHireData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="timeGradient" x1="0" y1="0" x2="0" y2="1">
@@ -277,7 +277,7 @@ export default function AnalyticsPage() {
                                     <RechartsTooltip cursor={{ stroke: 'var(--color-info-500)', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold', color: 'var(--color-text)' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
                                     <Area type="monotone" dataKey="days" name="Ngày" stroke="var(--color-info-500)" strokeWidth={3} fillOpacity={1} fill="url(#timeGradient)" dot={{ r: 4, fill: 'var(--color-info-500)', strokeWidth: 2, stroke: 'var(--color-card-bg)' }} />
                                 </AreaChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có ứng viên nào được tuyển." />)}
                         </div>
                     </div>
 
@@ -291,7 +291,7 @@ export default function AnalyticsPage() {
                             {knockoutData[0]?.is_mock && <span className="px-2 py-1 bg-warning-100 text-warning-700 text-[10px] font-bold rounded">Mock Data</span>}
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {knockoutData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={knockoutData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" hide />
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
                                         ))}
                                     </Bar>
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có dữ liệu tiêu chí bị trượt." />)}
                         </div>
                     </div>
 
@@ -316,7 +316,7 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
                         <div className="h-72 w-full mt-auto">
-                            <ResponsiveContainer width="100%" height="100%">
+                            {skillsData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={skillsData} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" hide />
@@ -324,11 +324,24 @@ export default function AnalyticsPage() {
                                     <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', fontWeight: 'bold', color: 'var(--color-text)' }}  itemStyle={{ color: "var(--color-text)", fontWeight: "bold" }} />
                                     <Bar dataKey="value" name="Tần suất" radius={[0, 4, 4, 0]} barSize={20} fill="var(--color-primary-500)" />
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ResponsiveContainer>) : (<ChartEmptyState icon={<Database className="w-6 h-6" />} title="Chưa có dữ liệu" description="Chưa có từ khóa kỹ năng." />)}
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function ChartEmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+    return (
+        <div className="relative flex flex-col items-center justify-center text-center px-6 py-8 w-full h-full animate-in fade-in duration-500">
+            <div className="absolute w-32 h-32 rounded-full bg-primary-500/[0.035] dark:bg-primary-500/5 blur-2xl" />
+            <div className="relative w-14 h-14 rounded-2xl bg-background border border-border shadow-sm flex items-center justify-center text-text-subtle mb-4">
+                {icon}
+            </div>
+            <p className="relative text-sm font-black text-text">{title}</p>
+            <p className="relative text-xs text-text-subtle font-medium mt-1.5 max-w-xs leading-relaxed">{description}</p>
         </div>
     );
 }

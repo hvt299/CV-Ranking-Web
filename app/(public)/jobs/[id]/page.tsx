@@ -17,11 +17,12 @@ import { formatSalaryRange, getDeadlineCountdown } from '@/utils/format';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
 import { ROUTES } from '@/constants/routes';
+import { applicationService } from '@/features/application/application.service';
 
 export default function PublicJobDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isAuthenticated, user } = useAuthStore();
+    const { isAuthenticated, user, savedJobIds, toggleSavedJob } = useAuthStore();
     const { openApplyModal } = useUIStore();
 
     const [job, setJob] = useState<Job | null>(null);
@@ -63,6 +64,35 @@ export default function PublicJobDetailPage() {
                 setIsLoading(false);
             });
     }, [params.id]);
+
+    const isSaved = job?.id ? savedJobIds.includes(job.id) : false;
+
+    const handleSaveJob = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || user.role !== 'applicant') {
+            toast.error('Vui lòng đăng nhập với tư cách ứng viên để lưu việc làm!');
+            return;
+        }
+
+        if (!job?.id) return;
+
+        toggleSavedJob(job.id);
+
+        try {
+            if (isSaved) {
+                await applicationService.unsaveJob(job.id);
+                toast.success('Đã bỏ lưu việc làm.');
+            } else {
+                await applicationService.saveJob(job.id);
+                toast.success('Đã lưu việc làm thành công.');
+            }
+        } catch (error) {
+            toggleSavedJob(job.id);
+            toast.error('Có lỗi xảy ra khi lưu việc làm.');
+        }
+    };
 
     const handleApplyClick = () => {
         if (user && user.role !== 'applicant') {
@@ -189,13 +219,13 @@ export default function PublicJobDetailPage() {
                                 </button>
 
                                 <div className="flex gap-2">
-                                    <button type="button" className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors">
-                                        <Heart className="w-4 h-4" />
-                                        Lưu
+                                    <button type="button" onClick={handleSaveJob} className={`flex-1 py-3 bg-slate-50 dark:bg-slate-800 font-bold rounded-xl flex items-center justify-center gap-2 border transition-colors whitespace-nowrap ${isSaved ? 'text-rose-600 border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10' : 'text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-slate-200 dark:border-slate-700'}`}>
+                                        <Heart className={`w-4 h-4 shrink-0 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                        {isSaved ? 'Đã lưu' : 'Lưu'}
                                     </button>
 
-                                    <button type="button" onClick={handleShare} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-primary-500/10 text-slate-600 dark:text-slate-300 hover:text-primary-600 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors">
-                                        <Share2 className="w-4 h-4" />
+                                    <button type="button" onClick={handleShare} className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-primary-500/10 text-slate-600 dark:text-slate-300 hover:text-primary-600 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors whitespace-nowrap">
+                                        <Share2 className="w-4 h-4 shrink-0" />
                                         Chia sẻ
                                     </button>
                                 </div>
@@ -471,8 +501,8 @@ export default function PublicJobDetailPage() {
             </main>
 
             <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 p-3.5 z-50 shadow-[0_-8px_30px_-10px_rgba(0,0,0,0.18)] flex items-center gap-3">
-                <button type="button" className="flex h-12 w-12 shrink-0 items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
-                    <Heart className="w-5 h-5" />
+                <button type="button" onClick={handleSaveJob} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-colors ${isSaved ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-rose-500 border-slate-200 dark:border-slate-700'}`}>
+                    <Heart className={`w-5 h-5 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
                 </button>
 
                 <button type="button" onClick={handleShare} className="flex h-12 w-12 shrink-0 items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">

@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Bookmark, MapPin, Briefcase, Mail, Phone, ExternalLink, Calendar, Search, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Users, Bookmark, MapPin, Briefcase, Mail, Phone, ExternalLink, Calendar, Search, ChevronLeft, ChevronRight, User, Trash2, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-client';
 import { ROUTES } from '@/constants/routes';
@@ -37,6 +37,16 @@ export default function SavedProfilesPage() {
         };
         fetchProfiles();
     }, []);
+
+    const handleUnsave = async (applicantId: string) => {
+        try {
+            await apiClient.delete(`/cv/talent-pool/bookmark/${applicantId}`);
+            setProfiles(prev => prev.filter(p => p.applicant_user_id !== applicantId));
+            toast.success('Đã xóa khỏi danh sách đã lưu');
+        } catch (error: any) {
+            toast.error(error?.response?.data?.detail || 'Có lỗi khi xóa hồ sơ');
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -84,32 +94,94 @@ export default function SavedProfilesPage() {
 
             {paginated.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {paginated.map(profile => (
-                        <div key={profile._id || profile.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col hover:shadow-md transition-all group">
-                            <div className="flex items-start gap-4 mb-5">
-                                <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center font-black text-lg bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-800">
-                                    <User className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-base truncate transition-colors">ID Ứng viên: {profile.applicant_user_id.substring(0,8)}...</h4>
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-1">
-                                        <Calendar className="w-3.5 h-3.5" /> Lưu ngày: {new Date(profile.created_at || profile.created_at?.$date).toLocaleDateString('vi-VN')}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-2 mb-6 text-sm text-slate-600 dark:text-slate-400">
-                                {profile.notes ? (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 italic">
-                                        "{profile.notes}"
-                                    </div>
-                                ) : (
-                                    <span className="italic text-slate-400">Không có ghi chú</span>
-                                )}
-                            </div>
+                    {paginated.map(profile => {
+                        const cvInfo = profile.cv?.parsed_data?.candidate_info || {};
+                        const name = cvInfo.name || profile.profile?.full_name || `ID: ${profile.applicant_user_id.substring(0, 8)}...`;
+                        const email = cvInfo.email || profile.profile?.email;
+                        const phone = cvInfo.phone || profile.profile?.phone;
+                        const skills = profile.cv?.parsed_data?.skills || [];
+                        const exp = cvInfo.years_of_experience || 0;
+                        const edu = cvInfo.education_level || 'N/A';
+                        const avatarLetter = name.charAt(0).toUpperCase();
 
-                        </div>
-                    ))}
+                        return (
+                            <div key={profile._id || profile.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col hover:shadow-md transition-all group h-full">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center font-black text-xl bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-800">
+                                            {avatarLetter}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-slate-900 dark:text-white text-base truncate" title={name}>{name}</h4>
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-1">
+                                                <Calendar className="w-3.5 h-3.5" /> Lưu ngày: {new Date(profile.created_at || profile.created_at?.$date).toLocaleDateString('vi-VN')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleUnsave(profile.applicant_user_id)}
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors shrink-0 -mt-1 -mr-1"
+                                        title="Bỏ lưu hồ sơ"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Contact Info */}
+                                <div className="flex flex-col gap-1.5 mb-4 px-1">
+                                    {email && (
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 truncate" title={email}>
+                                            <Mail className="w-4 h-4 shrink-0 text-slate-400" /> <span className="truncate">{email}</span>
+                                        </div>
+                                    )}
+                                    {phone && (
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 truncate">
+                                            <Phone className="w-4 h-4 shrink-0 text-slate-400" /> <span>{phone}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Stats */}
+                                <div className="grid grid-cols-2 gap-3 w-full mb-4">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 flex flex-col items-center justify-center text-center">
+                                        <Briefcase className="w-4 h-4 text-slate-400 mb-1" />
+                                        <span className="text-xs font-black text-slate-700 dark:text-slate-200">{exp} năm</span>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 flex flex-col items-center justify-center text-center">
+                                        <GraduationCap className="w-4 h-4 text-slate-400 mb-1" />
+                                        <span className="text-xs font-black text-slate-700 dark:text-slate-200 truncate w-full px-1" title={edu}>{edu}</span>
+                                    </div>
+                                </div>
+
+                                {/* Skills */}
+                                <div className="mb-4">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {skills.slice(0, 3).map((s: string, idx: number) => (
+                                            <span key={idx} className="px-2 py-1 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md text-[10px] font-bold uppercase border border-slate-200 dark:border-slate-700 shadow-sm">
+                                                {s}
+                                            </span>
+                                        ))}
+                                        {skills.length > 3 && (
+                                            <span className="px-2 py-1 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-md text-[10px] font-bold border border-primary-200 dark:border-primary-500/20 shadow-sm">
+                                                +{skills.length - 3}
+                                            </span>
+                                        )}
+                                        {skills.length === 0 && <span className="text-xs text-slate-400 italic">Chưa có kỹ năng</span>}
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    {profile.notes ? (
+                                        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 italic line-clamp-2" title={profile.notes}>
+                                            "{profile.notes}"
+                                        </div>
+                                    ) : (
+                                        <span className="italic text-slate-400 text-sm">Không có ghi chú</span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="text-center py-16 text-slate-400 text-sm font-medium">Không tìm thấy hồ sơ nào.</div>

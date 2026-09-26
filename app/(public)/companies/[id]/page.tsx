@@ -13,15 +13,45 @@ import { Company, Job } from '@/types';
 import { INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
 import { ROUTES } from '@/constants/routes';
+import { applicationService } from '@/features/application/application.service';
 
 export default function PublicCompanyDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isAuthenticated, user } = useAuthStore();
+    const { isAuthenticated, user, savedCompanyIds, toggleSavedCompany } = useAuthStore();
     const [company, setCompany] = useState<Company | null>(null);
     const [companyJobs, setCompanyJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const isSaved = company?.id ? savedCompanyIds.includes(company.id) : false;
+
+    const handleSaveCompany = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || user.role !== 'applicant') {
+            toast.error('Vui lòng đăng nhập với tư cách ứng viên để theo dõi công ty!');
+            return;
+        }
+
+        if (!company?.id) return;
+
+        toggleSavedCompany(company.id);
+
+        try {
+            if (isSaved) {
+                await applicationService.unsaveCompany(company.id);
+                toast.success('Đã bỏ theo dõi công ty.');
+            } else {
+                await applicationService.saveCompany(company.id);
+                toast.success('Đã theo dõi công ty thành công.');
+            }
+        } catch (error) {
+            toggleSavedCompany(company.id);
+            toast.error('Có lỗi xảy ra khi theo dõi công ty.');
+        }
+    };
 
     const handleShare = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -138,12 +168,12 @@ export default function PublicCompanyDetailPage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2 w-full lg:w-auto">
-                                <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-black bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-700 dark:text-slate-300 hover:text-rose-500 border border-slate-200 dark:border-slate-700 hover:border-rose-200 dark:hover:border-rose-500/20 transition-all">
-                                    <Heart className="w-4 h-4" />
-                                    Lưu
+                            <div className="flex flex-row gap-2 w-full lg:w-auto">
+                                <button onClick={handleSaveCompany} className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3.5 rounded-xl font-black border transition-all whitespace-nowrap ${isSaved ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-500/20' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border-slate-200 dark:border-slate-700 hover:border-rose-200 dark:hover:border-rose-500/20'}`}>
+                                    <Heart className={`w-4 h-4 shrink-0 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                    {isSaved ? 'Đã lưu' : 'Lưu'}
                                 </button>
-                                <button onClick={handleShare} className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-black bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all">
+                                <button onClick={handleShare} className="flex-1 lg:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3.5 rounded-xl font-black bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all whitespace-nowrap">
                                     <Share2 className="w-4 h-4" />
                                     Chia sẻ
                                 </button>

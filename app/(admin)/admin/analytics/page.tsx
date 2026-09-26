@@ -188,11 +188,12 @@ function SystemHealthMonitor() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
                 <HealthCard title="NextJS / FastAPI" status={health.fastapi} />
                 <HealthCard title="MongoDB Database" status={health.mongodb} />
                 <HealthCard title="Redis Cache" status={health.redis} />
-                <HealthCard title="Gemini 2.0 Flash" status={health.gemini_2_0} />
+                <HealthCard title="Gemini 3.6 Flash" status={health.gemini_3_6} />
+                <HealthCard title="Gemini 3.1 Lite" status={health.gemini_3_1_lite} />
                 <HealthCard title="Gemini 2.5 Flash" status={health.gemini_2_5} />
                 <HealthCard title="BGE-M3 (Vector)" status={health.bgem3} />
             </div>

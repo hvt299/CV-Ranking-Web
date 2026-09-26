@@ -50,7 +50,7 @@ export default function ApplicantAnalytics({ metrics }: ApplicantAnalyticsProps)
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                                     <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-subtle)', fontSize: 11, fontWeight: 600 }} />
                                     <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text)', fontSize: 11, fontWeight: 700 }} width={95} />
-                                    <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)', color: 'var(--color-text)', fontWeight: 'bold' }} />
+                                    <RechartsTooltip cursor={{ fill: 'var(--color-surface-hover)', opacity: 0.5 }} labelStyle={{ color: 'var(--color-text)', fontWeight: 700 }} itemStyle={{ color: 'var(--color-text)', fontWeight: 700 }} contentStyle={{ borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-card-bg)', boxShadow: 'var(--shadow-dropdown)' }} />
                                     <Bar dataKey="value" name="Số lượng" radius={[0, 6, 6, 0]} barSize={18} isAnimationActive animationBegin={100} animationDuration={900} animationEasing="ease-out">
                                         {funnel.map((entry: any, index: number) => (
                                             <Cell key={`funnel-cell-${index}`} fill={entry.fill || 'var(--color-primary-500)'} />

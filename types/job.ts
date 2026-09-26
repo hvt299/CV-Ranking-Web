@@ -92,6 +92,7 @@ export interface Job {
     title: string;
     company_id: string;
     company_name?: string;
+    company_logo?: string;
     status: JobStatus;
 
     is_hot?: boolean;

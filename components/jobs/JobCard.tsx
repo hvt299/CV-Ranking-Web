@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ROUTES } from '@/constants/routes';
 import { JOB_BADGE_CONFIG } from '@/utils/tier-colors';
+import { applicationService } from '@/features/application/application.service';
 
 interface PublicJob extends Partial<Job> {
     company_name?: string;
@@ -22,7 +23,38 @@ interface JobCardProps {
 
 export default function JobCard({ job, viewMode }: JobCardProps) {
     const { openApplyModal } = useUIStore();
-    const { user } = useAuthStore();
+    const { user, savedJobIds, toggleSavedJob } = useAuthStore();
+
+    const isSaved = job.id ? savedJobIds.includes(job.id) : false;
+
+    const handleSaveJob = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || user.role !== 'applicant') {
+            toast.error('Vui lòng đăng nhập với tư cách ứng viên để lưu việc làm!');
+            return;
+        }
+
+        if (!job.id) return;
+
+        // Optimistic UI update
+        toggleSavedJob(job.id);
+
+        try {
+            if (isSaved) {
+                await applicationService.unsaveJob(job.id);
+                toast.success('Đã bỏ lưu việc làm.');
+            } else {
+                await applicationService.saveJob(job.id);
+                toast.success('Đã lưu việc làm thành công.');
+            }
+        } catch (error) {
+            // Revert on failure
+            toggleSavedJob(job.id);
+            toast.error('Có lỗi xảy ra khi lưu việc làm.');
+        }
+    };
 
     const isExpired = Boolean(
         job.deadline &&
@@ -298,15 +330,16 @@ export default function JobCard({ job, viewMode }: JobCardProps) {
                     }`}
             >
                 <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
-                    className="group/btn flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white py-2.5 text-slate-400 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-rose-500/20 dark:hover:bg-rose-500/10"
-                    title="Lưu tin tuyển dụng"
+                    onClick={handleSaveJob}
+                    className={`group/btn flex flex-1 items-center justify-center rounded-xl border py-2.5 transition-colors ${
+                        isSaved 
+                        ? 'border-rose-200 bg-rose-50 text-rose-500 dark:border-rose-500/20 dark:bg-rose-500/10' 
+                        : 'border-slate-200 bg-white text-slate-400 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-rose-500/20 dark:hover:bg-rose-500/10'
+                    }`}
+                    title={isSaved ? "Bỏ lưu việc làm" : "Lưu tin tuyển dụng"}
                     type="button"
                 >
-                    <Heart className="h-4 w-4 transition-colors group-hover/btn:fill-rose-500/20" />
+                    <Heart className={`h-4 w-4 transition-colors ${isSaved ? 'fill-rose-500' : 'group-hover/btn:fill-rose-500/20'}`} />
                 </button>
 
                 <button

@@ -317,7 +317,7 @@ export default function ProfileForm() {
                                             <div className="relative flex-1">
                                                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
-                                                    type="url"
+                                                    type="text"
                                                     value={url}
                                                     onChange={(e) => {
                                                         const newPortfolio = [...(profile.portfolio || [])];
@@ -325,7 +325,7 @@ export default function ProfileForm() {
                                                         setProfile((prev: any) => ({ ...prev, portfolio: newPortfolio }));
                                                     }}
                                                     className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                                    placeholder="https://..."
+                                                    placeholder="github.com/..."
                                                 />
                                             </div>
                                             <button 
@@ -358,11 +358,11 @@ export default function ProfileForm() {
                                     <div className="relative">
                                         <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input
-                                            type="url"
+                                            type="text"
                                             value={profile.linkedin || ''}
                                             onChange={(e) => setProfile((prev: any) => ({ ...prev, linkedin: e.target.value }))}
                                             className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                            placeholder="https://linkedin.com/in/..."
+                                            placeholder="linkedin.com/in/..."
                                         />
                                     </div>
                                 </div>
