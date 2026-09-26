@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
     Building2, Search, CheckCircle, XCircle, AlertCircle,
     ExternalLink, Save, Briefcase, Filter, MapPin, Globe,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CompanyStatus } from '@/types';
@@ -15,6 +15,13 @@ import { companyService } from '@/features/company/company.service';
 import { systemService, LocationUnit } from '@/features/system/system.service';
 import { useAdminCompanies } from '@/features/company/useCompany';
 
+import CompanyBrandAssets from '@/components/companies/settings/CompanyBrandAssets';
+import CompanyBasicInfo from '@/components/companies/settings/CompanyBasicInfo';
+import CompanyLocation from '@/components/companies/settings/CompanyLocation';
+import CompanyCulture from '@/components/companies/settings/CompanyCulture';
+import CompanyGallery from '@/components/companies/settings/CompanyGallery';
+import CompanyLegal from '@/components/companies/settings/CompanyLegal';
+
 export default function AdminCompaniesPage() {
     const { companies, isLoading, verifyCompany, updateCompany } = useAdminCompanies();
 
@@ -23,6 +30,13 @@ export default function AdminCompaniesPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
+    
+    const getVisiblePages = (current: number, total: number) => {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        if (current <= 3) return [1, 2, 3, 4, '...', total];
+        if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
+        return [1, '...', current - 1, current, current + 1, '...', total];
+    };
 
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
     const [rejectionReason, setRejectionReason] = useState('');
@@ -32,13 +46,6 @@ export default function AdminCompaniesPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [showConfirmSave, setShowConfirmSave] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [isUploadingLicense, setIsUploadingLicense] = useState(false);
-
-    const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
-    const domesticVersion = editingCompany?.location?.version || 'new';
-    const displayedProvinces = allProvinces.filter(p => p.version === domesticVersion);
-    const [districts, setDistricts] = useState<LocationUnit[]>([]);
-    const [wards, setWards] = useState<LocationUnit[]>([]);
 
     useEffect(() => {
         const checkDark = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -47,34 +54,6 @@ export default function AdminCompaniesPage() {
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         return () => observer.disconnect();
     }, []);
-
-    useEffect(() => {
-        systemService.getLocations().then(res => setAllProvinces(res)).catch(console.error);
-    }, []);
-
-    useEffect(() => {
-        const loadInitialSubLocations = async () => {
-            const currentCountry = editingCompany?.location?.country || 'Việt Nam';
-            if (currentCountry === 'Việt Nam' && editingCompany?.location?.province_code) {
-                if (domesticVersion === 'new') {
-                    const wds = await systemService.getSubLocations(editingCompany.location.province_code);
-                    setWards(wds.filter(item => item.version === 'new'));
-                    setDistricts([]);
-                } else {
-                    const dists = await systemService.getSubLocations(editingCompany.location.province_code);
-                    setDistricts(dists.filter(item => item.version === 'old'));
-
-                    if (editingCompany.location?.district_code) {
-                        const wds = await systemService.getSubLocations(editingCompany.location.district_code);
-                        setWards(wds.filter(item => item.version === 'old'));
-                    } else {
-                        setWards([]);
-                    }
-                }
-            }
-        };
-        if (editingCompany?.location) loadInitialSubLocations();
-    }, [editingCompany?.location?.province_code, domesticVersion, editingCompany?.location?.country]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -89,97 +68,6 @@ export default function AdminCompaniesPage() {
     const paginatedCompanies = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const totalPages = Math.ceil(filtered.length / pageSize);
     const pendingCount = companies.filter(c => c.status === CompanyStatus.PENDING_VERIFICATION).length;
-
-    const handleVersionChange = (ver: 'new' | 'old') => {
-        setEditingCompany((prev: any) => ({ ...prev, location: { ...prev.location, version: ver } }));
-    };
-
-    const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const code = e.target.value;
-        const prov = displayedProvinces.find(p => p.code === code);
-        setEditingCompany((prev: any) => ({
-            ...prev,
-            location: {
-                ...prev.location, province_code: code, province_name: prov?.name || '', version: domesticVersion,
-                district_code: '', district_name: '', ward_code: '', ward_name: '', full_address_snapshot: ''
-            }
-        }));
-
-        if (domesticVersion === 'new') {
-            const wds = await systemService.getSubLocations(code);
-            setWards(wds.filter(item => item.version === 'new'));
-            setDistricts([]);
-        } else {
-            const dists = await systemService.getSubLocations(code);
-            setDistricts(dists.filter(item => item.version === 'old'));
-            setWards([]);
-        }
-    };
-
-    const handleDistrictChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const code = e.target.value;
-        const dist = districts.find(d => d.code === code);
-        setEditingCompany((prev: any) => ({ ...prev, location: { ...prev.location, district_code: code, district_name: dist?.name || '', ward_code: '', ward_name: '', full_address_snapshot: '' } }));
-        const wds = await systemService.getSubLocations(code);
-        setWards(wds.filter(item => item.version === 'old'));
-    };
-
-    const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const code = e.target.value;
-        const ward = wards.find(w => w.code === code);
-        setEditingCompany((prev: any) => ({ ...prev, location: { ...prev.location, ward_code: code, ward_name: ward?.name || '' } }));
-    };
-
-    const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsUploadingLicense(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await companyService.uploadFile(formData);
-            setEditingCompany({ ...editingCompany, license_file_url: res.file_url || res.url });
-            toast.success('Tải giấy phép lên thành công!');
-        } catch (error) {
-            toast.error('Lỗi khi tải file lên');
-        } finally {
-            setIsUploadingLicense(false);
-        }
-    };
-
-    const handleLookupTax = async () => {
-        if (!editingCompany?.tax_code?.trim()) return toast.error("Vui lòng nhập Mã số thuế trước khi tra cứu");
-        const loadingToast = toast.loading("Đang tra cứu dữ liệu từ Tổng cục Thuế...");
-        try {
-            const res = await companyService.lookupTax(editingCompany.tax_code);
-            const actualData = res?.data?.data || res?.data || res;
-
-            const companyName = actualData.company_name || actualData.name || '';
-            const rawAddress = actualData.address || '';
-
-            let newLocation = { ...editingCompany.location, street_address: rawAddress };
-
-            if (actualData.structured_location) {
-                newLocation = {
-                    ...editingCompany.location,
-                    ...actualData.structured_location,
-                    country: 'Việt Nam'
-                };
-            }
-
-            setEditingCompany((prev: any) => ({
-                ...prev,
-                name: companyName || prev.name,
-                location: newLocation
-            }));
-
-            toast.success("Đã tra cứu thành công! Hệ thống tự động điền địa chỉ mới.", { id: loadingToast });
-        } catch (e: any) {
-            toast.error(e.message || "Không tìm thấy dữ liệu từ Mã số thuế này", { id: loadingToast });
-        }
-    };
 
     const handleVerify = async (companyId: string, approve: boolean) => {
         if (!approve && !rejectionReason.trim()) {
@@ -227,12 +115,15 @@ export default function AdminCompaniesPage() {
         }),
         singleValue: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
         input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
+        multiValue: (base: any) => ({ ...base, backgroundColor: isDarkMode ? '#334155' : '#e2e8f0', borderRadius: '0.5rem' }),
+        multiValueLabel: (base: any) => ({ ...base, color: isDarkMode ? '#f8fafc' : '#1e293b', fontWeight: 'bold' }),
+        multiValueRemove: (base: any) => ({ ...base, ':hover': { backgroundColor: '#ef4444', color: 'white', borderRadius: '0 0.5rem 0.5rem 0' } }),
     };
 
     if (isLoading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
 
             {/* HEADER & ACTIONS */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -307,10 +198,13 @@ export default function AdminCompaniesPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                            {paginatedCompanies.map(c => (
-                                <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            {paginatedCompanies.map((c, index) => (
+                                <tr 
+                                    key={c.id} 
+                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                >
                                     <td className="p-5 pl-6">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
                                             {c.logo_url ? (
                                                 <img src={c.logo_url} alt="Logo" className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" referrerPolicy="no-referrer" />
                                             ) : (
@@ -320,14 +214,26 @@ export default function AdminCompaniesPage() {
                                             )}
                                             <div>
                                                 <p className="font-bold text-sm text-slate-800 dark:text-white line-clamp-1">{c.name}</p>
-                                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                                                    {INDUSTRIES.find(i => i.value === c.industry)?.label || 'Chưa cập nhật ngành'}
-                                                </p>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
+                                                        {c.industries && c.industries.length > 0 
+                                                            ? INDUSTRIES.find(i => i.value === c.industries[0])?.label 
+                                                            : 'Chưa cập nhật ngành'}
+                                                    </p>
+                                                    {c.industries && c.industries.length > 1 && (
+                                                        <span 
+                                                            className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 rounded-md cursor-help border border-slate-200 dark:border-slate-700 whitespace-nowrap"
+                                                            title={c.industries.slice(1).map((val: string) => INDUSTRIES.find(i => i.value === val)?.label).filter(Boolean).join(', ')}
+                                                        >
+                                                            +{c.industries.length - 1}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="p-5">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
                                             <span className="font-mono text-sm font-bold bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-sm">{c.tax_code}</span>
                                             {c.license_file_url && (
                                                 <a href={c.license_file_url} target="_blank" rel="noreferrer" className="p-1.5 bg-info-50 text-info-600 dark:bg-info-500/10 dark:text-info-400 rounded-lg hover:bg-info-100 transition-colors" title="Xem giấy phép kinh doanh">
@@ -337,16 +243,20 @@ export default function AdminCompaniesPage() {
                                         </div>
                                     </td>
                                     <td className="p-5 text-sm font-medium text-slate-500">
-                                        {new Date(c.created_at).toLocaleDateString('vi-VN')}
+                                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                            {new Date(c.created_at).toLocaleDateString('vi-VN')}
+                                        </div>
                                     </td>
                                     <td className="p-5">
-                                        {getStatusBadge(c.status)}
+                                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
+                                            {getStatusBadge(c.status)}
                                         {c.status === CompanyStatus.REJECTED && c.rejection_reason && (
                                             <p className="text-[10px] text-error-500 mt-1.5 max-w-37.5 truncate font-medium" title={c.rejection_reason}>Lý do: {c.rejection_reason}</p>
                                         )}
+                                        </div>
                                     </td>
                                     <td className="p-5 pr-6 text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <div className="flex items-center justify-end gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
                                             {c.status === CompanyStatus.PENDING_VERIFICATION && (
                                                 <>
                                                     <button onClick={() => handleVerify(c.id, true)} className="flex items-center gap-1 px-3 py-1.5 bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 rounded-lg text-xs font-bold transition-colors shadow-sm">
@@ -383,8 +293,12 @@ export default function AdminCompaniesPage() {
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                    <button key={page} onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors shadow-sm ${currentPage === page ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                                {getVisiblePages(currentPage, totalPages).map((page, idx) => (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => typeof page === 'number' && setCurrentPage(page)} 
+                                        disabled={page === '...'}
+                                        className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${page !== '...' ? 'shadow-sm' : ''} ${currentPage === page ? 'bg-primary-600 text-white' : page === '...' ? 'text-slate-400 bg-transparent cursor-default' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
                                         {page}
                                     </button>
                                 ))}
@@ -422,183 +336,55 @@ export default function AdminCompaniesPage() {
             {/* MODAL CẤU HÌNH DOANH NGHIỆP DÀNH CHO ADMIN */}
             {editingCompany && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700">
-                        <h3 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                            <Building2 className="w-6 h-6 text-primary-500" /> Cấu hình Doanh nghiệp
-                        </h3>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <Building2 className="w-6 h-6 text-primary-500" /> Cấu hình Doanh nghiệp
+                            </h2>
+                            <button onClick={() => setEditingCompany(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mã số thuế</label>
-                                <div className="flex gap-2">
-                                    <input type="text" value={editingCompany.tax_code || ''} onChange={e => setEditingCompany({ ...editingCompany, tax_code: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none dark:text-white focus:border-primary-500 transition-colors" placeholder="VD: 0312..." />
-                                    <button onClick={handleLookupTax} className="px-5 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-bold rounded-xl text-sm hover:bg-primary-200 dark:hover:bg-primary-900/50 whitespace-nowrap transition-colors">Tra cứu</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên công ty</label>
-                                <input type="text" value={editingCompany.name || ''} onChange={e => setEditingCompany({ ...editingCompany, name: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none dark:text-white focus:border-primary-500 transition-colors" placeholder="TechCorp" />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngành nghề</label>
-                                <Select
-                                    options={GROUPED_INDUSTRIES}
-                                    styles={customSelectStyles}
-                                    placeholder="Tìm ngành nghề..."
-                                    noOptionsMessage={() => "Không tìm thấy"}
-                                    value={INDUSTRIES.find(i => i.value === editingCompany.industry) || null}
-                                    onChange={(selected: any) => setEditingCompany({ ...editingCompany, industry: selected?.value || '' })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quy mô</label>
-                                <select value={editingCompany.size || ''} onChange={e => setEditingCompany({ ...editingCompany, size: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none dark:text-white focus:border-primary-500 cursor-pointer transition-colors appearance-none">
-                                    <option value="">Chọn quy mô</option>
-                                    {COMPANY_SIZES.map(s => (
-                                        <option key={s.value} value={s.value}>{s.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* MODULE CẤP QUYỀN TRẠNG THÁI CHO ADMIN */}
-                            <div className="md:col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
-                                <label className="text-xs font-black text-error-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4" /> Trạng thái Công ty (Quyền Admin)
-                                </label>
-                                <select
-                                    value={editingCompany.status || ''}
-                                    onChange={e => setEditingCompany({ ...editingCompany, status: e.target.value })}
-                                    className="w-full p-3 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/30 text-error-700 dark:text-error-400 rounded-xl text-sm font-bold outline-none focus:border-error-500 cursor-pointer transition-colors appearance-none"
-                                >
-                                    {Object.entries(COMPANY_STATUS_CONFIG).map(([key, config]) => {
-                                        if (key === 'default') return null;
-                                        return <option key={key} value={key}>{config.label}</option>;
-                                    })}
-                                </select>
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Website</label>
-                                <div className="relative">
-                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                    <input type="url" value={editingCompany.website || ''} onChange={e => setEditingCompany({ ...editingCompany, website: e.target.value })} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none dark:text-white focus:border-primary-500 transition-colors" placeholder="https://..." />
-                                </div>
-                            </div>
-
-                            {/* MODULE ĐỊA ĐIỂM ĐƯỢC BỨNG TỪ HR SANG */}
-                            <div className="md:col-span-2 bg-slate-50/50 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4 mt-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-primary-500" /> Trụ sở kinh doanh
-                                    </label>
-                                    {(editingCompany.location?.country || 'Việt Nam') === 'Việt Nam' && (
-                                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Mới (Hiện tại)</button>
-                                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Cũ (Trước 1/7/2025)</button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <select
-                                        className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer"
-                                        value={editingCompany.location?.country || 'Việt Nam'}
-                                        onChange={e => setEditingCompany({ ...editingCompany, location: { ...editingCompany.location, country: e.target.value, province_code: '', district_code: '', ward_code: '' } })}
-                                    >
-                                        <option value="Việt Nam">Việt Nam</option>
-                                        <option value="Nước ngoài">Nước ngoài</option>
-                                    </select>
-
-                                    {(editingCompany.location?.country || 'Việt Nam') === 'Việt Nam' ? (
-                                        <>
-                                            <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer" value={editingCompany.location?.province_code || ''} onChange={handleProvinceChange}>
-                                                <option value="" disabled>Tỉnh/Thành phố</option>
-                                                {displayedProvinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
-                                            </select>
-
-                                            {domesticVersion === 'old' && (
-                                                <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer disabled:opacity-50" value={editingCompany.location?.district_code || ''} onChange={handleDistrictChange} disabled={!editingCompany.location?.province_code}>
-                                                    <option value="" disabled>Quận/Huyện</option>
-                                                    {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
-                                                </select>
-                                            )}
-
-                                            <select className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 cursor-pointer disabled:opacity-50" value={editingCompany.location?.ward_code || ''} onChange={handleWardChange} disabled={domesticVersion === 'new' ? !editingCompany.location?.province_code : !editingCompany.location?.district_code}>
-                                                <option value="" disabled>Phường/Xã</option>
-                                                {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
-                                            </select>
-
-                                            <div className="col-span-1 md:col-span-4 mt-1 relative">
-                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Số nhà, tên đường chi tiết..."
-                                                    className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 transition-colors"
-                                                    value={editingCompany.location?.street_address || ''}
-                                                    onChange={e => setEditingCompany({ ...editingCompany, location: { ...editingCompany.location, street_address: e.target.value } })}
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="col-span-1 md:col-span-3 mt-1 relative">
-                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                                            <input
-                                                type="text"
-                                                placeholder="VD: 123 Orchard Road, Singapore"
-                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-sm shadow-sm focus:border-primary-500 transition-colors"
-                                                value={editingCompany.location?.street_address || ''}
-                                                onChange={e => setEditingCompany({ ...editingCompany, location: { ...editingCompany.location, street_address: e.target.value } })}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giấy phép kinh doanh</label>
-                                <input
-                                    type="text"
-                                    value={editingCompany.license_file_url || ""}
-                                    onChange={(e) => setEditingCompany({ ...editingCompany, license_file_url: e.target.value })}
-                                    placeholder="https://res.cloudinary.com/..."
-                                    className="w-full mb-4 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-bold outline-none focus:border-primary-500 transition-colors"
-                                />
-
-                                <label
-                                    className={`group flex flex-col items-center justify-center w-full h-48 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 ${isUploadingLicense ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        if (isUploadingLicense) return;
-                                        const file = e.dataTransfer.files?.[0];
-                                        if (file) handleLicenseUpload({ target: { files: [file] } } as any);
-                                    }}
-                                >
-                                    <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" onChange={handleLicenseUpload} disabled={isUploadingLicense} />
-                                    <Briefcase className="w-12 h-12 text-primary-500 mb-4 group-hover:scale-110 transition-transform" />
-                                    <p className="font-bold text-slate-700 dark:text-slate-200">{isUploadingLicense ? "Đang tải lên..." : "Kéo & thả file vào đây"}</p>
-                                    {!isUploadingLicense && (
-                                        <>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">hoặc <span className="text-primary-600 font-bold">bấm để chọn file</span></p>
-                                            <p className="mt-2 text-xs text-slate-400 font-medium">PDF, JPG, PNG • Tối đa 10MB</p>
-                                        </>
-                                    )}
-                                    {editingCompany.license_file_url && (
-                                        <a href={editingCompany.license_file_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline mt-4 inline-block relative z-10 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-lg shadow-sm" onClick={(e) => e.stopPropagation()}>Xem file hiện tại</a>
-                                    )}
-                                </label>
-                            </div>
+                        {/* ADMIN CONTROL BLOCK */}
+                        <div className="bg-error-50/50 dark:bg-error-500/5 p-5 rounded-2xl border border-error-200/50 dark:border-error-500/20 mb-6">
+                            <label className="text-xs font-black text-error-600 dark:text-error-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" /> Trạng thái Công ty (Quyền Admin)
+                            </label>
+                            <select
+                                value={editingCompany.status || ''}
+                                onChange={e => setEditingCompany({ ...editingCompany, status: e.target.value })}
+                                className="w-full p-3 bg-white dark:bg-slate-900 border border-error-200 dark:border-error-500/30 text-error-700 dark:text-error-400 rounded-xl text-sm font-bold outline-none focus:border-error-500 cursor-pointer shadow-sm appearance-none"
+                            >
+                                {Object.entries(COMPANY_STATUS_CONFIG).map(([key, config]) => {
+                                    if (key === 'default') return null;
+                                    return <option key={key} value={key}>{config.label}</option>;
+                                })}
+                            </select>
                         </div>
 
-                        <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                            <button onClick={() => setEditingCompany(null)} className="px-6 py-3 font-bold text-slate-500 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">Hủy</button>
+                        <CompanyBrandAssets company={editingCompany} setCompany={setEditingCompany} />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                            <CompanyBasicInfo company={editingCompany} setCompany={setEditingCompany} />
+                            <CompanyLocation company={editingCompany} setCompany={setEditingCompany} />
+                            <CompanyCulture company={editingCompany} setCompany={setEditingCompany} />
+                            <CompanyGallery company={editingCompany} setCompany={setEditingCompany} />
+                            <CompanyLegal company={editingCompany} setCompany={setEditingCompany} />
+                        </div>
+
+                        </div>
+                        
+                        <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+                            <button onClick={() => setEditingCompany(null)} className="px-5 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Hủy bỏ</button>
                             <button
                                 disabled={isSaving}
                                 onClick={() => setShowConfirmSave(true)}
-                                className="px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 flex items-center gap-2 shadow-lg shadow-primary-500/30 transition-all disabled:opacity-70"
+                                className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center gap-2 shadow-lg shadow-primary-500/30"
                             >
-                                <Save className="w-5 h-5" /> {isSaving ? 'Đang xử lý...' : 'Lưu cấu hình'}
+                                <Save className="w-4 h-4" /> {isSaving ? 'Đang xử lý...' : 'Lưu thay đổi'}
                             </button>
                         </div>
                     </div>

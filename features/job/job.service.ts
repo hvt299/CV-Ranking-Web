@@ -1,7 +1,12 @@
 import apiClient from '@/lib/api-client';
-import { Job } from '@/types';
+import { Job, JobPayload } from '@/types';
 
 export const jobService = {
+    async assignJob(jobId: string, hrUserIds: string[]): Promise<{ status: string; message: string }> {
+        const response = await apiClient.put(`/jobs/${jobId}/assign`, { hr_user_ids: hrUserIds });
+        return response.data;
+    },
+
     /**
      * Lấy danh sách tất cả chiến dịch tuyển dụng
      */
@@ -21,7 +26,7 @@ export const jobService = {
     /**
      * Tạo mới một chiến dịch tuyển dụng
      */
-    async createJob(payload: any): Promise<{ message: string; job_id: string }> {
+    async createJob(payload: JobPayload): Promise<{ message: string; job_id: string }> {
         const response = await apiClient.post('/jobs/', payload);
         return response.data;
     },
@@ -29,7 +34,7 @@ export const jobService = {
     /**
      * Cập nhật thông tin chiến dịch tuyển dụng
      */
-    async updateJob(jobId: string, payload: any): Promise<{ status: string; message: string }> {
+    async updateJob(jobId: string, payload: JobPayload): Promise<{ status: string; message: string }> {
         const response = await apiClient.put(`/jobs/${jobId}`, payload);
         return response.data;
     },

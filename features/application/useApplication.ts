@@ -178,7 +178,112 @@ export function useMyCvLibrary() {
         }
     };
 
-    return { cvs, isLoading, isUploading, uploadProgress, uploadFiles, deleteCV };
+    const addCVUrl = async (url: string, display_name: string) => {
+        setIsUploading(true);
+        try {
+            await applicationService.addMyCVViaUrl({ url, display_name });
+            toast.success('Đã thêm CV từ URL!');
+            await fetchLibrary();
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi thêm CV");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return { cvs, isLoading, isUploading, uploadProgress, uploadFiles, deleteCV, addCVUrl };
+}
+
+/**
+ * Hook quản lý Thư viện Thư giới thiệu (Cover Letter)
+ */
+export function useCoverLetterLibrary() {
+    const [coverLetters, setCoverLetters] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+
+    const fetchLibrary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await applicationService.getMyCoverLetters();
+            setCoverLetters(data);
+        } catch (error) {
+            toast.error('Lỗi tải thư viện Thư giới thiệu');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchLibrary();
+    }, [fetchLibrary]);
+
+    const uploadFiles = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+
+        const MAX_FILE_SIZE = 5 * 1024 * 1024;
+        const validFiles = Array.from(files).filter(file => file.size <= MAX_FILE_SIZE);
+
+        if (validFiles.length < files.length) {
+            toast.error(`Đã bỏ qua ${files.length - validFiles.length} file vì vượt quá giới hạn 5MB.`);
+        }
+
+        if (validFiles.length === 0) return;
+
+        setIsUploading(true);
+        setUploadProgress({ current: 0, total: validFiles.length });
+        let successCount = 0;
+
+        for (let i = 0; i < validFiles.length; i++) {
+            const file = validFiles[i];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('display_name', file.name.split('.')[0]);
+
+            setUploadProgress(prev => ({ ...prev, current: i + 1 }));
+
+            try {
+                await applicationService.uploadCoverLetter(formData);
+                successCount++;
+            } catch (error: any) {
+                toast.error(`Lỗi tải lên ${file.name}: ${error.response?.data?.detail || "Không rõ lỗi"}`);
+            }
+        }
+
+        setIsUploading(false);
+        if (successCount > 0) {
+            toast.success(`Đã tải lên thành công ${successCount} Thư giới thiệu!`);
+            await fetchLibrary();
+        }
+    };
+
+    const addCoverLetterUrl = async (url: string, display_name: string) => {
+        setIsUploading(true);
+        try {
+            await applicationService.addCoverLetterViaUrl({ url, display_name });
+            toast.success('Đã thêm Thư giới thiệu từ URL!');
+            await fetchLibrary();
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi thêm");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const deleteCoverLetter = async (clId: string, name: string) => {
+        if (!confirm(`Bạn có chắc chắn muốn xóa Thư giới thiệu "${name}" khỏi thư viện? Các hồ sơ đã nộp sẽ KHÔNG bị ảnh hưởng.`)) return;
+
+        try {
+            await applicationService.deleteCoverLetter(clId);
+            toast.success("Đã xóa Thư giới thiệu thành công!");
+            setCoverLetters(prev => prev.filter(cl => cl.id !== clId));
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || "Lỗi khi xóa");
+        }
+    };
+
+    return { coverLetters, isLoading, isUploading, uploadProgress, uploadFiles, deleteCoverLetter, addCoverLetterUrl };
 }
 
 /**

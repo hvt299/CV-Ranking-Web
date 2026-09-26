@@ -220,7 +220,7 @@ export default function JobSearchBar({
                 />
             </div>
 
-            {/* Các Tùy chọn Phụ trợ (Xếp dọc cho Sidebar) */}
+            {/* Các Tùy chọn Phụ trợ */}
             <div className="flex flex-col gap-3 mt-4">
                 <button
                     onClick={() => setShowFilters(!showFilters)}
@@ -237,19 +237,21 @@ export default function JobSearchBar({
                     )}
                 </button>
 
-                <button
-                    onClick={() => onFiltersChange({ ...filters, isHot: !filters.isHot })}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-colors border ${filters.isHot ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                >
-                    <Flame className={`w-4 h-4 ${filters.isHot ? 'text-rose-500' : 'text-slate-400'}`} />
-                    Việc HOT
-                </button>
-
-                {activeFiltersCount > 0 && (
-                    <button onClick={onClearFilters} className="flex w-full md:w-auto items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 rounded-xl transition-colors">
-                        <X className="w-4 h-4" /> Xóa bộ lọc
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => onFiltersChange({ ...filters, isHot: !filters.isHot })}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-colors border ${filters.isHot ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                    >
+                        <Flame className={`w-4 h-4 ${filters.isHot ? 'text-orange-500' : 'text-slate-400'}`} />
+                        Việc HOT
                     </button>
-                )}
+
+                    {activeFiltersCount > 0 && (
+                        <button onClick={onClearFilters} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 rounded-xl transition-all">
+                            <X className="w-4 h-4" /> Xóa bộ lọc
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Lưu & Tải Bộ lọc (Presets) */}

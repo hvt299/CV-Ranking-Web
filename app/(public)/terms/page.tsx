@@ -5,7 +5,7 @@ import { FileText, CheckSquare, Layers, UserCheck, Shield, AlertTriangle, Chevro
 
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const SECTIONS = [
     { id: 'acceptance', title: '1. Chấp nhận Điều khoản', icon: CheckSquare },
@@ -16,7 +16,7 @@ const SECTIONS = [
 ];
 
 export default function TermsPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
 

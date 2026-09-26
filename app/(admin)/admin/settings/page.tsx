@@ -1,22 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Search, User as UserIcon, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, Search, User as UserIcon, AlertCircle, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types';
 import { ROLES } from '@/constants/user.constants';
 import { companyService } from '@/features/company/company.service';
 import ProfileForm from '@/components/shared/ProfileForm';
 
 export default function AdminSettingsPage() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [mainTab, setMainTab] = useState<'personal' | 'admin'>('personal');
 
     if (!user || user.role !== UserRole.ADMIN) return null;
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
             {/* HEADER CÀI ĐẶT */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div>
@@ -57,6 +57,7 @@ function AdminManagementSection({ currentUser }: { currentUser: any }) {
     const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All');
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [confirmAction, setConfirmAction] = useState<{ type: 'ROLE' | 'STATUS', user: any, newValue: any } | null>(null);
 
@@ -107,9 +108,13 @@ function AdminManagementSection({ currentUser }: { currentUser: any }) {
     // Reset về trang 1 khi gõ tìm kiếm
     useEffect(() => {
         setCurrentPage(1);
-    }, [search]);
+    }, [search, roleFilter]);
 
-    const filtered = users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()));
+    const filtered = users.filter(u => {
+        const matchSearch = u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase());
+        const matchRole = roleFilter === 'All' || u.role === roleFilter;
+        return matchSearch && matchRole;
+    });
 
     // Tính toán Paginated Data
     const paginatedUsers = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -117,10 +122,25 @@ function AdminManagementSection({ currentUser }: { currentUser: any }) {
 
     return (
         <div className="space-y-6 animate-in fade-in">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div className="relative">
+            <div className="flex flex-col lg:flex-row gap-4 bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input type="text" placeholder="Tìm theo email hoặc tên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-slate-800 transition-colors" />
+                    <input type="text" placeholder="Tìm theo email hoặc tên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-medium focus:border-slate-800 transition-colors shadow-sm" />
+                </div>
+                <div className="relative min-w-48 shrink-0">
+                    <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <select
+                        className="w-full pl-10 pr-8 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm font-bold text-slate-600 dark:text-slate-300 appearance-none cursor-pointer focus:border-slate-800 shadow-sm transition-colors"
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                    >
+                        <option value="All">Tất cả Quyền</option>
+                        {ROLES.map((r) => (
+                            <option key={r.value} value={r.value}>
+                                {r.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 

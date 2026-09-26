@@ -181,7 +181,7 @@ export default function DocumentViewer({ url, filename = 'Tài liệu', candidat
                                         <AlertTriangle className="w-5 h-5 text-error-500 shrink-0" />
                                         <div className="text-xs text-error-700 dark:text-error-400 leading-relaxed font-medium">
                                             <strong className="block font-black mb-1">Cảnh báo rủi ro: Bị trừ {candidate.ai_score.score_breakdown?.penalty_score}đ</strong>
-                                            {getPenaltyReasons(cInfo, candidate.ai_score.score_breakdown)}
+                                            {getPenaltyReasons(cInfo, candidate.ai_score.score_breakdown, candidate.ai_score)}
                                         </div>
                                     </div>
                                 )}

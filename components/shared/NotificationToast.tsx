@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types';
 import { applicationService } from '@/features/application/application.service';
 
@@ -29,7 +29,7 @@ const TOAST_COLORS = {
 };
 
 export default function NotificationToast() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const isApplicant = user?.role === UserRole.APPLICANT;
 
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
