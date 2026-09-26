@@ -20,14 +20,11 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const authRoutes = ['/login', '/register', '/reset-password', '/forgot-password', '/verify'];
-    const adminRoutes = ['/admin'];
-    const hrRoutes = ['/dashboard', '/jobs', '/candidates', '/analytics', '/interviews', '/messages', '/settings'];
-    const applicantRoutes = ['/overview', '/my-applications', '/profile', '/cv-library', '/self-score', '/notifications'];
 
     const isAuthRoute = authRoutes.some(r => pathname === r || pathname.startsWith(`${r}?`));
-    const isAdminRoute = adminRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
-    const isHrRoute = hrRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
-    const isApplicantRoute = applicantRoutes.some(r => pathname === r || pathname.startsWith(`${r}/`));
+    const isAdminRoute = pathname.startsWith('/admin');
+    const isHrRoute = pathname.startsWith('/hr');
+    const isApplicantRoute = pathname.startsWith('/applicant');
 
     const isProtected = isAdminRoute || isHrRoute || isApplicantRoute;
 
@@ -41,8 +38,8 @@ export function middleware(request: NextRequest) {
 
         if (isAuthRoute) {
             if (role === UserRole.ADMIN) return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-            if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) return NextResponse.redirect(new URL('/dashboard', request.url));
-            return NextResponse.redirect(new URL('/overview', request.url));
+            if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) return NextResponse.redirect(new URL('/hr/dashboard', request.url));
+            return NextResponse.redirect(new URL('/applicant/dashboard', request.url));
         }
 
         if (role === UserRole.ADMIN) {
@@ -54,14 +51,14 @@ export function middleware(request: NextRequest) {
 
         if (role === UserRole.HR_OWNER || role === UserRole.HR_MEMBER) {
             if (isAdminRoute || isApplicantRoute) {
-                return NextResponse.redirect(new URL('/dashboard', request.url));
+                return NextResponse.redirect(new URL('/hr/dashboard', request.url));
             }
             return NextResponse.next();
         }
 
         if (role === UserRole.APPLICANT) {
             if (isAdminRoute || isHrRoute) {
-                return NextResponse.redirect(new URL('/overview', request.url));
+                return NextResponse.redirect(new URL('/applicant/dashboard', request.url));
             }
             return NextResponse.next();
         }

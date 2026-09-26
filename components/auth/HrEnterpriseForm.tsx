@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Globe, MapPin, Users } from 'lucide-react';
+import { Search, Globe, MapPin, Users, AlignLeft } from 'lucide-react';
 import Select from 'react-select';
 import { GROUPED_INDUSTRIES, INDUSTRIES } from '@/constants/job.constants';
 import { COMPANY_SIZES } from '@/constants/company.constants';
@@ -9,22 +9,31 @@ import { companyService } from '@/features/company/company.service';
 import { systemService, LocationUnit } from '@/features/system/system.service';
 import { LocationDetail } from '@/types';
 import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/shared/RichTextEditor'), {
+    ssr: false,
+    loading: () => <div className="h-52 bg-input-bg border border-input-border animate-pulse rounded-button" />
+});
 
 export interface HrInfoState {
     companyName: string;
     taxCode: string;
-    industry: string;
+    industries: string[];
     size: string;
     location: LocationDetail;
     website: string;
+    description: string;
+    license_file_url?: string;
 }
 
 export const DEFAULT_HR_INFO: HrInfoState = {
     companyName: '',
     taxCode: '',
-    industry: '',
+    industries: [],
     size: '',
     website: '',
+    description: '',
     location: {
         country: 'Việt Nam',
         version: 'new',
@@ -38,15 +47,23 @@ export const DEFAULT_HR_INFO: HrInfoState = {
 interface HrEnterpriseFormProps {
     hrInfo: HrInfoState;
     setHrInfo: React.Dispatch<React.SetStateAction<HrInfoState>>;
-    isDarkMode: boolean;
 }
 
-export default function HrEnterpriseForm({ hrInfo, setHrInfo, isDarkMode }: HrEnterpriseFormProps) {
+export default function HrEnterpriseForm({ hrInfo, setHrInfo }: HrEnterpriseFormProps) {
     const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
     const domesticVersion = hrInfo.location?.version || 'new';
     const displayedProvinces = allProvinces.filter(p => p.version === domesticVersion);
     const [districts, setDistricts] = useState<LocationUnit[]>([]);
     const [wards, setWards] = useState<LocationUnit[]>([]);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const checkDark = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
+        checkDark();
+        const observer = new MutationObserver(checkDark);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         systemService.getLocations().then(res => setAllProvinces(res)).catch(console.error);
@@ -151,91 +168,107 @@ export default function HrEnterpriseForm({ hrInfo, setHrInfo, isDarkMode }: HrEn
     };
 
     const customSelectStyles = {
-        control: (base: any, state: any) => ({ ...base, backgroundColor: isDarkMode ? '#0f172a' : '#fff', borderColor: state.isFocused ? '#3b82f6' : isDarkMode ? '#334155' : '#cbd5e1', borderRadius: '0.75rem', minHeight: '42px', padding: '0 4px', boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none' }),
-        input: (base: any) => ({ ...base, color: isDarkMode ? '#e2e8f0' : '#334155' }),
-        singleValue: (base: any) => ({ ...base, color: isDarkMode ? '#f8fafc' : '#334155' }),
-        placeholder: (base: any) => ({ ...base, color: '#94a3b8' }),
-        menu: (base: any) => ({ ...base, zIndex: 9999, backgroundColor: isDarkMode ? '#1e293b' : '#fff', borderRadius: '0.75rem', overflow: 'hidden' }),
-        menuList: (base: any) => ({ ...base, backgroundColor: isDarkMode ? '#1e293b' : '#fff' }),
-        option: (base: any, state: any) => ({ ...base, backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? (isDarkMode ? '#334155' : '#eff6ff') : 'transparent', color: state.isSelected ? '#fff' : isDarkMode ? '#e2e8f0' : '#334155', cursor: 'pointer' })
+        control: (base: any, state: any) => ({ ...base, backgroundColor: isDarkMode ? 'var(--color-input-bg)' : 'var(--color-input-bg)', borderColor: state.isFocused ? 'var(--color-input-focus)' : 'var(--color-input-border)', borderRadius: '0.75rem', minHeight: '42px', padding: '0 4px', boxShadow: state.isFocused ? '0 0 0 1px var(--color-input-focus)' : 'none', transition: 'all 0.2s' }),
+        input: (base: any) => ({ ...base, color: isDarkMode ? 'var(--color-text)' : 'var(--color-text)' }),
+        singleValue: (base: any) => ({ ...base, color: isDarkMode ? 'var(--color-text)' : 'var(--color-text)' }),
+        placeholder: (base: any) => ({ ...base, color: 'var(--color-text-subtle)' }),
+        menu: (base: any) => ({ ...base, zIndex: 9999, backgroundColor: isDarkMode ? 'var(--color-surface-hover)' : 'var(--color-surface)', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid var(--color-border)' }),
+        menuList: (base: any) => ({ ...base, backgroundColor: isDarkMode ? 'var(--color-surface-hover)' : 'var(--color-surface)' }),
+        option: (base: any, state: any) => ({ ...base, backgroundColor: state.isSelected ? 'var(--color-primary-600)' : state.isFocused ? 'var(--color-background)' : 'transparent', color: state.isSelected ? '#fff' : 'var(--color-text)', cursor: 'pointer' }),
+        multiValue: (base: any) => ({ ...base, backgroundColor: 'var(--color-background)', borderRadius: '0.5rem' }),
+        multiValueLabel: (base: any) => ({ ...base, color: 'var(--color-text)', fontWeight: 'bold' }),
+        multiValueRemove: (base: any) => ({ ...base, ':hover': { backgroundColor: 'var(--color-error-500)', color: 'white', borderRadius: '0 0.5rem 0.5rem 0' } }),
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-            <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mã số thuế <span className="text-rose-500">*</span></label>
-                <div className="flex gap-2">
+        <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Mã số thuế <span className="text-error-500">*</span></label>
+                    <div className="flex gap-2">
+                        <input
+                            type="text" required
+                            value={hrInfo.taxCode}
+                            onChange={e => setHrInfo({ ...hrInfo, taxCode: e.target.value })}
+                            className="min-w-0 flex-1 px-4 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
+                            placeholder="VD: 0312..."
+                        />
+                        <button
+                            type="button"
+                            onClick={handleLookupTax}
+                            className="px-4 bg-button-primary-bg hover:bg-button-primary-hover text-button-primary-text rounded-button shrink-0 transition-colors shadow-sm flex items-center justify-center"
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Tên Công ty <span className="text-error-500">*</span></label>
                     <input
                         type="text" required
-                        value={hrInfo.taxCode}
-                        onChange={e => setHrInfo({ ...hrInfo, taxCode: e.target.value })}
-                        className="min-w-0 flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all"
-                        placeholder="VD: 0312..."
+                        value={hrInfo.companyName}
+                        onChange={e => setHrInfo({ ...hrInfo, companyName: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
+                        placeholder="Tên doanh nghiệp"
                     />
-                    <button
-                        type="button"
-                        onClick={handleLookupTax}
-                        className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shrink-0 transition-colors shadow-sm"
-                    >
-                        <Search className="w-4 h-4" />
-                    </button>
                 </div>
             </div>
-            <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tên Công ty <span className="text-rose-500">*</span></label>
-                <input
-                    type="text" required
-                    value={hrInfo.companyName}
-                    onChange={e => setHrInfo({ ...hrInfo, companyName: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all"
-                    placeholder="Tên doanh nghiệp"
-                />
-            </div>
 
-            <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Ngành nghề <span className="text-rose-500">*</span></label>
-                <Select
-                    options={GROUPED_INDUSTRIES}
-                    styles={customSelectStyles}
-                    placeholder="Chọn lĩnh vực..."
-                    noOptionsMessage={() => "Không tìm thấy"}
-                    value={INDUSTRIES.find(i => i.value === hrInfo.industry) || null}
-                    onChange={(selected: any) => setHrInfo({ ...hrInfo, industry: selected?.value || '' })}
-                />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Ngành nghề (Tối đa 3) <span className="text-error-500">*</span></label>
+                    <Select
+                        isMulti
+                        options={GROUPED_INDUSTRIES}
+                        styles={customSelectStyles}
+                        placeholder="Chọn lĩnh vực..."
+                        noOptionsMessage={() => "Không tìm thấy"}
+                        value={(hrInfo.industries || []).map((val: string) => {
+                            const ind = INDUSTRIES.find(i => i.value === val);
+                            return ind ? { value: ind.value, label: ind.label } : null;
+                        }).filter(Boolean)}
+                        onChange={(selected: any) => {
+                            if (selected && selected.length > 3) {
+                                return toast.error("Chỉ được chọn tối đa 3 ngành nghề!");
+                            }
+                            setHrInfo({ ...hrInfo, industries: selected ? selected.map((s: any) => s.value) : [] });
+                        }}
+                    />
+                </div>
 
-            <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Quy mô <span className="text-rose-500">*</span></label>
-                <div className="relative">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                    <select
-                        value={hrInfo.size}
-                        onChange={e => setHrInfo({ ...hrInfo, size: e.target.value })}
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white appearance-none transition-all cursor-pointer"
-                    >
-                        <option value="">Chọn quy mô</option>
-                        {COMPANY_SIZES.map(size => (
-                            <option key={size.value} value={size.value}>{size.label}</option>
-                        ))}
-                    </select>
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Quy mô <span className="text-error-500">*</span></label>
+                    <div className="relative">
+                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
+                        <select
+                            value={hrInfo.size}
+                            onChange={e => setHrInfo({ ...hrInfo, size: e.target.value })}
+                            className="w-full pl-9 pr-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text appearance-none transition-all cursor-pointer"
+                        >
+                            <option value="">Chọn quy mô</option>
+                            {COMPANY_SIZES.map(size => (
+                                <option key={size.value} value={size.value}>{size.label}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
             {/* MODULE ĐỊA ĐIỂM CHUẨN */}
-            <div className="md:col-span-2 space-y-3">
+            <div className="space-y-3 pt-4 mt-2 border-t border-border">
                 <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trụ sở kinh doanh</label>
+                    <label className="block text-sm font-semibold text-text">Trụ sở kinh doanh</label>
                     {(hrInfo.location?.country || 'Việt Nam') === 'Việt Nam' && (
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Mới</button>
-                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Cũ</button>
+                        <div className="flex bg-background p-1 rounded-lg border border-border">
+                            <button type="button" onClick={() => handleVersionChange('new')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'new' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm' : 'text-text-muted hover:text-text'}`}>Mới</button>
+                            <button type="button" onClick={() => handleVersionChange('old')} className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${domesticVersion === 'old' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm' : 'text-text-muted hover:text-text'}`}>Cũ</button>
                         </div>
                     )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <select
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all cursor-pointer"
+                        className="w-full px-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all cursor-pointer"
                         value={hrInfo.location?.country || 'Việt Nam'}
                         onChange={e => setHrInfo((prev: any) => ({ ...prev, location: { ...prev.location, country: e.target.value, province_code: '', district_code: '', ward_code: '' } }))}
                     >
@@ -245,29 +278,29 @@ export default function HrEnterpriseForm({ hrInfo, setHrInfo, isDarkMode }: HrEn
 
                     {(hrInfo.location?.country || 'Việt Nam') === 'Việt Nam' ? (
                         <>
-                            <select className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all cursor-pointer" value={hrInfo.location?.province_code || ''} onChange={handleProvinceChange}>
+                            <select className="w-full px-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all cursor-pointer" value={hrInfo.location?.province_code || ''} onChange={handleProvinceChange}>
                                 <option value="" disabled>Tỉnh/Thành phố</option>
                                 {displayedProvinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
                             </select>
 
                             {domesticVersion === 'old' && (
-                                <select className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all cursor-pointer disabled:opacity-50" value={hrInfo.location?.district_code || ''} onChange={handleDistrictChange} disabled={!hrInfo.location?.province_code}>
+                                <select className="w-full px-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all cursor-pointer disabled:opacity-50" value={hrInfo.location?.district_code || ''} onChange={handleDistrictChange} disabled={!hrInfo.location?.province_code}>
                                     <option value="" disabled>Quận/Huyện</option>
                                     {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
                                 </select>
                             )}
 
-                            <select className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all cursor-pointer disabled:opacity-50" value={hrInfo.location?.ward_code || ''} onChange={handleWardChange} disabled={domesticVersion === 'new' ? !hrInfo.location?.province_code : !hrInfo.location?.district_code}>
+                            <select className="w-full px-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all cursor-pointer disabled:opacity-50" value={hrInfo.location?.ward_code || ''} onChange={handleWardChange} disabled={domesticVersion === 'new' ? !hrInfo.location?.province_code : !hrInfo.location?.district_code}>
                                 <option value="" disabled>Phường/Xã</option>
                                 {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
                             </select>
 
-                            <div className="col-span-1 md:col-span-4 relative mt-1">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                            <div className={`relative mt-1 ${domesticVersion === 'old' ? 'col-span-1 md:col-span-4' : 'col-span-1 md:col-span-2'}`}>
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
                                 <input
                                     type="text"
                                     placeholder="Số nhà, tên đường (Hoặc địa chỉ tự điền từ Tra cứu MST)"
-                                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all"
+                                    className="w-full pl-9 pr-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
                                     value={hrInfo.location?.street_address || ''}
                                     onChange={e => setHrInfo((prev: any) => ({ ...prev, location: { ...prev.location, street_address: e.target.value } }))}
                                 />
@@ -275,11 +308,11 @@ export default function HrEnterpriseForm({ hrInfo, setHrInfo, isDarkMode }: HrEn
                         </>
                     ) : (
                         <div className="col-span-1 md:col-span-3 relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
                             <input
                                 type="text"
                                 placeholder="VD: 123 Orchard Road, Singapore"
-                                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all"
+                                className="w-full pl-9 pr-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
                                 value={hrInfo.location?.street_address || ''}
                                 onChange={e => setHrInfo((prev: any) => ({ ...prev, location: { ...prev.location, street_address: e.target.value } }))}
                             />
@@ -287,16 +320,42 @@ export default function HrEnterpriseForm({ hrInfo, setHrInfo, isDarkMode }: HrEn
                     )}
                 </div>
             </div>
-            <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Website (Tùy chọn)</label>
-                <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Website (Tùy chọn)</label>
+                    <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle w-4 h-4" />
+                        <input
+                            type="url"
+                            value={hrInfo.website}
+                            onChange={e => setHrInfo({ ...hrInfo, website: e.target.value })}
+                            className="w-full pl-9 pr-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
+                            placeholder="https://www.company.com"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-semibold text-text mb-1.5">Giấy phép kinh doanh (Tùy chọn)</label>
                     <input
-                        type="url"
-                        value={hrInfo.website}
-                        onChange={e => setHrInfo({ ...hrInfo, website: e.target.value })}
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-900 dark:text-white transition-all"
-                        placeholder="https://www.company.com"
+                        type="text"
+                        value={hrInfo.license_file_url || ''}
+                        onChange={e => setHrInfo({ ...hrInfo, license_file_url: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-button bg-input-bg border border-input-border text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-input-focus text-text transition-all placeholder-text-subtle"
+                        placeholder="Link tới Giấy ĐKKD hoặc tài liệu xác minh..."
+                    />
+                    <p className="text-xs text-text-subtle mt-1.5">Cung cấp tài liệu giúp Admin duyệt tài khoản nhanh hơn.</p>
+                </div>
+            </div>
+
+            <div className="mt-4">
+                <label className="block text-sm font-semibold text-text mb-1.5">Mô tả tổng quan (Tùy chọn)</label>
+                <div className="rounded-button overflow-hidden border border-input-border">
+                    <RichTextEditor
+                        value={hrInfo.description}
+                        onChange={val => setHrInfo({ ...hrInfo, description: val })}
+                        placeholder="Mô tả tóm tắt về tầm nhìn, sứ mệnh..."
                     />
                 </div>
             </div>

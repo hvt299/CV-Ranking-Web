@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Globe, Link, Save, Briefcase, Camera, Loader2, DollarSign } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Globe, Link, Save, Briefcase, Camera, Loader2, DollarSign, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useMyProfile } from '@/features/application/useApplication';
 import { UserRole } from '@/types';
 import apiClient from '@/lib/api-client';
 import { systemService, LocationUnit } from '@/features/system/system.service';
+import AvatarUpload from '@/components/shared/AvatarUpload';
 
 export default function ProfileForm() {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser } = useAuthStore();
     const { profile, setProfile, isLoading, isSaving, updateProfile } = useMyProfile();
-    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     const [allProvinces, setAllProvinces] = useState<LocationUnit[]>([]);
     const domesticVersion = profile?.current_location?.version || 'new';
@@ -106,62 +106,25 @@ export default function ProfileForm() {
         }
     };
 
-    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("Vui lòng chọn ảnh dưới 2MB");
-            return;
-        }
-
-        setIsUploadingAvatar(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await apiClient.post('/upload/image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            const newAvatarUrl = res.data?.data?.url || res.data?.url;
-            if (newAvatarUrl) {
-                setProfile((prev: any) => ({ ...prev, avatar_url: newAvatarUrl, avatar: newAvatarUrl }));
-                if (updateUser) {
-                    await updateUser({ ...user, avatar_url: newAvatarUrl });
-                }
-                toast.success("Cập nhật ảnh đại diện thành công!");
-            }
-        } catch (error) {
-            toast.error("Lỗi khi tải ảnh lên!");
-        } finally {
-            setIsUploadingAvatar(false);
-        }
-    };
-
     return (
         <div className="w-full space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">
 
                 {/* Khu vực Avatar */}
                 <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 pb-8 border-b border-slate-100 dark:border-slate-800">
-                    <div className="relative group">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-800 shadow-md">
-                            {isUploadingAvatar ? (
-                                <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                    <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-                                </div>
-                            ) : (
-                                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            )}
-                        </div>
-                        <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-transform hover:scale-110">
-                            <Camera className="w-4 h-4" />
-                            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploadingAvatar} />
-                        </label>
-                    </div>
+                    <AvatarUpload
+                        value={profile.avatar_url}
+                        onChange={(url) => {
+                            setProfile((prev: any) => ({ ...prev, avatar_url: url, avatar: url }));
+                            if (updateUser) {
+                                updateUser({ ...user, avatar_url: url });
+                            }
+                        }}
+                        size="lg"
+                    />
                     <div className="text-center sm:text-left">
                         <h2 className="text-xl font-black text-slate-800 dark:text-white mb-1">Ảnh đại diện</h2>
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">JPG, PNG tối đa 2MB. Ảnh sẽ hiển thị công khai trên nền tảng.</p>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">JPG, PNG tối đa 5MB. Ảnh sẽ hiển thị công khai trên nền tảng.</p>
                     </div>
                 </div>
 
@@ -348,17 +311,46 @@ export default function ProfileForm() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">GitHub</label>
-                                    <div className="relative">
-                                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input
-                                            type="url"
-                                            value={profile.github || ''}
-                                            onChange={(e) => setProfile((prev: any) => ({ ...prev, github: e.target.value }))}
-                                            className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                            placeholder="https://github.com/..."
-                                        />
-                                    </div>
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Liên kết cá nhân (Portfolio, GitHub...)</label>
+                                    {(profile.portfolio || []).map((url: string, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-2 mb-2">
+                                            <div className="relative flex-1">
+                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    value={url}
+                                                    onChange={(e) => {
+                                                        const newPortfolio = [...(profile.portfolio || [])];
+                                                        newPortfolio[idx] = e.target.value;
+                                                        setProfile((prev: any) => ({ ...prev, portfolio: newPortfolio }));
+                                                    }}
+                                                    className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                                    placeholder="github.com/..."
+                                                />
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    const newPortfolio = [...(profile.portfolio || [])];
+                                                    newPortfolio.splice(idx, 1);
+                                                    setProfile((prev: any) => ({ ...prev, portfolio: newPortfolio }));
+                                                }} 
+                                                className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"
+                                                title="Xóa liên kết"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            setProfile((prev: any) => ({ ...prev, portfolio: [...(prev.portfolio || []), ''] }));
+                                        }} 
+                                        className="text-sm font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center gap-1"
+                                    >
+                                        + Thêm liên kết
+                                    </button>
                                 </div>
 
                                 <div className="space-y-2">
@@ -366,11 +358,11 @@ export default function ProfileForm() {
                                     <div className="relative">
                                         <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input
-                                            type="url"
+                                            type="text"
                                             value={profile.linkedin || ''}
                                             onChange={(e) => setProfile((prev: any) => ({ ...prev, linkedin: e.target.value }))}
                                             className="w-full pl-11 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                            placeholder="https://linkedin.com/in/..."
+                                            placeholder="linkedin.com/in/..."
                                         />
                                     </div>
                                 </div>
@@ -393,11 +385,11 @@ export default function ProfileForm() {
                     <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                         <button
                             type="submit"
-                            disabled={isSaving || isUploadingAvatar}
-                            className="w-full sm:w-auto px-8 py-3.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md shadow-primary-500/20"
+                            disabled={isSaving}
+                            className="w-full sm:w-auto px-8 py-3.5 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold rounded-2xl transition-all shadow-md shadow-primary-500/20 disabled:shadow-none flex items-center justify-center gap-2 mt-4"
                         >
                             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
+                            {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                         </button>
                     </div>
                 </form>

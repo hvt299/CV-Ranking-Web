@@ -2,10 +2,13 @@
 
 import {
     Mail, Phone, GraduationCap, Briefcase, FolderOutput, Eye, FileText,
-    Trash2, AlertTriangle, MoreVertical, GitCommitHorizontal, Globe, Check
+    Trash2, AlertTriangle, MoreVertical, GitCommitHorizontal, Globe, Check, Heart
 } from 'lucide-react';
 import { CV } from '@/types';
 import { useState, useRef, useEffect } from 'react';
+import apiClient from '@/lib/api-client';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface CandidateGridViewProps {
     candidates: CV[];
@@ -18,8 +21,35 @@ interface CandidateGridViewProps {
 }
 
 export default function CandidateGridView({ candidates, selectedIds, onToggleSelect, onMapToJob, onViewSkills, onPreviewCV, onDeleteCV }: CandidateGridViewProps) {
+    const { savedProfileIds, toggleSavedProfile } = useAuthStore();
+    
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const handleBookmark = async (cv: CV) => {
+        const applicantId = cv.owner_user_id || cv.id;
+        const isSaved = savedProfileIds.includes(applicantId);
+        
+        // Optimistic update
+        toggleSavedProfile(applicantId);
+        
+        try {
+            if (isSaved) {
+                await apiClient.delete(`/cv/talent-pool/bookmark/${applicantId}`);
+                toast.success('Đã bỏ lưu hồ sơ');
+            } else {
+                await apiClient.post('/cv/talent-pool/bookmark', {
+                    applicant_user_id: applicantId,
+                    notes: `Đã lưu từ CV ${cv.filename}`
+                });
+                toast.success('Đã lưu hồ sơ vào Talent Pool thành công');
+            }
+        } catch (error: any) {
+            // Revert on error
+            toggleSavedProfile(applicantId);
+            toast.error(error?.response?.data?.detail || 'Có lỗi xảy ra khi lưu hồ sơ');
+        }
+    };
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -73,6 +103,9 @@ export default function CandidateGridView({ candidates, selectedIds, onToggleSel
                                         )}
                                         <button onClick={() => { onViewSkills(cv); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                             <FileText className="w-4 h-4" /> Chi tiết Phân tích
+                                        </button>
+                                        <button onClick={() => { handleBookmark(cv); setOpenMenuId(null); }} className={`w-full flex items-center gap-2 px-4 py-2 text-xs font-bold transition-colors ${savedProfileIds.includes(cv.owner_user_id || cv.id) ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                                            <Heart className={`w-4 h-4 ${savedProfileIds.includes(cv.owner_user_id || cv.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-500'}`} /> {savedProfileIds.includes(cv.owner_user_id || cv.id) ? 'Đã lưu' : 'Lưu hồ sơ'}
                                         </button>
                                         <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
                                         <button onClick={() => { onDeleteCV(cv.id, cv.filename); setOpenMenuId(null); }} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">

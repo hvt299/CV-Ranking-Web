@@ -48,7 +48,7 @@ export const EMPLOYMENT_TYPES = [
 ];
 
 export const WORK_MODES = [
-    { value: 'Onsite', label: 'Làm tại văn phòng' },
+    { value: 'Office', label: 'Làm tại văn phòng' },
     { value: 'Hybrid', label: 'Kết hợp (Hybrid)' },
     { value: 'Remote', label: 'Làm từ xa (Remote)' },
 ];

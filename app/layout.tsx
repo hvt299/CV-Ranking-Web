@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ui/ThemeProvider";
-import { AuthProvider } from "@/context/AuthContext";
-import { ApplyModalProvider } from "@/context/ApplyModalContext";
-import { Toaster } from 'react-hot-toast';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { Providers } from "./providers";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -26,16 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${beVietnamPro.variable} font-sans antialiased`} suppressHydrationWarning>
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <AuthProvider>
-              <ApplyModalProvider>
-                {children}
-              </ApplyModalProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </GoogleOAuthProvider>
-        <Toaster position="top-right" reverseOrder={false} />
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

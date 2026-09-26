@@ -16,8 +16,8 @@ export default function JobDetailTabs({ activeTab, setActiveTab, candidateCount 
     ];
 
     return (
-        <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800">
-            <div className="flex gap-2 px-2 sm:px-6">
+        <div className="border-b border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-3 w-full">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -25,19 +25,15 @@ export default function JobDetailTabs({ activeTab, setActiveTab, candidateCount 
                     return (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-3.5 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${isActive
-                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
-                                }`}
+                            onClick={() => setActiveTab(tab.id as 'candidates' | 'job_info' | 'ai_config')}
+                            className={`relative flex items-center justify-center gap-2 px-3 sm:px-4 py-4 text-sm font-bold whitespace-nowrap transition-all duration-200 border-b-2 ${isActive ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400'}`}
                         >
-                            <Icon className={`w-4 h-4 ${isActive ? 'text-primary-500' : 'text-slate-400'}`} />
-                            {tab.label}
+                            <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-primary-500 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500'}`} />
+
+                            <span>{tab.label}</span>
+
                             {tab.count !== undefined && (
-                                <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] ${isActive
-                                        ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                                    }`}>
+                                <span className={`min-w-6 h-5 px-1.5 flex items-center justify-center rounded-full text-[10px] font-black ${isActive ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
                                     {tab.count}
                                 </span>
                             )}

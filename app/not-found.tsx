@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Hexagon, Home, Search, ArrowLeft } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 export default function NotFound() {
     return (
@@ -33,14 +34,14 @@ export default function NotFound() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <Link
-                        href="/careers"
+                        href={ROUTES.PUBLIC_JOBS}
                         className="px-6 py-3.5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm backdrop-blur-md"
                     >
                         <Search className="w-4 h-4" /> Khám phá việc làm
                     </Link>
 
                     <Link
-                        href="/"
+                        href={ROUTES.HOME}
                         className="px-6 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
                         <Home className="w-4 h-4" /> Về trang chủ

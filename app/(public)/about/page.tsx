@@ -7,7 +7,7 @@ import { systemService } from '@/features/system/system.service';
 import PublicHeader from '@/components/layout/PublicHeader';
 import Counter from '@/components/ui/Counter';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const CORE_VALUES = [
     {
@@ -33,7 +33,7 @@ const CORE_VALUES = [
 ];
 
 export default function AboutPage() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuthStore();
     const [isScrolled, setIsScrolled] = useState(false);
 
     const [sysStats, setSysStats] = useState({ candidates: 0, companies: 0, success_rate: 0 });

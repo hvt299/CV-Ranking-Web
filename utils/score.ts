@@ -47,10 +47,10 @@ export const getScoreTheme = (score: number) => {
 /**
  * Danh sách lý do bị trừ điểm AI
  */
-export const getPenaltyReasons = (cvInfo: any, breakdown: any): string => {
+export const getPenaltyReasons = (cvInfo: any, breakdown: any, aiScore?: any): string => {
     const reasons: string[] = [];
 
-    const fraudReasons = breakdown?.fraud_analysis?.reasons ?? [];
+    const fraudReasons = cvInfo?.fraud_analysis?.reasons ?? [];
 
     const fraudMap: Record<string, string> = {
         'Keyword stuffing': 'Nhồi nhét từ khóa',
@@ -72,7 +72,7 @@ export const getPenaltyReasons = (cvInfo: any, breakdown: any): string => {
                 return fraudMap[reason] ?? reason;
             })
         );
-    } else if (breakdown?.fraud_analysis?.detected) {
+    } else if (cvInfo?.fraud_analysis?.detected) {
         reasons.push('Có dấu hiệu gian lận CV');
     }
 
@@ -88,7 +88,12 @@ export const getPenaltyReasons = (cvInfo: any, breakdown: any): string => {
         reasons.push(`Khoảng trống sự nghiệp dài (${gaps} tháng)`);
     }
 
+    const missing = aiScore?.skill_details?.filter((s: any) => !s.matched && s.is_knockout)?.map((s: any) => s.skill) || [];
+    if (missing.length) {
+        reasons.push(`Thiếu yêu cầu bắt buộc (${missing.slice(0, 2).join(', ')}${missing.length > 2 ? ',...' : ''})`);
+    }
+
     return reasons.length
         ? reasons.join(' + ')
-        : 'Vi phạm tiêu chí hệ thống';
+        : 'Chưa đạt tiêu chí hệ thống';
 };
